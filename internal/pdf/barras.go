@@ -150,8 +150,8 @@ func (pg *Pagina) CodigoDeBarras(posX, posY, largura, altura float64, texto stri
 }
 
 // MatrizQR é um QR Code já codificado, em que cada posição verdadeira é um
-// módulo escuro. A biblioteca não codifica QR Codes — ela produz o texto que
-// vai dentro deles — e recebe a matriz pronta de quem imprime.
+// módulo escuro. O DACTE e o DAMDFE codificam o deles (pacote danfe, com o
+// rsc.io/qr); o cupom da NFC-e recebe a matriz pronta de quem imprime.
 //
 // Com github.com/skip2/go-qrcode, por exemplo:
 //

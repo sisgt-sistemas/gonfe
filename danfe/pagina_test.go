@@ -2,10 +2,12 @@ package danfe_test
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/sisgt-sistemas/gonfe/cte"
 	"github.com/sisgt-sistemas/gonfe/danfe"
 	"github.com/sisgt-sistemas/gonfe/nfe"
 )
@@ -67,13 +69,28 @@ func numero(t *testing.T, b []byte) float64 {
 }
 
 // conferirCabeNaPagina garante que nada foi desenhado fora da folha. É a
-// contraprova das constantes de espaço reservado que dividem os itens entre as
-// páginas: se a estimativa for otimista, o rodapé escorrega para fora e o
-// leitor simplesmente não mostra o que faltou.
-func conferirCabeNaPagina(t *testing.T, nome string, dados []byte) {
+// contraprova da paginação: se a medida for otimista, o rodapé escorrega para
+// fora e o leitor simplesmente não mostra o que faltou. Os documentos do
+// transporte, com a paginação medida, também não podem invadir a margem.
+func conferirCabeNaPagina(t *testing.T, nome string, dados []byte, respeitaMargem bool) {
 	t.Helper()
-	if y := menorY(t, dados); y < 0 {
-		t.Errorf("%s: desenho %.1f pt abaixo da borda inferior da página", nome, -y)
+	limite := 0.0
+	if respeitaMargem {
+		limite = 5 * 72 / 25.4 // a margem de 5 mm, em pontos
+	}
+	if y := menorY(t, dados); y < limite-0.01 {
+		t.Errorf("%s: desenho a %.1f pt da borda inferior; o limite é %.1f pt", nome, y, limite)
+	}
+}
+
+// conferirFolhas confere o "n/total" de cada folha dos documentos do transporte.
+func conferirFolhas(t *testing.T, nome string, dados []byte) {
+	t.Helper()
+	total := bytes.Count(dados, []byte("/Type /Page "))
+	for folha := 1; folha <= total; folha++ {
+		if !bytes.Contains(dados, []byte(fmt.Sprintf("(%d/%d)", folha, total))) {
+			t.Errorf("%s: falta a folha %d/%d", nome, folha, total)
+		}
 	}
 }
 
@@ -114,7 +131,59 @@ func TestTudoCabeNaPagina(t *testing.T) {
 
 	for _, caso := range casos {
 		t.Run(caso.nome, func(t *testing.T) {
-			conferirCabeNaPagina(t, caso.nome, caso.dados(t))
+			conferirCabeNaPagina(t, caso.nome, caso.dados(t), false)
+		})
+	}
+}
+
+// Os documentos do transporte, com a paginação medida, ficam dentro da margem em toda folha e numeram as folhas
+// (Manual do DACTE, §2.21.2): com e sem canhoto, em homologação e em produção, curtos e longos.
+func TestDocumentosDoTransporteCabemNaMargem(t *testing.T) {
+	semCanhoto := danfe.Opcoes{SemCanhoto: true}
+	producao := func(c *cte.CTe) *cte.CTe { c.InfCte.Ide.TpAmb = cte.Producao; return c }
+	casos := []struct {
+		nome  string
+		dados func(t *testing.T) ([]byte, error)
+	}{
+		{"DACTE com 1 documento", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(1)), danfe.Opcoes{})
+		}},
+		{"DACTE com 150 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), danfe.Opcoes{})
+		}},
+		{"DACTE com 150 documentos sem canhoto", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), semCanhoto)
+		}},
+		{"DACTE em produção com 150 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, producao(conhecimentoExemplo(150))), danfe.Opcoes{})
+		}},
+		{"DACTE pedido em paisagem", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), danfe.Opcoes{Orientacao: danfe.Paisagem})
+		}},
+		{"DACTE OS com 1 documento", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTEOS(procOSDe(t, fretamentoExemplo(1)), danfe.Opcoes{})
+		}},
+		{"DACTE OS com 150 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTEOS(procOSDe(t, fretamentoExemplo(150)), danfe.Opcoes{})
+		}},
+		{"DACTE do Simplificado com 2 entregas", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTESimp(procSimpDe(t, simplificadoExemplo(2)), danfe.Opcoes{})
+		}},
+		{"DACTE do Simplificado com 80 entregas", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTESimp(procSimpDe(t, simplificadoExemplo(80)), danfe.Opcoes{})
+		}},
+		{"DAMDFE com 200 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDAMDFE(procMDFeDe(t, manifestoExemplo(200)), danfe.Opcoes{})
+		}},
+	}
+	for _, caso := range casos {
+		t.Run(caso.nome, func(t *testing.T) {
+			dados, err := caso.dados(t)
+			if err != nil {
+				t.Fatal(err)
+			}
+			conferirCabeNaPagina(t, caso.nome, dados, true)
+			conferirFolhas(t, caso.nome, dados)
 		})
 	}
 }

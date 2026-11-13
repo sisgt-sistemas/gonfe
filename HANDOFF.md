@@ -46,9 +46,10 @@ primeira linha.
    que faz o resumo criptográfico daqui bater com o que a SEFAZ recalcula. Nunca
    reserialize um documento já assinado.
 
-4. **Sem CGO, e uma dependência externa só** (`go-pkcs12`). O escritor de PDF, a
-   canonicalização C14N, o cliente SOAP e o Code 128 são todos próprios por causa
-   disso.
+4. **Sem CGO, e duas dependências pequenas em Go puro** (`go-pkcs12` e o
+   `rsc.io/qr`, para o QR Code obrigatório do DACTE e do DAMDFE). O escritor de
+   PDF, a canonicalização C14N, o cliente SOAP e o Code 128 são todos próprios
+   por causa disso.
 
 5. **Normalização por tag.** `norm:"num"` mantém só dígitos, `norm:"upper"` força
    maiúsculas, `norm:"-"` não toca. Campos que a SEFAZ compara caractere a

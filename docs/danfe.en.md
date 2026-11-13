@@ -1,7 +1,7 @@
 # Auxiliary documents as PDF
 
 The [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) package
-generates the five auxiliary documents as PDFs.
+generates the six auxiliary documents as PDFs.
 
 | Auxiliary document | Fiscal document | Function | Format |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ generates the five auxiliary documents as PDFs.
 | Receipt | NFC-e, model 65 | `Gerar` or `Cupom` | till roll |
 | DACTE | CT-e, model 57 | `GerarDACTE` or `DACTE` | A4 |
 | DACTE OS | CT-e OS, model 67 | `GerarDACTEOS` or `DACTEOS` | A4 |
+| Simplificado DACTE | CT-e Simplificado, model 57 | `GerarDACTESimp` or `DACTESimp` | A4 |
 | DAMDFE | MDF-e, model 58 | `GerarDAMDFE` or `DAMDFE` | A4 |
 
 ```go
@@ -32,11 +33,13 @@ All of them accept the same [options](#opcoes) and paginate automatically.
 ## No dependencies
 
 The PDF is written in pure Go, using the base-14 fonts every reader already has.
-There is no graphics library, no CGO, no embedded font file — the module still
-has a single external dependency, the PKCS#12 one.
+There is no graphics library, no CGO, no embedded font file.
 
 The Code 128 barcode of the access key is drawn as rectangles, with no barcode
-library.
+library, and switches from set C to set A for the letters of an alphanumeric
+CNPJ. The QR Code on the DACTE and the DAMDFE, which the manuals require, is
+encoded with `rsc.io/qr` (pure Go, no CGO) from the document's `qrCodCTe` or
+`qrCodMDFe`.
 
 !!! warning "On fidelity to the manual"
 
@@ -78,26 +81,35 @@ proc, _ := os.ReadFile("43260...-procCTe.xml")
 dacte, err := danfe.GerarDACTE(proc, danfe.Opcoes{})
 ```
 
+The DACTE, the DACTE OS and the Simplificado one follow MOC CT-e 4.00, Annex II
+(the DACTE manual):
+
 ```mermaid
 flowchart TB
-    A[Delivery receipt stub] --> B[Issuer · DACTE · Key and barcode]
-    B --> C[CFOP · Nature · CT-e type]
-    C --> D[Service type · Payer · Start and end of the service]
-    D --> E[Sender · Recipient · Dispatcher · Receiver · Payer]
-    E --> F[Predominant product and quantities]
-    F --> G[Freight components and totals]
-    G --> H[Tax]
-    H --> I[Originating documents]
-    I --> J[Modal · Notes · Reserved fields]
+    A[Receipt stub] --> B[Issuer · DACTE: model, series, number, sheet, issue date · QR Code]
+    B --> C[Barcode · Key · Lookup · Protocol]
+    C --> D[Notice: homologation, cancelled, contingency]
+    D --> E[CT-e and service type · Globalised · CFOP and nature · Start and end]
+    E --> F[Sender · Recipient · Dispatcher · Receiver · Payer]
+    F --> G[Cargo · Components · Tax · IBS and CBS]
+    G --> H[Originating documents, in two columns]
+    H --> I[Cargo flow · Notes · Modal · Issuer use · Reserved to the tax authority]
+    I --> J[Additional information]
 ```
 
-Two behaviours that save work:
-
-- **The payer is resolved automatically.** When `toma3` points at the sender,
-  the dispatcher, the receiver or the recipient, the payer block is filled with
-  that party's details. A `toma4` is used as given.
-- **The key fills the table.** In the originating documents, the issuer's CNPJ,
-  the series and the number come from the transported NF-e's own access key.
+- **Only what is in the XML.** The manual does not allow text from outside the
+  document, and `Mensagem` is not printed on the transport documents.
+- **Homologation in the variable area.** The notice "EMITIDO EM AMBIENTE DE
+  HOMOLOGAÇÃO – SEM VALOR FISCAL" goes in a band below the key, with no banner
+  over the values.
+- **Sheets.** The fixed blocks stay on the first sheet; documents that do not fit
+  continue on the next ones, which repeat the header (§2.12). The table runs to
+  the foot of the sheet, as in the models.
+- **The payer is resolved automatically.** When `toma3` points at one of the
+  parties, the payer block carries that party's details. A `toma4` is used as
+  given.
+- **What the manual does not cover** (IBS and CBS, collection orders, ICMS
+  sharing) comes in blocks after the standard layout.
 
 ## The DACTE OS
 
@@ -105,12 +117,22 @@ Two behaviours that save work:
 dacteos, err := danfe.GerarDACTEOS(procCTeOS, danfe.Opcoes{})
 ```
 
-Where the DACTE describes cargo and transported documents, the DACTE OS
-describes a payer, the service in free text, the vehicle and the referenced
-documents — passenger tickets and GTV-e, which share one table.
+It follows the model on p.51 of the manual: the service with the vehicle route,
+payer, service quantity and description, amounts, tax, notes, insurance and road
+modal. Chartering and referenced documents (BP-e, GTV-e) come afterwards. The
+model's receipt stub is optional and is not printed; `SemCanhoto` is ignored.
 
-It has **no receipt stub**: there are no packages to receive, so there is no
-delivery receipt, and `SemCanhoto` is ignored.
+## The Simplificado DACTE
+
+```go
+dacte, err := danfe.GerarDACTESimp(procCTeSimp, danfe.Opcoes{})
+```
+
+Neither the manual nor NT 2024.002 defines its layout. This one follows the
+manual's general rules — the same header, QR Code, barcode and sheets — and, in
+place of sender and recipient, carries the deliveries table: item, origin,
+destination, amounts and each delivery's documents, continuing on the next
+sheets.
 
 ## The DAMDFE
 
@@ -120,25 +142,13 @@ proc, _ := os.ReadFile("43260...-procMDFe.xml")
 damdfe, err := danfe.GerarDAMDFE(proc, danfe.Opcoes{})
 ```
 
-```mermaid
-flowchart TB
-    A[Issuer · DAMDFE · Key and barcode] --> B[Issuer and carrier type · Start and end state]
-    B --> C[Loading municipalities · Route]
-    C --> D[Modal: RNTRC, tractor unit, trailers, drivers]
-    D --> E[Totals: NF-e and CT-e counts, cargo value and weight]
-    E --> F[Cargo insurance]
-    F --> G[Documents by unloading municipality]
-    G --> H[Notes]
-```
-
-The DAMDFE has no receipt stub — what gets signed for on delivery are the
-documents it lists, not the manifest — so `SemCanhoto` is ignored. In the
-document list the municipality appears only on the first row of each group;
-repeating it on every key would turn the column into noise.
-
-The footer reminds you that the manifest must be closed out. That is not
-decoration: an open MDF-e blocks the next one from being issued, and the printed
-reminder reaches the driver, who is the one standing in the yard.
+It follows the road model of MOC MDF-e 3.00b, Annex II (§2.7): issuer with RNTRC,
+QR Code, identification, totals, tax authority control with the key and the
+lookup address, protocol, vehicles, drivers, toll vouchers and notes. In
+contingency, the notice with the 168-hour deadline takes the protocol's place.
+Below the standard layout, as the manual allows, come the trip, the CIOT,
+vehicle details, cargo, insurance and the list of documents by unloading
+municipality. The DAMDFE has no receipt stub.
 
 ## Options
 
@@ -146,9 +156,9 @@ reminder reaches the driver, who is the one standing in the yard.
 danfe.Opcoes{
     Orientacao:    danfe.Paisagem,  // default: portrait
     SemCanhoto:    true,            // omits the delivery receipt stub
-    Cancelada:     true,            // prints the cancellation banner
-    Homologacao:   true,            // forces the test banner
-    Mensagem:      "Emitido por Sistema X",
+    Cancelada:     true,            // marks the document as cancelled
+    Homologacao:   true,            // forces the test notice
+    Mensagem:      "Emitido por Sistema X", // NF-e and NFC-e only
     LarguraBobina: 58,              // NFC-e: 80 mm by default
     QRCode:        matriz,          // NFC-e: see below
 }
@@ -159,9 +169,8 @@ homologation gets `SEM VALOR FISCAL`, a denied one gets `USO DENEGADO`, and one
 without a protocol gets `SEM AUTORIZAÇÃO`.
 
 `Orientacao` rotates the sheet and gives the blocks more width. In the transport
-documents the structure drawn is the same in both orientations — it is not the
-dedicated landscape layout the DACTE manual describes, and the document's
-`tpImp` field is not consulted.
+documents the structure drawn is the same in both orientations, and the
+document's `tpImp` field is not consulted.
 
 ## The NFC-e QR Code
 

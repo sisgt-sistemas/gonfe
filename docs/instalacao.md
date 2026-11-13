@@ -17,9 +17,10 @@ biblioteca não usa CGO.
 go get github.com/sisgt-sistemas/gonfe
 ```
 
-Isso traz também a única dependência externa,
+Isso traz também as duas dependências externas, em Go puro:
 `software.sslmate.com/src/go-pkcs12`, usada para ler arquivos PKCS#12 cifrados
-com os algoritmos modernos que as autoridades certificadoras emitem hoje.
+com os algoritmos modernos que as autoridades certificadoras emitem hoje, e
+`rsc.io/qr`, que codifica o QR Code do DACTE e do DAMDFE.
 
 ## Conferindo a instalação
 

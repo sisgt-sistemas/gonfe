@@ -27,7 +27,7 @@ seguindo os padrões da Receita Federal e das Secretarias de Fazenda estaduais.
 | **CT-e** — Conhecimento de Transporte, modelo 57, leiaute 4.00 | Modal rodoviário completo, com eventos |
 | **CT-e OS** — Outros Serviços, modelo 67, leiaute 4.00 | Completo, sem rodagem em campo |
 | **MDF-e** — Manifesto de Documentos Fiscais, modelo 58, leiaute 3.00 | Modal rodoviário completo |
-| **Documentos auxiliares** em PDF — DANFE, cupom, DACTE, DACTE OS e DAMDFE | Completos, sem dependência gráfica |
+| **Documentos auxiliares** em PDF — DANFE, cupom, DACTE, DACTE OS, DACTE do Simplificado e DAMDFE | Completos, sem dependência gráfica |
 | **Distribuição de DF-e** | Completo |
 
 Em NF-e e NFC-e a biblioteca cobre o ciclo inteiro: montagem do documento,
@@ -37,8 +37,9 @@ PDF e o ciclo de vida posterior — correção, cancelamento e inutilização.
 
 ## Princípios
 
-- **Sem dependências pesadas.** Uma única dependência externa, para ler
-  arquivos PKCS#12 modernos. Nada de CGO: o mesmo binário roda em Linux,
+- **Sem dependências pesadas.** Duas dependências externas, em Go puro: uma
+  para ler arquivos PKCS#12 modernos e o `rsc.io/qr`, para o QR Code do DACTE e
+  do DAMDFE. Nada de CGO: o mesmo binário roda em Linux,
   macOS e Windows.
 - **Nenhum `float64` em valor fiscal.** Todo campo monetário usa um decimal de
   precisão fixa com a escala que o leiaute exige. `0.1 + 0.2` dá exatamente

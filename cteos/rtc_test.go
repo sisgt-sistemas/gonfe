@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/cteos"
 	"github.com/sisgt-sistemas/gonfe/internal/certtest"
 	"github.com/sisgt-sistemas/gonfe/internal/rtctest"
 	"github.com/sisgt-sistemas/gonfe/tipos"
@@ -55,5 +56,24 @@ func TestFormasDeEmissaoDoCTeOS(t *testing.T) {
 		if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "ide.tpEmis") {
 			t.Errorf("tpEmis %s aceito no CT-e OS: %v", tp, err)
 		}
+	}
+}
+
+// O percurso do veículo é conferido: UF válidas, no máximo 25.
+func TestPercursoDoVeiculo(t *testing.T) {
+	c := fretamentoExemplo()
+	c.InfCte.Ide.InfPercurso = []cteos.Percurso{{UFPer: "SC"}, {UFPer: "XX"}}
+	if err := c.Preparar(); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "ide.infPercurso[1].UFPer") {
+		t.Errorf("UF inválida no percurso aceita: %v", err)
+	}
+	c.InfCte.Ide.InfPercurso = make([]cteos.Percurso, 26)
+	for i := range c.InfCte.Ide.InfPercurso {
+		c.InfCte.Ide.InfPercurso[i] = cteos.Percurso{UFPer: "SC"}
+	}
+	if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "ide.infPercurso") {
+		t.Errorf("percurso com 26 UF aceito: %v", err)
 	}
 }

@@ -25,88 +25,104 @@ func GerarDACTE(procCTe []byte, opc Opcoes) ([]byte, error) {
 	return DACTE(c, prot, opc)
 }
 
-// DACTE gera o documento auxiliar do CT-e modelo 57, em A4.
+// DACTE gera o documento auxiliar do CT-e modelo 57, em A4, pelo MOC CT-e 4.00,
+// Anexo II (Manual do DACTE).
 //
-// A tabela de documentos originários é paginada automaticamente: o cabeçalho
-// se repete em cada folha e a lista continua de onde parou.
+// Os quadros fixos ficam na primeira folha. Os documentos originários que não
+// couberem nela continuam nas seguintes, que repetem o cabeçalho e só trazem a
+// continuação (§2.12). O QR Code sai do qrCodCTe do documento. Os quadros que o
+// manual não prevê (IBS e CBS, ordens de coleta, partilha do ICMS) vêm depois
+// do leiaute padrão.
 //
-// [Opcoes.Orientacao] gira a folha e dá mais largura aos blocos; a estrutura
-// desenhada é a mesma nas duas orientações, e não o leiaute paisagem próprio
-// que o manual descreve. O campo `tpImp` do documento não é consultado.
+// A folha é sempre A4 retrato: em paisagem os quadros fixos não cabem, e
+// [Opcoes.Orientacao] é ignorada. Se os quadros fixos não couberem nem em retrato
+// (componentes ou quantidades demais), o erro embrulha [ErrNaoCabe].
 func DACTE(c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) ([]byte, error) {
 	if c == nil {
 		return nil, fmt.Errorf("dacte: conhecimento ausente")
 	}
 
+	opc = emRetrato(opc)
+	paginas, linhas, err := paginarDocumentos(c, prot, opc)
+	if err != nil {
+		return nil, fmt.Errorf("dacte: %w", err)
+	}
 	documento := pdf.Novo()
-	paginas := paginarDocumentos(c, opc)
-
-	for i := range paginas {
+	for i, docs := range paginas {
 		pg := novaFolha(documento, opc)
 		m := medidasDe(pg)
-
-		y := m.margem
-		if !opc.SemCanhoto && i == 0 {
-			y = desenharCanhotoCTe(pg, m, c, y)
-		}
-		y = desenharCabecalhoCTe(pg, m, c, prot, i+1, len(paginas), y)
 		if i == 0 {
-			y = desenharPrestacaoCTe(pg, m, c, y)
-			y = desenharPartesCTe(pg, m, c, y)
-			y = desenharCargaCTe(pg, m, c, y)
-			y = desenharValoresCTe(pg, m, c, y)
-			y = desenharImpostoCTe(pg, m, c, y)
+			desenharPrimeiraFolhaCTe(pg, m, c, prot, opc, docs, linhas[0], len(paginas))
+			continue
 		}
-		y = desenharDocumentosCTe(pg, m, paginas[i], y)
-		if i == len(paginas)-1 {
-			desenharRodapeCTe(pg, m, c, opc, y)
-		}
-		desenharTarjasCTe(pg, c, prot, opc)
+		y := desenharCabecalhoCTe(pg, m, c, prot, opc, i+1, len(paginas), m.margem)
+		desenharDocumentosCTe(pg, m, docs, linhas[1], y)
 	}
-
 	return documento.Bytes()
+}
+
+// desenharPrimeiraFolhaCTe desenha a primeira folha com os documentos dados e
+// devolve onde ela terminou: é também a medida da paginação.
+func desenharPrimeiraFolhaCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, prot *cte.ProtCTe, opc Opcoes, docs []docOrig, linhas, folhas int) float64 {
+	y := m.margem
+	if !opc.SemCanhoto {
+		y = desenharCanhotoCTe(pg, m, c, y)
+	}
+	y = desenharCabecalhoCTe(pg, m, c, prot, opc, 1, folhas, y)
+	y = desenharPrestacaoCTe(pg, m, c, y)
+	y = desenharPartesCTe(pg, m, c, y)
+	y = desenharCargaCTe(pg, m, c, y)
+	y = desenharValoresCTe(pg, m, c.InfCte.VPrest, y)
+	y = desenharImpostoCTe(pg, m, &c.InfCte.Imp, y)
+	y = desenharIBSCBS(pg, m, c.InfCte.Imp.IBSCBS, c.InfCte.Imp.VTotDFe, y)
+	y = desenharDocumentosCTe(pg, m, docs, linhas, y)
+	y = desenharFluxo(pg, m, fluxoDe(c.InfCte.Compl), y)
+	y = desenharObservacoesCTe(pg, m, c, y)
+	return desenharAdicionaisCTe(pg, m, c, y)
 }
 
 // docOrig é uma linha da tabela de documentos originários, já achatada a
 // partir das três formas que o leiaute aceita.
 type docOrig struct {
-	tipo, emitente, numero, chave string
+	tipo, emitente, numero string
 }
 
-// paginarDocumentos divide os documentos originários entre as folhas. A
-// primeira tem menos espaço, porque carrega os blocos de identificação.
-func paginarDocumentos(c *cte.CTe, opc Opcoes) [][]docOrig {
+// paginarDocumentos divide os documentos originários entre as folhas, medindo o
+// espaço que sobra: a primeira folha é desenhada à parte com a tabela vazia, e o
+// que fica até o pé recebe linhas de dois documentos. As demais só têm o
+// cabeçalho e a continuação. Devolve também quantas linhas a tabela tem na
+// primeira folha e nas demais: as que sobram saem em branco, até o pé, como nos
+// modelos do manual.
+func paginarDocumentos(c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) ([][]docOrig, [2]int, error) {
 	docs := documentosOriginarios(c)
 
-	altura := pdf.AlturaA4
-	if opc.Orientacao == Paisagem {
-		altura = pdf.LarguraA4
+	rascunho := pdf.Novo()
+	pg := novaFolha(rascunho, opc)
+	m := medidasDe(pg)
+	fim := desenharPrimeiraFolhaCTe(pg, m, c, prot, opc, nil, 1, 1)
+	if err := cabeNaFolha(fim, m); err != nil {
+		return nil, [2]int{}, err
 	}
-	// Espaço reservado aos demais blocos, em milímetros.
-	const reservadoPrimeira = 185
-	const reservadoDemais = 55
-	const rodape = 40
+	// A tabela vazia já ocupa uma linha; o que sobra vira linhas a mais.
+	naPrimeira := 2 * (1 + max(int((m.altura-m.margem-fim)/alturaDocOrig), 0))
 
-	naPrimeira := max(int((altura-reservadoPrimeira-rodape)/alturaDocOrig), 1)
-	nasDemais := max(int((altura-reservadoDemais-rodape)/alturaDocOrig), 1)
+	pg2 := novaFolha(rascunho, opc)
+	topo := desenharCabecalhoCTe(pg2, m, c, prot, opc, 2, 2, m.margem) + 3.4*2
+	nasDemais := 2 * max(int((m.altura-m.margem-topo)/alturaDocOrig), 1)
 
-	if len(docs) == 0 {
-		return [][]docOrig{nil}
+	linhas := [2]int{naPrimeira / 2, nasDemais / 2}
+	if len(docs) <= naPrimeira {
+		return [][]docOrig{docs}, linhas, nil
 	}
-
-	var paginas [][]docOrig
-	corte := min(naPrimeira, len(docs))
-	paginas = append(paginas, docs[:corte])
-	for corte < len(docs) {
-		fim := min(corte+nasDemais, len(docs))
-		paginas = append(paginas, docs[corte:fim])
-		corte = fim
+	paginas := [][]docOrig{docs[:naPrimeira]}
+	for corte := naPrimeira; corte < len(docs); corte += nasDemais {
+		paginas = append(paginas, docs[corte:min(corte+nasDemais, len(docs))])
 	}
-	return paginas
+	return paginas, linhas, nil
 }
 
 // documentosOriginarios achata as três listas de documentos transportados em
-// uma só, para que a tabela do DACTE tenha um formato único.
+// uma só, nas colunas do manual: tipo, CNPJ/CPF do emitente, série e número.
 func documentosOriginarios(c *cte.CTe) []docOrig {
 	norm := c.InfCte.InfCTeNorm
 	if norm == nil || norm.InfDoc == nil {
@@ -115,57 +131,49 @@ func documentosOriginarios(c *cte.CTe) []docOrig {
 
 	var docs []docOrig
 	for _, d := range norm.InfDoc.InfNFe {
-		doc := docOrig{tipo: "NF-e", chave: chaveFormatada(d.Chave)}
+		doc := docOrig{tipo: "NF-e"}
 		// A chave carrega o emitente, a série e o número; aproveitá-los evita
 		// exigir do chamador dados que ele já informou uma vez.
 		if p, err := chave.Parse(d.Chave); err == nil {
 			doc.emitente = validacao.FormatarCNPJ(p.CNPJ)
 			doc.numero = fmt.Sprintf("%03d / %09d", p.Serie, p.Numero)
+		} else {
+			doc.numero = d.Chave
 		}
 		docs = append(docs, doc)
 	}
 	for _, d := range norm.InfDoc.InfNF {
-		docs = append(docs, docOrig{
-			tipo:   "NF mod. " + d.Mod,
-			numero: d.Serie + " / " + d.NDoc,
-			chave:  "EMISSÃO " + dataSimples(d.DEmi) + " — VALOR R$ " + moeda(d.VNF),
-		})
+		docs = append(docs, docOrig{tipo: "NF mod. " + d.Mod, numero: d.Serie + " / " + d.NDoc})
 	}
 	for _, d := range norm.InfDoc.InfOutros {
-		descricao := d.DescOutros
-		if descricao == "" {
-			descricao = "OUTROS"
+		tipo := "OUTROS"
+		if d.DescOutros != "" {
+			tipo = d.DescOutros
 		}
-		docs = append(docs, docOrig{
-			tipo:   "TP " + d.TpDoc,
-			numero: d.NDoc,
-			chave:  descricao,
-		})
+		docs = append(docs, docOrig{tipo: tipo, numero: d.NDoc})
 	}
 	return docs
 }
 
-// desenharCanhotoCTe imprime o recibo de entrega no topo da primeira folha.
+// desenharCanhotoCTe imprime o recibo de entrega no topo da primeira folha, com
+// os campos do modelo do manual.
 func desenharCanhotoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
 	const altura = 15
-	larguraRecibo := m.util * 0.82
+	larguraRecibo := m.util * 0.84
 
 	pg.Retangulo(m.margem, y, larguraRecibo, altura, 0.1)
 	pg.Texto(m.margem+1, y+1,
-		"DECLARO QUE RECEBI OS VOLUMES DESTE CONHECIMENTO EM PERFEITO ESTADO, "+
+		"DECLARO QUE RECEBI OS VOLUMES DESTE CONHECIMENTO EM PERFEITO ESTADO "+
 			"PELO QUE DOU POR CUMPRIDO O PRESENTE CONTRATO DE TRANSPORTE",
 		miudo)
 
 	meio := y + 5
-	pg.Linha(m.margem, meio, m.margem+larguraRecibo, meio, 0.1)
-
 	colunas := []struct {
 		nome    string
 		largura float64
 	}{
-		{"NOME", 0.34},
-		{"ASSINATURA / CARIMBO", 0.34},
-		{"TÉRMINO DA PRESTAÇÃO — DATA / HORA", 0.32},
+		{"NOME", 0.24}, {"RG", 0.12}, {"ASSINATURA / CARIMBO", 0.24},
+		{"INÍCIO DA PRESTAÇÃO - DATA / HORA", 0.20}, {"TÉRMINO DA PRESTAÇÃO - DATA / HORA", 0.20},
 	}
 	cursor := m.margem
 	for _, col := range colunas {
@@ -175,7 +183,6 @@ func desenharCanhotoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float6
 		cursor += largura
 	}
 
-	// Bloco lateral com a identificação do conhecimento.
 	x := m.margem + larguraRecibo
 	largura := m.util - larguraRecibo
 	pg.Retangulo(x, y, largura, altura, 0.1)
@@ -183,7 +190,7 @@ func desenharCanhotoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float6
 	pg.TextoCentralizado(x, largura, y+6, fmt.Sprintf("Nº %09d", c.InfCte.Ide.NCT), valorForte)
 	pg.TextoCentralizado(x, largura, y+10.5, fmt.Sprintf("SÉRIE %03d", c.InfCte.Ide.Serie), valorForte)
 
-	// Linha pontilhada de corte.
+	// Linha tracejada de corte.
 	corte := y + altura + 1.5
 	for cursor := m.margem; cursor < m.margem+m.util; cursor += 3 {
 		pg.Linha(cursor, corte, cursor+1.5, corte, 0.1)
@@ -191,69 +198,82 @@ func desenharCanhotoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float6
 	return corte + 2
 }
 
-// desenharCabecalhoCTe imprime o emitente, o bloco central e a chave de acesso
-// com o código de barras.
-func desenharCabecalhoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, prot *cte.ProtCTe, folha, folhas int, y float64) float64 {
-	const altura = 34
+// linhasDoEmitente são as linhas do emitente no cabeçalho: endereço completo,
+// telefone e documentos (§2.6).
+func linhasDoEmitente(nomeFantasia string, end cte.EnderecoEmitente, cnpj, cpf, ie string) []string {
+	linhas := []string{enderecoEmUmaLinha(end.XLgr, end.Nro, end.XCpl)}
+	linhas = append(linhas,
+		end.XBairro+" - CEP: "+validacao.FormatarCEP(end.CEP),
+		end.XMun+" - "+end.UF,
+	)
+	if end.Fone != "" {
+		linhas = append(linhas, "FONE: "+end.Fone)
+	}
+	linhas = append(linhas, "CNPJ/CPF: "+formatarDocumento(cnpj, cpf)+"   IE: "+ie)
+	if nomeFantasia != "" {
+		linhas = append([]string{nomeFantasia}, linhas...)
+	}
+	return linhas
+}
+
+// situacaoCTe é o aviso da área variável (§2.20): homologação, cancelado, sem
+// protocolo ou contingência.
+func situacaoCTe(tpAmb cte.Ambiente, tpEmis cte.TipoEmissao, autorizado bool, opc Opcoes, nomeDoc string) string {
+	homologacao := opc.Homologacao || tpAmb == cte.Homologacao
+	switch {
+	case opc.Cancelada && homologacao:
+		return nomeDoc + " CANCELADO – EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO"
+	case opc.Cancelada:
+		return nomeDoc + " CANCELADO"
+	case homologacao:
+		return "EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO – SEM VALOR FISCAL"
+	case tpEmis.Contingencia():
+		// Em contingência o documento é impresso antes da autorização, que é para isso que ela existe.
+		return "EMITIDO EM CONTINGÊNCIA"
+	case !autorizado:
+		return "DOCUMENTO SEM PROTOCOLO DE AUTORIZAÇÃO – SEM VALOR FISCAL"
+	}
+	return ""
+}
+
+// desenharCabecalhoCTe imprime o cabeçalho, que se repete em toda folha, e as
+// linhas do tipo do conhecimento e da natureza da operação.
+func desenharCabecalhoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, prot *cte.ProtCTe, opc Opcoes, folha, folhas int, y float64) float64 {
+	ide := &c.InfCte.Ide
 	emit := &c.InfCte.Emit
-	larguraEmit := m.util * 0.36
-	larguraCentro := m.util * 0.24
-	larguraChave := m.util - larguraEmit - larguraCentro
-
-	// Emitente.
-	pg.Retangulo(m.margem, y, larguraEmit, altura, 0.1)
-	pg.TextoCentralizado(m.margem, larguraEmit, y+2,
-		pdf.Encurtar(emit.XNome, pdf.Negrito, 7.5, larguraEmit-2),
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7.5})
-	linhas := []string{
-		enderecoEmUmaLinha(emit.EnderEmit.XLgr, emit.EnderEmit.Nro, emit.EnderEmit.XCpl),
-		emit.EnderEmit.XBairro + " - CEP: " + validacao.FormatarCEP(emit.EnderEmit.CEP),
-		emit.EnderEmit.XMun + " - " + emit.EnderEmit.UF,
-		"CNPJ/CPF: " + formatarDocumento(emit.CNPJ, emit.CPF),
-		"IE: " + emit.IE,
+	suframa := ""
+	if d := c.InfCte.Dest; d != nil {
+		suframa = d.ISUF
 	}
-	for i, linha := range linhas {
-		pg.TextoCentralizado(m.margem, larguraEmit, y+7+float64(i)*3.4,
-			pdf.Encurtar(linha, pdf.Normal, 5.5, larguraEmit-2),
-			pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5})
+	qrCode := ""
+	if c.InfCTeSupl != nil {
+		qrCode = c.InfCTeSupl.QrCodCTe
 	}
+	y = desenharIdentificacao(pg, m, identificacao{
+		sigla: "DACTE", nome1: "Documento Auxiliar do Conhecimento", nome2: "de Transporte Eletrônico",
+		modal:    "MODAL " + strings.ToUpper(ide.Modal.Descricao()),
+		emitNome: emit.XNome, emitLinhas: linhasDoEmitente(emit.XFant, emit.EnderEmit, emit.CNPJ, emit.CPF, emit.IE),
+		modelo: string(ide.Mod), serie: fmt.Sprintf("%03d", ide.Serie), numero: fmt.Sprintf("%09d", ide.NCT),
+		emissao: dataHora(ide.DhEmi), suframa: suframa, folha: folha, folhas: folhas,
+		chave: c.Chave(), protocolo: protocoloCTeDescrito(prot), consulta: URLConsultaCTe, qrCode: qrCode,
+		situacao: situacaoCTe(ide.TpAmb, ide.TpEmis, prot != nil && prot.Autorizado(), opc, "CT-e"),
+	}, y)
 
-	// Bloco central.
-	x := m.margem + larguraEmit
-	pg.Retangulo(x, y, larguraCentro, altura, 0.1)
-	pg.TextoCentralizado(x, larguraCentro, y+1.5, "DACTE", titulo)
-	pg.TextoCentralizado(x, larguraCentro, y+6, "Documento Auxiliar do Conhecimento", miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+9, "de Transporte Eletrônico", miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+13,
-		"MODAL "+strings.ToUpper(c.InfCte.Ide.Modal.Descricao()),
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6})
-	pg.TextoCentralizado(x, larguraCentro, y+17.5,
-		fmt.Sprintf("MODELO %s   SÉRIE %03d", c.InfCte.Ide.Mod, c.InfCte.Ide.Serie), miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+21, fmt.Sprintf("Nº %09d", c.InfCte.Ide.NCT), valorForte)
-	pg.TextoCentralizado(x, larguraCentro, y+25.5, "EMISSÃO "+dataHora(c.InfCte.Ide.DhEmi), miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+29, fmt.Sprintf("FOLHA %d de %d", folha, folhas), miudo)
-
-	// Chave de acesso e código de barras.
-	x += larguraCentro
-	pg.Retangulo(x, y, larguraChave, 16, 0.1)
-	if ch := c.Chave(); len(ch) == 44 {
-		if err := pg.CodigoDeBarras(x+2, y+2, larguraChave-4, 11, ch); err != nil {
-			pg.TextoCentralizado(x, larguraChave, y+6, "código de barras indisponível", miudo)
-		}
+	globalizado := "NÃO"
+	if ide.IndGlobalizado == "1" {
+		globalizado = "SIM"
 	}
-	caixaCentro(pg, x, y+16, larguraChave, 8, "CHAVE DE ACESSO",
-		chaveFormatada(c.Chave()), pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6})
-	caixaCentro(pg, x, y+24, larguraChave, altura-24, "PROTOCOLO DE AUTORIZAÇÃO DE USO",
-		protocoloCTeDescrito(prot), valor)
-	y += altura
-
-	// Natureza da prestação e CFOP.
-	caixa(pg, m.margem, y, m.util*0.14, 7, "CFOP", c.InfCte.Ide.CFOP, valor)
-	caixa(pg, m.margem+m.util*0.14, y, m.util*0.56, 7,
-		"NATUREZA DA PRESTAÇÃO", c.InfCte.Ide.NatOp, valor)
-	caixa(pg, m.margem+m.util*0.70, y, m.util*0.30, 7,
-		"TIPO DO CT-E", tipoDoCTe(c.InfCte.Ide.TpCTe), valor)
-	return y + 7 + 1.5
+	infGlobalizado := ""
+	if n := c.InfCte.InfCTeNorm; n != nil && n.InfGlobalizado != nil {
+		infGlobalizado = n.InfGlobalizado.XObs
+	}
+	caixa(pg, m.margem, y, m.util*0.22, 7, "TIPO DO CT-e", tipoDoCTe(ide.TpCTe), valor)
+	caixa(pg, m.margem+m.util*0.22, y, m.util*0.26, 7, "TIPO DO SERVIÇO", tipoDoServico(ide.TpServ), valor)
+	caixa(pg, m.margem+m.util*0.48, y, m.util*0.14, 7, "CT-e GLOBALIZADO", globalizado, valor)
+	caixa(pg, m.margem+m.util*0.62, y, m.util*0.38, 7, "INF. DO CT-e GLOBALIZADO", infGlobalizado, valor)
+	y += 7
+	caixa(pg, m.margem, y, m.util, 7, "CFOP - NATUREZA DA OPERAÇÃO", ide.CFOP+" - "+ide.NatOp, valor)
+	return y + 7
 }
 
 func protocoloCTeDescrito(prot *cte.ProtCTe) string {
@@ -295,21 +315,11 @@ func tipoDoServico(t cte.TipoServico) string {
 	}
 }
 
-// desenharPrestacaoCTe imprime o tipo do serviço e os extremos da prestação.
+// desenharPrestacaoCTe imprime os extremos da prestação.
 func desenharPrestacaoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
 	ide := &c.InfCte.Ide
-
-	caixa(pg, m.margem, y, m.util*0.30, 7, "TIPO DO SERVIÇO", tipoDoServico(ide.TpServ), valor)
-	caixa(pg, m.margem+m.util*0.30, y, m.util*0.35, 7,
-		"TOMADOR DO SERVIÇO", nomeDoTomador(c), valor)
-	caixa(pg, m.margem+m.util*0.65, y, m.util*0.35, 7,
-		"MUNICÍPIO DE ENVIO", ide.XMunEnv+" - "+ide.UFEnv, valor)
-	y += 7
-
-	caixa(pg, m.margem, y, m.util*0.5, 7,
-		"INÍCIO DA PRESTAÇÃO", ide.XMunIni+" - "+ide.UFIni, valor)
-	caixa(pg, m.margem+m.util*0.5, y, m.util*0.5, 7,
-		"TÉRMINO DA PRESTAÇÃO", ide.XMunFim+" - "+ide.UFFim, valor)
+	caixa(pg, m.margem, y, m.util*0.5, 7, "INÍCIO DA PRESTAÇÃO", ide.XMunIni+" - "+ide.UFIni, valor)
+	caixa(pg, m.margem+m.util*0.5, y, m.util*0.5, 7, "TÉRMINO DA PRESTAÇÃO", ide.XMunFim+" - "+ide.UFFim, valor)
 	return y + 7 + 1.5
 }
 
@@ -317,40 +327,36 @@ func desenharPrestacaoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) floa
 // quatro papéis têm tipos distintos no modelo, porque o esquema nomeia o
 // endereço de cada um de um jeito; aqui eles voltam a ser um só.
 type parte struct {
-	nome, documento, ie, fone, email string
-	endereco                         *cte.Endereco
+	nome, documento, ie, fone string
+	endereco                  *cte.Endereco
 }
 
 func parteDoRemetente(r *cte.Rem) *parte {
 	if r == nil {
 		return nil
 	}
-	return &parte{nome: r.XNome, documento: formatarDocumento(r.CNPJ, r.CPF),
-		ie: r.IE, fone: r.Fone, email: r.Email, endereco: r.EnderReme}
+	return &parte{nome: r.XNome, documento: formatarDocumento(r.CNPJ, r.CPF), ie: r.IE, fone: r.Fone, endereco: r.EnderReme}
 }
 
 func parteDoExpedidor(e *cte.Exped) *parte {
 	if e == nil {
 		return nil
 	}
-	return &parte{nome: e.XNome, documento: formatarDocumento(e.CNPJ, e.CPF),
-		ie: e.IE, fone: e.Fone, email: e.Email, endereco: e.EnderExped}
+	return &parte{nome: e.XNome, documento: formatarDocumento(e.CNPJ, e.CPF), ie: e.IE, fone: e.Fone, endereco: e.EnderExped}
 }
 
 func parteDoRecebedor(r *cte.Receb) *parte {
 	if r == nil {
 		return nil
 	}
-	return &parte{nome: r.XNome, documento: formatarDocumento(r.CNPJ, r.CPF),
-		ie: r.IE, fone: r.Fone, email: r.Email, endereco: r.EnderReceb}
+	return &parte{nome: r.XNome, documento: formatarDocumento(r.CNPJ, r.CPF), ie: r.IE, fone: r.Fone, endereco: r.EnderReceb}
 }
 
 func parteDoDestinatario(d *cte.Dest) *parte {
 	if d == nil {
 		return nil
 	}
-	return &parte{nome: d.XNome, documento: formatarDocumento(d.CNPJ, d.CPF),
-		ie: d.IE, fone: d.Fone, email: d.Email, endereco: d.EnderDest}
+	return &parte{nome: d.XNome, documento: formatarDocumento(d.CNPJ, d.CPF), ie: d.IE, fone: d.Fone, endereco: d.EnderDest}
 }
 
 // tomador resolve quem paga o frete, seja pelo apontamento do toma3 para uma
@@ -358,8 +364,7 @@ func parteDoDestinatario(d *cte.Dest) *parte {
 func tomador(c *cte.CTe) *parte {
 	ide := &c.InfCte.Ide
 	if t := ide.Toma4; t != nil {
-		return &parte{nome: t.XNome, documento: formatarDocumento(t.CNPJ, t.CPF),
-			ie: t.IE, fone: t.Fone, email: t.Email, endereco: t.EnderToma}
+		return &parte{nome: t.XNome, documento: formatarDocumento(t.CNPJ, t.CPF), ie: t.IE, fone: t.Fone, endereco: t.EnderToma}
 	}
 	if ide.Toma3 == nil {
 		return nil
@@ -378,81 +383,54 @@ func tomador(c *cte.CTe) *parte {
 	}
 }
 
-func nomeDoTomador(c *cte.CTe) string {
-	if t := tomador(c); t != nil {
-		return t.nome
-	}
-	return "NÃO IDENTIFICADO"
-}
-
-// desenharPartesCTe imprime remetente, destinatário, expedidor, recebedor e
-// tomador, dois por linha.
+// desenharPartesCTe imprime remetente e destinatário, expedidor e recebedor
+// (quando o documento os traz, §2.7) e o tomador.
 func desenharPartesCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
-	pares := [][2]struct {
-		rotulo string
-		p      *parte
-	}{
-		{
-			{"REMETENTE", parteDoRemetente(c.InfCte.Rem)},
-			{"DESTINATÁRIO", parteDoDestinatario(c.InfCte.Dest)},
-		},
-		{
-			{"EXPEDIDOR", parteDoExpedidor(c.InfCte.Exped)},
-			{"RECEBEDOR", parteDoRecebedor(c.InfCte.Receb)},
-		},
-	}
-
 	metade := m.util / 2
-	for _, linha := range pares {
-		if linha[0].p == nil && linha[1].p == nil {
-			continue
-		}
-		desenharParte(pg, m.margem, y, metade, linha[0].rotulo, linha[0].p)
-		desenharParte(pg, m.margem+metade, y, metade, linha[1].rotulo, linha[1].p)
-		y += alturaParte
-	}
+	desenharParte(pg, m.margem, y, metade, "REMETENTE", parteDoRemetente(c.InfCte.Rem))
+	desenharParte(pg, m.margem+metade, y, metade, "DESTINATÁRIO", parteDoDestinatario(c.InfCte.Dest))
+	y += alturaParte
 
-	if t := tomador(c); t != nil {
-		desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", t)
+	exped, receb := parteDoExpedidor(c.InfCte.Exped), parteDoRecebedor(c.InfCte.Receb)
+	if exped != nil || receb != nil {
+		desenharParte(pg, m.margem, y, metade, "EXPEDIDOR", exped)
+		desenharParte(pg, m.margem+metade, y, metade, "RECEBEDOR", receb)
 		y += alturaParte
 	}
-	return y + 1.5
+	desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", tomador(c))
+	return y + alturaParte + 1.5
 }
 
 // alturaParte é a altura do quadro de um participante: três linhas de campos.
 const alturaParte = 21
 
-// desenharParte desenha um participante em três linhas de campos, em alturaParte.
+// desenharParte desenha um participante em três linhas de campos: nome e
+// documento; endereço, bairro e país; município, UF, CEP, IE e telefone.
 func desenharParte(pg *pdf.Pagina, x, y, largura float64, nome string, p *parte) {
-	const altura = alturaParte
-	pg.Retangulo(x, y, largura, altura, 0.1)
+	pg.Retangulo(x, y, largura, alturaParte, 0.1)
 	pg.RetanguloPreenchido(x, y, largura, 3.4, 0.88)
 	pg.Texto(x+0.8, y+0.4, nome, pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-
 	if p == nil {
 		pg.Texto(x+0.8, y+6, "NÃO INFORMADO", miudo)
 		return
 	}
-
 	var end cte.Endereco
 	if p.endereco != nil {
 		end = *p.endereco
 	}
-
 	interna := y + 3.4
 	caixa(pg, x, interna, largura*0.62, 6, "NOME / RAZÃO SOCIAL", p.nome, valor)
 	caixa(pg, x+largura*0.62, interna, largura*0.38, 6, "CNPJ / CPF", p.documento, valor)
 	interna += 6
-
-	caixa(pg, x, interna, largura*0.62, 6, "ENDEREÇO",
-		enderecoEmUmaLinha(end.XLgr, end.Nro, end.XCpl), valor)
-	caixa(pg, x+largura*0.62, interna, largura*0.38, 6, "BAIRRO", end.XBairro, valor)
+	caixa(pg, x, interna, largura*0.50, 6, "ENDEREÇO", enderecoEmUmaLinha(end.XLgr, end.Nro, end.XCpl), valor)
+	caixa(pg, x+largura*0.50, interna, largura*0.30, 6, "BAIRRO", end.XBairro, valor)
+	caixa(pg, x+largura*0.80, interna, largura*0.20, 6, "PAÍS", end.XPais, valor)
 	interna += 6
-
-	caixa(pg, x, interna, largura*0.34, 6, "MUNICÍPIO", end.XMun, valor)
-	caixa(pg, x+largura*0.34, interna, largura*0.08, 6, "UF", end.UF, valor)
-	caixa(pg, x+largura*0.42, interna, largura*0.20, 6, "CEP", validacao.FormatarCEP(end.CEP), valor)
-	caixa(pg, x+largura*0.62, interna, largura*0.38, 6, "INSCRIÇÃO ESTADUAL", p.ie, valor)
+	caixa(pg, x, interna, largura*0.28, 6, "MUNICÍPIO", end.XMun, valor)
+	caixa(pg, x+largura*0.28, interna, largura*0.07, 6, "UF", end.UF, valor)
+	caixa(pg, x+largura*0.35, interna, largura*0.17, 6, "CEP", validacao.FormatarCEP(end.CEP), valor)
+	caixa(pg, x+largura*0.52, interna, largura*0.26, 6, "INSCRIÇÃO ESTADUAL", p.ie, valor)
+	caixa(pg, x+largura*0.78, interna, largura*0.22, 6, "FONE", p.fone, valor)
 }
 
 // desenharCargaCTe imprime o produto predominante e as quantidades.
@@ -461,25 +439,21 @@ func desenharCargaCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 
 	if norm == nil {
 		return y
 	}
-	carga := &norm.InfCarga
+	return desenharCarga(pg, m, &norm.InfCarga, y)
+}
 
+// desenharCarga imprime o produto predominante, o valor e as quantidades da carga, em até cinco colunas por linha.
+func desenharCarga(pg *pdf.Pagina, m medidas, carga *cte.InfCarga, y float64) float64 {
 	valorCarga := ""
 	if carga.VCarga != nil {
 		valorCarga = moeda(*carga.VCarga)
 	}
 	caixa(pg, m.margem, y, m.util*0.40, 7, "PRODUTO PREDOMINANTE", carga.ProPred, valor)
-	caixa(pg, m.margem+m.util*0.40, y, m.util*0.40, 7,
-		"OUTRAS CARACTERÍSTICAS DA CARGA", carga.XOutCat, valor)
-	caixaDireita(pg, m.margem+m.util*0.80, y, m.util*0.20, 7,
-		"VALOR TOTAL DA CARGA", valorCarga, valor)
+	caixa(pg, m.margem+m.util*0.40, y, m.util*0.40, 7, "OUTRAS CARACTERÍSTICAS DA CARGA", carga.XOutCat, valor)
+	caixaDireita(pg, m.margem+m.util*0.80, y, m.util*0.20, 7, "VALOR TOTAL DA CARGA", valorCarga, valor)
 	y += 7
 
-	if len(carga.InfQ) == 0 {
-		return y + 1.5
-	}
-
-	// As quantidades vão em até três colunas por linha.
-	const porLinha = 3
+	const porLinha = 5
 	largura := m.util / porLinha
 	for i, q := range carga.InfQ {
 		coluna := i % porLinha
@@ -489,13 +463,13 @@ func desenharCargaCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 
 		caixaDireita(pg, m.margem+float64(coluna)*largura, y, largura, 7,
 			strings.ToUpper(q.TpMed)+" ("+unidadeCTe(q.CUnid)+")", quantidade(q.QCarga), valor)
 	}
-	// Fecha a última linha, completando as colunas que sobraram.
-	if resto := len(carga.InfQ) % porLinha; resto != 0 {
-		for coluna := resto; coluna < porLinha; coluna++ {
+	if n := len(carga.InfQ); n > 0 {
+		for coluna := n % porLinha; coluna > 0 && coluna < porLinha; coluna++ {
 			pg.Retangulo(m.margem+float64(coluna)*largura, y, largura, 7, 0.1)
 		}
+		y += 7
 	}
-	return y + 7 + 1.5
+	return y + 1.5
 }
 
 func unidadeCTe(u cte.UnidadeDeMedida) string {
@@ -517,38 +491,27 @@ func unidadeCTe(u cte.UnidadeDeMedida) string {
 	}
 }
 
-// desenharValoresCTe imprime os componentes do frete e os totais.
-func desenharValoresCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
-	pg.RetanguloPreenchido(m.margem, y, m.util, 3.4, 0.88)
-	pg.Retangulo(m.margem, y, m.util, 3.4, 0.1)
-	pg.Texto(m.margem+0.8, y+0.4, "COMPONENTES DO VALOR DA PRESTAÇÃO DO SERVIÇO",
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-	y += 3.4
-
-	comps := c.InfCte.VPrest.Comp
-	const porLinha = 3
+// desenharValoresCTe imprime os componentes do frete, em quatro colunas como
+// no manual, e os totais.
+func desenharValoresCTe(pg *pdf.Pagina, m medidas, v cte.VPrest, y float64) float64 {
+	y = cabecalhoDeSecao(pg, m, y, "COMPONENTES DO VALOR DA PRESTAÇÃO DO SERVIÇO")
+	const porLinha = 4
 	largura := m.util / porLinha
-	if len(comps) > 0 {
-		for i, comp := range comps {
-			coluna := i % porLinha
-			if coluna == 0 && i > 0 {
-				y += 7
-			}
-			caixaDireita(pg, m.margem+float64(coluna)*largura, y, largura, 7,
-				strings.ToUpper(comp.XNome), moeda(comp.VComp), valor)
+	for i, comp := range v.Comp {
+		coluna := i % porLinha
+		if coluna == 0 && i > 0 {
+			y += 7
 		}
-		if resto := len(comps) % porLinha; resto != 0 {
-			for coluna := resto; coluna < porLinha; coluna++ {
-				pg.Retangulo(m.margem+float64(coluna)*largura, y, largura, 7, 0.1)
-			}
+		caixaDireita(pg, m.margem+float64(coluna)*largura, y, largura, 7, strings.ToUpper(comp.XNome), moeda(comp.VComp), valor)
+	}
+	if n := len(v.Comp); n > 0 {
+		for coluna := n % porLinha; coluna > 0 && coluna < porLinha; coluna++ {
+			pg.Retangulo(m.margem+float64(coluna)*largura, y, largura, 7, 0.1)
 		}
 		y += 7
 	}
-
-	caixaDireita(pg, m.margem, y, m.util*0.5, 7,
-		"VALOR TOTAL DA PRESTAÇÃO DO SERVIÇO", moeda(c.InfCte.VPrest.VTPrest), valorForte)
-	caixaDireita(pg, m.margem+m.util*0.5, y, m.util*0.5, 7,
-		"VALOR A RECEBER", moeda(c.InfCte.VPrest.VRec), valorForte)
+	caixaDireita(pg, m.margem, y, m.util*0.5, 7, "VALOR TOTAL DA PRESTAÇÃO DO SERVIÇO", moeda(v.VTPrest), valorForte)
+	caixaDireita(pg, m.margem+m.util*0.5, y, m.util*0.5, 7, "VALOR A RECEBER", moeda(v.VRec), valorForte)
 	return y + 7 + 1.5
 }
 
@@ -558,17 +521,15 @@ type impostoCTe struct {
 }
 
 // resumirICMS achata o grupo de ICMS preenchido em um conjunto único de
-// campos. Sem isto o bloco do imposto precisaria de sete variações de desenho.
-func resumirICMS(imp *cte.Imp) impostoCTe {
-	i := imp.ICMS
+// campos. O ICMS60 (substituição) entra nas mesmas colunas, pelo valor retido.
+func resumirICMS(i *cte.ICMS) impostoCTe {
 	switch {
 	case i.ICMS00 != nil:
 		return impostoCTe{cst: i.ICMS00.CST, base: moeda(i.ICMS00.VBC),
 			aliquota: percentual(i.ICMS00.PICMS), valor: moeda(i.ICMS00.VICMS)}
 	case i.ICMS20 != nil:
 		return impostoCTe{cst: i.ICMS20.CST, reducao: percentual(i.ICMS20.PRedBC),
-			base: moeda(i.ICMS20.VBC), aliquota: percentual(i.ICMS20.PICMS),
-			valor: moeda(i.ICMS20.VICMS)}
+			base: moeda(i.ICMS20.VBC), aliquota: percentual(i.ICMS20.PICMS), valor: moeda(i.ICMS20.VICMS)}
 	case i.ICMS45 != nil:
 		return impostoCTe{cst: i.ICMS45.CST}
 	case i.ICMS60 != nil:
@@ -598,27 +559,24 @@ func resumirICMS(imp *cte.Imp) impostoCTe {
 // percentual apresenta uma alíquota com duas casas.
 func percentual(d tipos.Decimal) string { return separarMilhar(d.ComCasas(2).String()) + "%" }
 
-// desenharImpostoCTe imprime o bloco de tributos.
-func desenharImpostoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
-	r := resumirICMS(&c.InfCte.Imp)
+// desenharImpostoCTe imprime o quadro do ICMS com os campos do manual.
+func desenharImpostoCTe(pg *pdf.Pagina, m medidas, imp *cte.Imp, y float64) float64 {
+	return desenharICMS(pg, m, &imp.ICMS, y)
+}
 
-	pg.RetanguloPreenchido(m.margem, y, m.util, 3.4, 0.88)
-	pg.Retangulo(m.margem, y, m.util, 3.4, 0.1)
-	pg.Texto(m.margem+0.8, y+0.4, "INFORMAÇÕES RELATIVAS AO IMPOSTO",
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-	y += 3.4
-
+func desenharICMS(pg *pdf.Pagina, m medidas, icms *cte.ICMS, y float64) float64 {
+	r := resumirICMS(icms)
+	y = cabecalhoDeSecao(pg, m, y, "INFORMAÇÕES RELATIVAS AO IMPOSTO")
 	campos := []struct {
 		nome, conteudo string
 		fracao         float64
 		direita        bool
 	}{
-		{"SITUAÇÃO TRIBUTÁRIA", situacaoTributaria(r.cst), 0.32, false},
+		{"CLASSIFICAÇÃO TRIBUTÁRIA DO SERVIÇO", situacaoTributaria(r.cst), 0.36, false},
 		{"BASE DE CÁLCULO", r.base, 0.17, true},
-		{"ALÍQUOTA ICMS", r.aliquota, 0.13, true},
+		{"ALÍQ. ICMS", r.aliquota, 0.12, true},
 		{"VALOR ICMS", r.valor, 0.17, true},
-		{"% RED. BC ICMS", r.reducao, 0.13, true},
-		{"ICMS ST", icmsUFFim(&c.InfCte.Imp), 0.08, true},
+		{"% RED. BC. CALC.", r.reducao, 0.18, true},
 	}
 	cursor := m.margem
 	for _, campo := range campos {
@@ -630,15 +588,37 @@ func desenharImpostoCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float6
 		}
 		cursor += largura
 	}
-	y += 7
+	return y + 7 + 1.5
+}
 
-	if ad := c.InfCte.Imp.InfAdFisco; ad != "" {
-		altura := pg.TextoQuebrado(m.margem+0.8, y+3.5, m.util-1.6, ad, miudo, 2) + 4.5
-		pg.Retangulo(m.margem, y, m.util, altura, 0.1)
-		pg.Texto(m.margem+0.8, y+0.5, "INFORMAÇÕES ADICIONAIS DE INTERESSE DO FISCO", rotulo)
-		y += altura
+// desenharIBSCBS imprime o quadro do IBS e da CBS, que o manual de 2022 ainda não
+// prevê: vem depois do imposto, só quando o documento traz o grupo.
+func desenharIBSCBS(pg *pdf.Pagina, m medidas, g *cte.IBSCBS, vTotDFe *tipos.Decimal, y float64) float64 {
+	if g == nil || g.GIBSCBS == nil {
+		return y
 	}
-	return y + 1.5
+	t := g.GIBSCBS
+	total := ""
+	if vTotDFe != nil {
+		total = moeda(*vTotDFe)
+	}
+	y = cabecalhoDeSecao(pg, m, y, "TRIBUTOS DA REFORMA TRIBUTÁRIA (IBS E CBS)")
+	campos := [][2]string{
+		{"CST / CLASSIF.", g.CST + " / " + g.CClassTrib},
+		{"BASE DE CÁLCULO", moeda(t.VBC)},
+		{"ALÍQ. IBS UF", percentual(t.GIBSUF.PIBSUF)},
+		{"IBS UF", moeda(t.GIBSUF.VIBSUF)},
+		{"ALÍQ. IBS MUN.", percentual(t.GIBSMun.PIBSMun)},
+		{"IBS MUN.", moeda(t.GIBSMun.VIBSMun)},
+		{"ALÍQ. CBS", percentual(t.GCBS.PCBS)},
+		{"CBS", moeda(t.GCBS.VCBS)},
+		{"TOTAL DO DOCUMENTO", total},
+	}
+	largura := m.util / float64(len(campos))
+	for i, c := range campos {
+		caixaDireita(pg, m.margem+float64(i)*largura, y, largura, 7, c[0], c[1], valor)
+	}
+	return y + 7 + 1.5
 }
 
 func situacaoTributaria(cst string) string {
@@ -658,32 +638,26 @@ func situacaoTributaria(cst string) string {
 	return cst
 }
 
-func icmsUFFim(imp *cte.Imp) string {
-	if imp.ICMSUFFim == nil {
-		return ""
-	}
-	return moeda(imp.ICMSUFFim.VICMSUFFim)
-}
-
-// desenharDocumentosCTe imprime a tabela de documentos originários.
-func desenharDocumentosCTe(pg *pdf.Pagina, m medidas, docs []docOrig, y float64) float64 {
+// desenharDocumentosCTe imprime a tabela de documentos originários em duas
+// colunas lado a lado, como no modelo do manual (p.27 e 28), com pelo menos
+// minLinhas linhas: as que sobram saem em branco.
+func desenharDocumentosCTe(pg *pdf.Pagina, m medidas, docs []docOrig, minLinhas int, y float64) float64 {
 	colunas := []struct {
 		nome   string
 		fracao float64
 	}{
-		{"TIPO DOC.", 0.10},
-		{"CNPJ/CPF DO EMITENTE", 0.18},
-		{"SÉRIE / NÚMERO", 0.16},
-		{"CHAVE DE ACESSO / OBSERVAÇÃO", 0.56},
+		{"TP DOC.", 0.22}, {"CNPJ/CPF EMITENTE", 0.40}, {"SÉRIE / Nº DOCUMENTO", 0.38},
 	}
-
-	pg.RetanguloPreenchido(m.margem, y, m.util, 3.4, 0.88)
-	cursor := m.margem
-	for _, col := range colunas {
-		largura := m.util * col.fracao
-		pg.Retangulo(cursor, y, largura, 3.4, 0.1)
-		pg.Texto(cursor+0.8, y+0.4, col.nome, pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-		cursor += largura
+	metade := m.util / 2
+	y = cabecalhoDeSecao(pg, m, y, "DOCUMENTOS ORIGINÁRIOS")
+	for lado := 0; lado < 2; lado++ {
+		cursor := m.margem + float64(lado)*metade
+		for _, col := range colunas {
+			largura := metade * col.fracao
+			pg.Retangulo(cursor, y, largura, 3.4, 0.1)
+			pg.Texto(cursor+0.8, y+0.4, col.nome, rotulo)
+			cursor += largura
+		}
 	}
 	y += 3.4
 
@@ -692,53 +666,123 @@ func desenharDocumentosCTe(pg *pdf.Pagina, m medidas, docs []docOrig, y float64)
 		pg.Texto(m.margem+0.8, y+0.6, "SEM DOCUMENTOS ORIGINÁRIOS RELACIONADOS", miudo)
 		return y + alturaDocOrig + 1.5
 	}
-
-	for _, d := range docs {
-		valores := []string{d.tipo, d.emitente, d.numero, d.chave}
-		cursor = m.margem
-		for i, col := range colunas {
-			largura := m.util * col.fracao
-			pg.Retangulo(cursor, y, largura, alturaDocOrig, 0.1)
-			pg.Texto(cursor+0.8, y+0.6,
-				pdf.Encurtar(valores[i], pdf.Normal, 5.5, largura-1.6),
-				pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5})
-			cursor += largura
+	celula := pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5}
+	for i := 0; i < max(len(docs), 2*minLinhas); i += 2 {
+		for lado := 0; lado < 2; lado++ {
+			cursor := m.margem + float64(lado)*metade
+			var valores [3]string
+			if i+lado < len(docs) {
+				d := docs[i+lado]
+				valores = [3]string{d.tipo, d.emitente, d.numero}
+			}
+			for j, col := range colunas {
+				largura := metade * col.fracao
+				pg.Retangulo(cursor, y, largura, alturaDocOrig, 0.1)
+				pg.Texto(cursor+0.8, y+0.6, pdf.Encurtar(valores[j], celula.Fonte, celula.Tamanho, largura-1.6), celula)
+				cursor += largura
+			}
 		}
 		y += alturaDocOrig
 	}
 	return y + 1.5
 }
 
-// desenharRodapeCTe imprime as observações, o modal e os campos reservados.
-func desenharRodapeCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, opc Opcoes, y float64) float64 {
-	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfModal.Rodo != nil {
-		rodo := norm.InfModal.Rodo
-		caixa(pg, m.margem, y, m.util*0.3, 7, "RNTRC DA EMPRESA", rodo.RNTRC, valor)
-		caixa(pg, m.margem+m.util*0.3, y, m.util*0.7, 7,
-			"ORDENS DE COLETA ASSOCIADAS", ordensDeColeta(rodo.Occ), valor)
-		y += 7
+func fluxoDe(compl *cte.Compl) *cte.Fluxo {
+	if compl == nil {
+		return nil
 	}
+	return compl.Fluxo
+}
 
-	observacoes := observacoesDoCTe(c, opc)
-	altura := 12.0
-	if observacoes != "" {
-		if usada := pg.TextoQuebrado(m.margem+0.8, y+4, m.util-1.6, observacoes, miudo, 4) + 5; usada > altura {
-			altura = usada
+// desenharFluxo imprime a previsão do fluxo da carga (compl.fluxo), quando há.
+func desenharFluxo(pg *pdf.Pagina, m medidas, f *cte.Fluxo, y float64) float64 {
+	if f == nil {
+		return y
+	}
+	passagens := make([]string, 0, len(f.Pass))
+	for _, p := range f.Pass {
+		passagens = append(passagens, p.XPass)
+	}
+	y = cabecalhoDeSecao(pg, m, y, "PREVISÃO DO FLUXO DA CARGA")
+	caixa(pg, m.margem, y, m.util*0.25, 7, "SIGLA OU CÓDIGO INTERNO DA FILIAL/PORTO/ESTAÇÃO/AEROPORTO DE ORIGEM", f.XOrig, valor)
+	caixa(pg, m.margem+m.util*0.25, y, m.util*0.40, 7, "PASSAGEM", strings.Join(passagens, ", "), valor)
+	caixa(pg, m.margem+m.util*0.65, y, m.util*0.25, 7, "DESTINO", f.XDest, valor)
+	caixa(pg, m.margem+m.util*0.90, y, m.util*0.10, 7, "ROTA", f.XRota, valor)
+	return y + 7 + 1.5
+}
+
+// observacoesDoCTe junta as observações gerais do documento (§ quadro
+// Observações): características adicionais e xObs. O ObsCont vai para "Uso
+// exclusivo do emissor" e o ObsFisco para "Reservado ao fisco".
+func observacoesDoCTe(compl *cte.Compl) (gerais, emissor, fisco string) {
+	if compl == nil {
+		return "", "", ""
+	}
+	var partes []string
+	for _, campo := range []string{compl.XCaracAd, compl.XCaracSer, compl.XObs} {
+		if campo != "" {
+			partes = append(partes, campo)
 		}
 	}
-	pg.Retangulo(m.margem, y, m.util, altura, 0.1)
-	pg.Texto(m.margem+0.8, y+0.5, "OBSERVAÇÕES", rotulo)
-	y += altura
+	return strings.Join(partes, " | "), juntarObs(compl.ObsCont), juntarObs(compl.ObsFisco)
+}
 
-	caixa(pg, m.margem, y, m.util*0.5, 10, "USO EXCLUSIVO DO EMISSOR DO CT-E", "", valor)
-	caixa(pg, m.margem+m.util*0.5, y, m.util*0.5, 10, "RESERVADO AO FISCO", "", valor)
-	return y + 10
+func juntarObs(obs []cte.ObsCampo) string {
+	partes := make([]string, 0, len(obs))
+	for _, o := range obs {
+		partes = append(partes, o.XCampo+": "+o.XTexto)
+	}
+	return strings.Join(partes, " | ")
+}
+
+// desenharObservacoesCTe imprime observações, o modal rodoviário, o uso
+// exclusivo do emissor e o reservado ao fisco.
+func desenharObservacoesCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
+	gerais, emissor, fisco := observacoesDoCTe(c.InfCte.Compl)
+	y = quadroDeTexto(pg, m.margem, y, m.util, 10, "OBSERVAÇÕES", gerais, 4)
+	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfModal.Rodo != nil {
+		y = cabecalhoDeSecao(pg, m, y, "INFORMAÇÕES ESPECÍFICAS DO MODAL RODOVIÁRIO")
+		caixa(pg, m.margem, y, m.util, 7, "RNTRC DA EMPRESA", norm.InfModal.Rodo.RNTRC, valor)
+		y += 7
+	}
+	fimEmissor := quadroDeTexto(pg, m.margem, y, m.util*0.5, 10, "USO EXCLUSIVO DO EMISSOR DO CT-e", emissor, 3)
+	fimFisco := quadroDeTexto(pg, m.margem+m.util*0.5, y, m.util*0.5, 10, "RESERVADO AO FISCO", fisco, 3)
+	return max(fimEmissor, fimFisco) + 1.5
+}
+
+// desenharAdicionaisCTe imprime, depois do leiaute padrão, o que o documento
+// traz e o manual não prevê: ordens de coleta, partilha do ICMS e informação
+// adicional ao fisco.
+func desenharAdicionaisCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64 {
+	var partes []string
+	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfModal.Rodo != nil {
+		if occ := ordensDeColeta(norm.InfModal.Rodo.Occ); occ != "" {
+			partes = append(partes, "ORDENS DE COLETA: "+occ)
+		}
+	}
+	if p := partilhaICMS(&c.InfCte.Imp); p != "" {
+		partes = append(partes, p)
+	}
+	if ad := c.InfCte.Imp.InfAdFisco; ad != "" {
+		partes = append(partes, "INFORMAÇÕES ADICIONAIS DE INTERESSE DO FISCO: "+ad)
+	}
+	if len(partes) == 0 {
+		return y
+	}
+	return quadroDeTexto(pg, m.margem, y, m.util, 8, "INFORMAÇÕES ADICIONAIS", strings.Join(partes, " | "), 4)
+}
+
+// partilhaICMS descreve o ICMS de partilha com a UF de término (ICMSUFFim).
+func partilhaICMS(imp *cte.Imp) string {
+	p := imp.ICMSUFFim
+	if p == nil {
+		return ""
+	}
+	return fmt.Sprintf("PARTILHA DO ICMS: BC %s, ICMS UF FIM %s, ICMS UF INÍCIO %s, FCP %s",
+		moeda(p.VBCUFFim), moeda(p.VICMSUFFim), moeda(p.VICMSUFIni), moeda(p.VFCPUFFim))
 }
 
 func ordensDeColeta(occ []cte.Occ) string {
-	if len(occ) == 0 {
-		return ""
-	}
 	partes := make([]string, 0, len(occ))
 	for _, o := range occ {
 		if o.Serie != "" {
@@ -748,37 +792,4 @@ func ordensDeColeta(occ []cte.Occ) string {
 		partes = append(partes, fmt.Sprint(o.NOcc))
 	}
 	return strings.Join(partes, ", ")
-}
-
-func observacoesDoCTe(c *cte.CTe, opc Opcoes) string {
-	var partes []string
-	if compl := c.InfCte.Compl; compl != nil {
-		for _, campo := range []string{compl.XCaracAd, compl.XCaracSer, compl.XObs} {
-			if campo != "" {
-				partes = append(partes, campo)
-			}
-		}
-		for _, obs := range compl.ObsCont {
-			partes = append(partes, obs.XCampo+": "+obs.XTexto)
-		}
-	}
-	if opc.Mensagem != "" {
-		partes = append(partes, opc.Mensagem)
-	}
-	return strings.Join(partes, " | ")
-}
-
-// desenharTarjasCTe imprime os avisos de homologação, contingência e
-// cancelamento.
-func desenharTarjasCTe(pg *pdf.Pagina, c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) {
-	switch {
-	case opc.Cancelada:
-		tarja(pg, "CT-e CANCELADO")
-	case prot == nil || !prot.Autorizado():
-		tarja(pg, "SEM VALOR FISCAL")
-	case opc.Homologacao || c.InfCte.Ide.TpAmb == cte.Homologacao:
-		tarja(pg, "AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL")
-	case c.InfCte.Ide.TpEmis.Contingencia():
-		tarja(pg, "EMITIDO EM CONTINGÊNCIA")
-	}
 }

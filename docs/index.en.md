@@ -65,7 +65,7 @@ go get github.com/sisgt-sistemas/gonfe
 
 - :octicons-file-badge-24: **Auxiliary documents**
 
-    DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDFs, written in pure
+    DANFE, NFC-e receipt, DACTE, DACTE OS, Simplificado DACTE and DAMDFE as PDFs, written in pure
     Go with no graphics library.
 
     [:octicons-arrow-right-24: Auxiliary documents](danfe.md)
@@ -102,8 +102,9 @@ seven reais.
 the same names and in the same order. Checking them against the Manual de
 Orientação do Contribuinte is a matter of reading the two side by side.
 
-**No CGO, and almost no dependencies.** A single external dependency, for
-reading modern PKCS#12 files. The same binary runs on Linux, macOS and Windows,
+**No CGO, and almost no dependencies.** Two external dependencies, both pure Go:
+one for reading modern PKCS#12 files and `rsc.io/qr`, for the QR Code on the
+DACTE and the DAMDFE. The same binary runs on Linux, macOS and Windows,
 and compiles into a `scratch` container.
 
 **Bytes preserved when signing.** The signature is inserted into the document

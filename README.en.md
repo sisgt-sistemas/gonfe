@@ -43,8 +43,9 @@ and printed.
 
 ## Principles
 
-- **No heavy dependencies.** A single external dependency, for reading modern
-  PKCS#12 files. No CGO: the same binary runs on Linux, macOS and Windows.
+- **No heavy dependencies.** Two external dependencies, both pure Go: one for
+  reading modern PKCS#12 files and `rsc.io/qr`, for the QR Code on the DACTE
+  and the DAMDFE. No CGO: the same binary runs on Linux, macOS and Windows.
 - **No `float64` in a fiscal value.** Every monetary field uses a fixed-point
   decimal at the scale the layout demands. `0.1 + 0.2` gives exactly `0.3`.
 - **Faithful to the layout.** The structures mirror the XSD field by field and
@@ -181,7 +182,7 @@ canc, _ := evento.NovoCancelamento(evento.DadosCancelamento{
 | [`cteos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cteos) | CT-e Outros Serviços model 67: passengers, valuables and excess baggage |
 | [`ctesimp`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/ctesimp) | CT-e Simplificado (model 57): several deliveries for one payer in one document |
 | [`mdfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/mdfe) | Freight manifest model 58, with trip close-out |
-| [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDF |
+| [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, NFC-e receipt, DACTE, DACTE OS, Simplificado DACTE and DAMDFE as PDF |
 | [`dfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/dfe) | DF-e distribution: documents of interest to a CNPJ |
 | [`sefaz`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/sefaz) | Endpoints by state, SOAP 1.2 client with mutual TLS, and operations |
 | [`xmldsig`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/xmldsig) | Signing and verification in the SEFAZ profile |

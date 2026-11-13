@@ -1,7 +1,7 @@
 # Documentos auxiliares em PDF
 
 O pacote [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) gera os
-cinco documentos auxiliares em PDF.
+seis documentos auxiliares em PDF.
 
 | Documento auxiliar | Documento fiscal | Função | Formato |
 | --- | --- | --- | --- |
@@ -9,6 +9,7 @@ cinco documentos auxiliares em PDF.
 | Cupom | NFC-e, modelo 65 | `Gerar` ou `Cupom` | bobina |
 | DACTE | CT-e, modelo 57 | `GerarDACTE` ou `DACTE` | A4 |
 | DACTE OS | CT-e OS, modelo 67 | `GerarDACTEOS` ou `DACTEOS` | A4 |
+| DACTE do Simplificado | CT-e Simplificado, modelo 57 | `GerarDACTESimp` ou `DACTESimp` | A4 |
 | DAMDFE | MDF-e, modelo 58 | `GerarDAMDFE` ou `DAMDFE` | A4 |
 
 ```go
@@ -24,19 +25,21 @@ os.WriteFile("danfe.pdf", documento, 0o644)
 As funções `Gerar*` recebem o XML de distribuição — `nfeProc`, `cteProc`,
 `cteOSProc` ou `mdfeProc` — e cuidam da leitura. `Gerar` ainda escolhe entre
 DANFE e cupom pelo modelo: 55 vira DANFE, 65 vira cupom. Quando o documento já
-está interpretado em memória, chame `DANFE`, `Cupom`, `DACTE`, `DACTEOS` ou
-`DAMDFE` diretamente, passando o documento e o protocolo.
+está interpretado em memória, chame `DANFE`, `Cupom`, `DACTE`, `DACTEOS`,
+`DACTESimp` ou `DAMDFE` diretamente, passando o documento e o protocolo.
 
 Todos aceitam as mesmas [opções](#opcoes) e produzem paginação automática.
 
 ## Sem dependências
 
 O PDF é escrito em Go puro, com as fontes base-14 que todo leitor já possui. Não
-há biblioteca gráfica, não há CGO, não há arquivo de fonte embutido — o módulo
-continua com uma única dependência externa, a de PKCS#12.
+há biblioteca gráfica, não há CGO, não há arquivo de fonte embutido.
 
 O código de barras Code 128 da chave de acesso é desenhado como retângulos, sem
-biblioteca de barcode.
+biblioteca de barcode, e alterna do conjunto C para o A nas letras do CNPJ
+alfanumérico. O QR Code do DACTE e do DAMDFE, obrigatório pelos manuais, é
+codificado com o `rsc.io/qr` (Go puro, sem CGO) a partir do `qrCodCTe` ou do
+`qrCodMDFe` do documento.
 
 !!! warning "Sobre a fidelidade ao manual"
 
@@ -78,26 +81,34 @@ proc, _ := os.ReadFile("43260...-procCTe.xml")
 dacte, err := danfe.GerarDACTE(proc, danfe.Opcoes{})
 ```
 
+O DACTE, o DACTE OS e o do Simplificado seguem o MOC CT-e 4.00, Anexo II
+(Manual do DACTE):
+
 ```mermaid
 flowchart TB
-    A[Canhoto de recebimento] --> B[Emitente · DACTE · Chave e código de barras]
-    B --> C[CFOP · Natureza · Tipo do CT-e]
-    C --> D[Tipo do serviço · Tomador · Início e término da prestação]
-    D --> E[Remetente · Destinatário · Expedidor · Recebedor · Tomador]
-    E --> F[Produto predominante e quantidades]
-    F --> G[Componentes do frete e totais]
-    G --> H[Imposto]
-    H --> I[Documentos originários]
-    I --> J[Modal · Observações · Campos reservados]
+    A[Canhoto] --> B[Emitente · DACTE: modelo, série, número, folha, emissão · QR Code]
+    B --> C[Código de barras · Chave · Consulta · Protocolo]
+    C --> D[Aviso: homologação, cancelado, contingência]
+    D --> E[Tipo do CT-e e do serviço · Globalizado · CFOP e natureza · Início e término]
+    E --> F[Remetente · Destinatário · Expedidor · Recebedor · Tomador]
+    F --> G[Carga · Componentes · Imposto · IBS e CBS]
+    G --> H[Documentos originários, em duas colunas]
+    H --> I[Fluxo da carga · Observações · Modal · Uso do emissor · Reservado ao fisco]
+    I --> J[Informações adicionais]
 ```
 
-Dois detalhes de comportamento que economizam trabalho:
-
-- **O tomador é resolvido sozinho.** Quando o `toma3` aponta para o remetente, o
-  expedidor, o recebedor ou o destinatário, o bloco do tomador é preenchido com
-  os dados daquela parte. Um `toma4` é usado como está.
-- **A chave preenche a tabela.** Nos documentos originários, o CNPJ do emitente,
-  a série e o número saem da própria chave de acesso da NF-e transportada.
+- **Só o que está no XML.** O manual não admite texto de fora do documento, e
+  `Mensagem` não sai nos documentos do transporte.
+- **Homologação na área variável.** O aviso "EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO
+  – SEM VALOR FISCAL" sai numa faixa abaixo da chave, sem tarja por cima dos
+  valores.
+- **Folhas.** Os quadros fixos ficam na primeira folha; os documentos que não
+  couberem continuam nas seguintes, que repetem o cabeçalho (§2.12). A tabela
+  vai até o pé da folha, como nos modelos.
+- **O tomador é resolvido sozinho.** Quando o `toma3` aponta para uma das partes,
+  o quadro do tomador traz os dados dela. Um `toma4` é usado como está.
+- **O que o manual não prevê** (IBS e CBS, ordens de coleta, partilha do ICMS)
+  vem em quadros depois do leiaute padrão.
 
 ## O DACTE OS
 
@@ -105,12 +116,21 @@ Dois detalhes de comportamento que economizam trabalho:
 dacteos, err := danfe.GerarDACTEOS(procCTeOS, danfe.Opcoes{})
 ```
 
-Onde o DACTE descreve carga e documentos transportados, o DACTE OS descreve um
-tomador, o serviço em texto livre, o veículo e os documentos referenciados —
-bilhetes de passagem e GTV-e, que saem na mesma tabela.
+Segue o modelo da p.51 do manual: prestação com o percurso do veículo, tomador,
+quantidade e descrição do serviço, valores, imposto, observações, seguro e modal
+rodoviário. O fretamento e os documentos referenciados (BP-e, GTV-e) vêm depois.
+O canhoto do modelo é opcional e não é impresso; `SemCanhoto` é ignorada.
 
-Ele **não tem canhoto**: não há volumes a receber, então não há recibo de
-entrega, e `SemCanhoto` é ignorada.
+## O DACTE do Simplificado
+
+```go
+dacte, err := danfe.GerarDACTESimp(procCTeSimp, danfe.Opcoes{})
+```
+
+Nem o manual nem a NT 2024.002 definem o leiaute. Este segue as regras gerais do
+manual — o mesmo cabeçalho, QR Code, código de barras e folhas — e, no lugar de
+remetente e destinatário, traz a tabela das entregas: item, origem, destino,
+valores e os documentos de cada uma, que continua nas folhas seguintes.
 
 ## O DAMDFE
 
@@ -120,25 +140,13 @@ proc, _ := os.ReadFile("43260...-procMDFe.xml")
 damdfe, err := danfe.GerarDAMDFE(proc, danfe.Opcoes{})
 ```
 
-```mermaid
-flowchart TB
-    A[Emitente · DAMDFE · Chave e código de barras] --> B[Tipo do emitente e do transportador · UF início e fim]
-    B --> C[Municípios de carregamento · Percurso]
-    C --> D[Modal: RNTRC, veículo de tração, reboques, condutores]
-    D --> E[Totalizadores: qNF-e, qCT-e, valor e peso da carga]
-    E --> F[Seguro da carga]
-    F --> G[Documentos por município de descarregamento]
-    G --> H[Observações]
-```
-
-O DAMDFE não tem canhoto — quem assina o recebimento são os documentos que ele
-relaciona, não o manifesto —, então `SemCanhoto` é ignorada. Na relação de
-documentos, o município aparece só na primeira linha de cada grupo; repeti-lo em
-cada chave transformaria a coluna em ruído.
-
-O rodapé lembra que o manifesto precisa ser encerrado. Não é decoração: um MDF-e
-em aberto bloqueia a emissão do seguinte, e o lembrete impresso chega ao
-motorista, que é quem está no pátio.
+Segue o modelo rodoviário do MOC MDF-e 3.00b, Anexo II (§2.7): emitente com
+RNTRC, QR Code, identificação, totais, controle do fisco com a chave e a
+consulta, protocolo, veículos, condutores, vale-pedágio e observações. Em
+contingência, o aviso com o prazo de 168 horas fica no lugar do protocolo.
+Abaixo do leiaute padrão, como o manual permite, vêm a viagem, o CIOT, os dados
+dos veículos, a carga, o seguro e a relação dos documentos por município de
+descarregamento. O DAMDFE não tem canhoto.
 
 ## Opções
 
@@ -146,9 +154,9 @@ motorista, que é quem está no pátio.
 danfe.Opcoes{
     Orientacao:    danfe.Paisagem,  // padrão: retrato
     SemCanhoto:    true,            // omite o recibo de entrega
-    Cancelada:     true,            // imprime a tarja de cancelamento
-    Homologacao:   true,            // força a tarja de teste
-    Mensagem:      "Emitido por Sistema X",
+    Cancelada:     true,            // marca o documento como cancelado
+    Homologacao:   true,            // força o aviso de teste
+    Mensagem:      "Emitido por Sistema X", // só NF-e e NFC-e
     LarguraBobina: 58,              // NFC-e: padrão 80 mm
     QRCode:        matriz,          // NFC-e: veja abaixo
 }
@@ -159,9 +167,8 @@ As tarjas saem sozinhas quando o documento pede: uma nota em homologação receb
 recebe `SEM AUTORIZAÇÃO`.
 
 `Orientacao` gira a folha e dá mais largura aos blocos. Nos documentos do
-transporte a estrutura desenhada é a mesma nas duas orientações — não é o
-leiaute paisagem próprio que o manual do DACTE descreve, e o campo `tpImp` do
-documento não é consultado.
+transporte a estrutura desenhada é a mesma nas duas orientações, e o campo
+`tpImp` do documento não é consultado.
 
 ## O QR Code da NFC-e
 

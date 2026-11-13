@@ -92,6 +92,9 @@ func fretamentoExemplo(referenciados int) *cteos.CTeOS {
 	}
 	c.InfCte.InfCTeNorm.InfDocRef = docs
 	c.InfCte.Compl = &cte.Compl{XObs: "Embarque as 05h no terminal rodoviario."}
+	c.InfCte.Ide.InfPercurso = []cteos.Percurso{{UFPer: "SC"}, {UFPer: "PR"}}
+	c.InfCte.Emit.EnderEmit.Fone = "5133330000"
+	c.InfCTeSupl = &cteos.InfCTeSupl{QrCodCTe: "https://dfe-portal.svrs.rs.gov.br/cte/qrCode?chCTe=43260312345678000195670010000004321556677880&tpAmb=2"}
 	return c
 }
 
@@ -201,8 +204,8 @@ func TestDACTEOSPaginaAutomaticamente(t *testing.T) {
 	if paginasDe(longo) < 2 {
 		t.Errorf("150 documentos saíram em %d página(s)", paginasDe(longo))
 	}
-	conferirCabeNaPagina(t, "DACTE OS com 150 referenciados", longo)
-	conferirCabeNaPagina(t, "DACTE OS com 2 referenciados", curto)
+	conferirCabeNaPagina(t, "DACTE OS com 150 referenciados", longo, true)
+	conferirCabeNaPagina(t, "DACTE OS com 2 referenciados", curto, true)
 }
 
 func TestDACTEOSSemReferenciados(t *testing.T) {
@@ -287,5 +290,5 @@ func TestDACTEOSSemPanicoComDocumentoMinimo(t *testing.T) {
 		t.Fatalf("DACTEOS mínimo: %v", err)
 	}
 	conferirPDF(t, dados)
-	conferirCabeNaPagina(t, "DACTE OS mínimo", dados)
+	conferirCabeNaPagina(t, "DACTE OS mínimo", dados, true)
 }

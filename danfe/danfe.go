@@ -48,8 +48,9 @@ type Opcoes struct {
 	QRCode pdf.MatrizQR
 	// LarguraBobina é a largura do cupom da NFC-e em milímetros; o padrão é 80.
 	LarguraBobina float64
-	// Mensagem é um texto livre acrescentado ao rodapé, para identificar o
-	// sistema emissor.
+	// Mensagem é um texto livre acrescentado ao rodapé do DANFE e do cupom da
+	// NFC-e, para identificar o sistema emissor. Os documentos do transporte não
+	// a imprimem: os manuais deles só admitem o que está no XML.
 	Mensagem string
 }
 

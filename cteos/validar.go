@@ -131,6 +131,16 @@ func (c *CTeOS) validarIde() Erros {
 		}
 	}
 
+	// O percurso do veículo: UF válidas, até 25 (infPercurso, maxOccurs 25).
+	if len(ide.InfPercurso) > 25 {
+		e = append(e, erro("ide.infPercurso", "%d UF no percurso; o leiaute aceita até 25", len(ide.InfPercurso)))
+	}
+	for i, p := range ide.InfPercurso {
+		if _, err := uf.PorSigla(p.UFPer); err != nil {
+			e = append(e, erro(fmt.Sprintf("ide.infPercurso[%d].UFPer", i), "%v", err))
+		}
+	}
+
 	// O TCTeOS aceita menos formas que o CT-e: sem o Regime Especial NFF (3) e sem EPEC (4).
 	switch ide.TpEmis {
 	case cte.EmissaoNormal, cte.EmissaoContingenciaOffline, cte.EmissaoSVCRS, cte.EmissaoSVCSP:

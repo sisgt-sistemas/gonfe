@@ -45,9 +45,10 @@ Anyone touching this needs to know these six things before writing a line.
    — that is what makes the digest computed here match the one SEFAZ recomputes.
    Never re-serialise an already-signed document.
 
-4. **No CGO, and a single external dependency** (`go-pkcs12`). The PDF writer,
-   the C14N canonicalisation, the SOAP client and the Code 128 encoder are all
-   ours because of this.
+4. **No CGO, and two small pure-Go dependencies** (`go-pkcs12`, and `rsc.io/qr`
+   for the mandatory QR Code on the DACTE and the DAMDFE). The PDF writer, the
+   C14N canonicalisation, the SOAP client and the Code 128 encoder are all ours
+   because of this.
 
 5. **Normalisation by tag.** `norm:"num"` keeps digits only, `norm:"upper"`
    forces upper case, `norm:"-"` leaves the value alone. Fields SEFAZ compares

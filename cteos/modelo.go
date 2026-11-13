@@ -200,6 +200,8 @@ type Ide struct {
 	XMunFim string `xml:"xMunFim"`
 	// UFFim é a UF de término.
 	UFFim string `xml:"UFFim" norm:"upper"`
+	// InfPercurso são as UF por onde o veículo passa, na ordem, até 25.
+	InfPercurso []Percurso `xml:"infPercurso,omitempty"`
 	// DhCont é a data e hora de entrada em contingência.
 	DhCont *tipos.DataHora `xml:"dhCont,omitempty"`
 	// XJust é a justificativa da contingência.
@@ -347,4 +349,9 @@ type ComponenteGTVe struct {
 // InfCteComp identifica o conhecimento que está sendo complementado.
 type InfCteComp struct {
 	Chave string `xml:"chCTe" norm:"alnum"`
+}
+
+// Percurso é uma UF do percurso do veículo.
+type Percurso struct {
+	UFPer string `xml:"UFPer" norm:"upper"`
 }

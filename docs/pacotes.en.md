@@ -130,7 +130,7 @@ the events for closing out a trip, cancellation and adding a driver.
 
 ### `danfe`
 
-DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDFs, written in pure Go.
+DANFE, NFC-e receipt, DACTE, DACTE OS, Simplificado DACTE and DAMDFE as PDFs, written in pure Go.
 See [Auxiliary documents](danfe.md).
 
 ```go

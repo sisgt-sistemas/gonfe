@@ -3,6 +3,7 @@ package danfe
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/sisgt-sistemas/gonfe/internal/pdf"
 	"github.com/sisgt-sistemas/gonfe/mdfe"
@@ -11,6 +12,10 @@ import (
 
 // alturaDocMDFe é o espaço vertical de cada linha da tabela de documentos.
 const alturaDocMDFe = 3.6
+
+// URLConsultaMDFe é o endereço de consulta impresso no quadro "Controle do
+// fisco" (MOC MDF-e 3.00b, Anexo II, §2.7).
+const URLConsultaMDFe = "https://dfe-portal.sefazvirtual.rs.gov.br/MDFe/consulta"
 
 // GerarDAMDFE produz o documento auxiliar a partir do XML de distribuição do
 // MDF-e, o mdfeProc.
@@ -22,77 +27,375 @@ func GerarDAMDFE(procMDFe []byte, opc Opcoes) ([]byte, error) {
 	return DAMDFE(m, prot, opc)
 }
 
-// DAMDFE gera o documento auxiliar do MDF-e modelo 58, em A4.
+// DAMDFE gera o documento auxiliar do MDF-e, modelo 58, em A4, pelo MOC MDF-e
+// 3.00b, Anexo II (modelo rodoviário, §2.7.1 e 2.7.2): emitente com RNTRC, QR
+// Code, identificação, totais, controle do fisco com a chave, protocolo (ou o
+// aviso de contingência), veículos, condutores, vale-pedágio e observações.
 //
-// A lista de documentos é paginada automaticamente: o cabeçalho se repete em
-// cada folha e a relação continua de onde parou.
-//
-// O DAMDFE não tem canhoto — quem assina o recebimento são os documentos que
-// ele relaciona, não o manifesto. [Opcoes.SemCanhoto] é ignorada aqui.
+// O que o manual não prevê vem abaixo do leiaute padrão, como ele permite
+// (§2.1): viagem, CIOT, dados dos veículos, carga, seguro e a relação dos
+// documentos por município de descarregamento, que continua nas folhas
+// seguintes. O DAMDFE não tem canhoto.
 func DAMDFE(m *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes) ([]byte, error) {
 	if m == nil {
 		return nil, fmt.Errorf("damdfe: manifesto ausente")
 	}
-
-	documento := pdf.Novo()
-	paginas := paginarDocumentosMDFe(m, opc)
-
-	for i := range paginas {
-		pg := novaFolha(documento, opc)
-		med := medidasDe(pg)
-
-		y := med.margem
-		y = desenharCabecalhoMDFe(pg, med, m, prot, i+1, len(paginas), y)
-		if i == 0 {
-			y = desenharViagemMDFe(pg, med, m, y)
-			y = desenharModalMDFe(pg, med, m, y)
-			y = desenharTotaisMDFe(pg, med, m, y)
-			y = desenharSeguroMDFe(pg, med, m, y)
-		}
-		y = desenharDocumentosMDFe(pg, med, paginas[i], y)
-		if i == len(paginas)-1 {
-			desenharObservacoesMDFe(pg, med, m, opc, y)
-		}
-		desenharTarjasMDFe(pg, m, prot, opc)
+	opc = emRetrato(opc)
+	paginas, err := paginarDocumentosMDFe(m, prot, opc)
+	if err != nil {
+		return nil, fmt.Errorf("damdfe: %w", err)
 	}
-
+	documento := pdf.Novo()
+	for i, docs := range paginas {
+		pg := novaFolha(documento, opc)
+		md := medidasDe(pg)
+		if i == 0 {
+			// No estilo leve do manual, a relação não é preenchida até o pé com linhas em branco.
+			desenharPrimeiraFolhaMDFe(pg, md, m, prot, opc, docs, 0, len(paginas))
+			continue
+		}
+		y := desenharCabecalhoMDFe(pg, md, m, i+1, len(paginas), md.margem)
+		desenharDocumentosMDFe(pg, md, docs, 0, y+2)
+	}
 	return documento.Bytes()
 }
 
-// docMDFe é uma linha da tabela de documentos relacionados.
+func desenharPrimeiraFolhaMDFe(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes, docs []docMDFe, linhas, folhas int) float64 {
+	y := desenharCabecalhoMDFe(pg, md, m, 1, folhas, md.margem)
+	y = desenharControleMDFe(pg, md, m, prot, opc, y+3)
+	y = desenharVeiculosECondutores(pg, md, m, y+3)
+	y = desenharObservacoesMDFe(pg, md, m, y+3)
+	y = desenharAdicionaisMDFe(pg, md, m, y+4)
+	return desenharDocumentosMDFe(pg, md, docs, linhas, y+2)
+}
+
+// Estilos do DAMDFE, mais leves que os do DACTE, como no modelo do manual.
+var (
+	tituloSecao  = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 9}
+	rotuloCampo  = pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5}
+	valorCampo   = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 8}
+	textoComum   = pdf.Estilo{Fonte: pdf.Normal, Tamanho: 6.5}
+	textoNegrito = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6.5}
+)
+
+// campoClaro desenha um campo do modelo: fundo claro, rótulo pequeno e valor em
+// destaque.
+func campoClaro(pg *pdf.Pagina, x, y, largura float64, nome, conteudo string) {
+	const altura = 8
+	pg.RetanguloPreenchido(x, y, largura-0.8, altura, 0.92)
+	pg.Texto(x+1, y+0.8, nome, rotuloCampo)
+	pg.Texto(x+1, y+4.2, pdf.Encurtar(conteudo, valorCampo.Fonte, valorCampo.Tamanho, largura-2.6), valorCampo)
+}
+
+// tracejado desenha um separador horizontal tracejado.
+func tracejado(pg *pdf.Pagina, x, y, largura float64) {
+	for cursor := x; cursor < x+largura; cursor += 2 {
+		pg.Linha(cursor, y, min(cursor+1, x+largura), y, 0.1)
+	}
+}
+
+// desenharCabecalhoMDFe imprime o emitente, o título, a linha de identificação
+// e o QR Code. Repete-se no alto de cada folha.
+func desenharCabecalhoMDFe(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, folha, folhas int, y float64) float64 {
+	emit := &m.InfMDFe.Emit
+	ide := &m.InfMDFe.Ide
+	rntrc := ""
+	if r := m.InfMDFe.InfModal.Rodo; r != nil && r.InfANTT != nil {
+		rntrc = r.InfANTT.RNTRC
+	}
+	larguraTexto := md.util - ladoCaixaQR
+
+	pg.Texto(md.margem, y+1, pdf.Encurtar(emit.XNome, pdf.Negrito, 9, larguraTexto), pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 9})
+	end := emit.EnderEmit
+	pg.Texto(md.margem, y+5.5, enderecoEmUmaLinha(end.XLgr, end.Nro, end.XCpl)+" - "+end.XBairro, textoComum)
+	pg.Texto(md.margem, y+8.8, end.XMun+" - "+end.UF+"    CEP "+validacao.FormatarCEP(end.CEP), textoComum)
+	linhaDocs := "CNPJ: " + formatarDocumento(emit.CNPJ, emit.CPF) + "    IE: " + emit.IE
+	if rntrc != "" {
+		linhaDocs += "    RNTRC: " + rntrc
+	}
+	pg.Texto(md.margem, y+12.1, linhaDocs, textoNegrito)
+	pg.Texto(md.margem, y+17, "DAMDFE - Documento Auxiliar de Manifesto Eletrônico de Documentos Fiscais", pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7.5})
+
+	qrCode := ""
+	if m.InfMDFeSupl != nil {
+		qrCode = m.InfMDFeSupl.QrCodMDFe
+	}
+	xQR := md.margem + larguraTexto
+	if matriz, err := matrizQR(qrCode); err == nil {
+		pg.QRCode(xQR+(ladoCaixaQR-ladoQR)/2, y+1, ladoQR, matriz)
+	} else {
+		pg.TextoCentralizado(xQR, ladoCaixaQR, y+10, "QR CODE NÃO INFORMADO", miudo)
+	}
+
+	y += 22
+	cursor := md.margem
+	for _, c := range []struct {
+		nome, conteudo string
+		largura        float64
+	}{
+		{"Modelo", string(ide.Mod), 13}, {"Série", fmt.Sprintf("%d", ide.Serie), 12},
+		{"Número", fmt.Sprintf("%09d", ide.NMDF), 20}, {"FL", fmtFolha(folha, folhas), 14},
+		{"Data e hora de Emissão", dataHora(ide.DhEmi), 42}, {"UF Carreg.", ide.UFIni, 20},
+		{"UF Descarreg.", ide.UFFim, 22},
+	} {
+		campoClaro(pg, cursor, y, c.largura, c.nome, c.conteudo)
+		cursor += c.largura
+	}
+	return y + 8
+}
+
+// desenharControleMDFe imprime os totais do modal, o controle do fisco (código
+// de barras, chave e consulta) e o protocolo, ou o aviso de contingência no
+// lugar dele (§2.4).
+func desenharControleMDFe(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes, y float64) float64 {
+	metade := md.util / 2
+	tot := &m.InfMDFe.Tot
+	pg.Texto(md.margem, y, "Modelo Rodoviário de Carga", tituloSecao)
+	terco := (metade - 4) / 3
+	campoClaro(pg, md.margem, y+5, terco, "Qtd. CTe", fmt.Sprintf("%d", tot.QCTe))
+	campoClaro(pg, md.margem+terco, y+5, terco, "Qtd. NFe", fmt.Sprintf("%d", tot.QNFe))
+	campoClaro(pg, md.margem+2*terco, y+5, terco, "Peso total ("+unidadeMDFe(tot.CUnid)+")", quantidade(tot.QCarga))
+
+	x := md.margem + metade
+	pg.Texto(x, y, "CONTROLE DO FISCO", rotuloCampo)
+	if ch := m.Chave(); len(ch) == 44 {
+		if err := pg.CodigoDeBarras(x+2, y+3, larguraBarras, alturaBarras, ch); err != nil {
+			pg.Texto(x, y+8, "código de barras indisponível", miudo)
+		}
+	}
+	yChave := y + 3 + alturaBarras + 2
+	pg.Texto(x, yChave, "Chave de Acesso", textoNegrito)
+	pg.Texto(x, yChave+3.4, chaveFormatada(m.Chave()), pdf.Estilo{Fonte: pdf.Normal, Tamanho: 7})
+	pg.Texto(x, yChave+7.2, "Consulte em "+URLConsultaMDFe, textoComum)
+
+	// Protocolo, ou o aviso que o substitui.
+	ide := &m.InfMDFe.Ide
+	yProt := y + 17
+	switch {
+	case opc.Cancelada:
+		avisoMDFe(pg, md.margem, yProt, metade-4, "MDF-e CANCELADO", "")
+	case ide.TpEmis.Contingencia():
+		limite := ide.DhEmi.Add(168 * time.Hour)
+		avisoMDFe(pg, md.margem, yProt, metade-4, "EMISSÃO EM CONTINGÊNCIA",
+			"Obrigatória a autorização em 168 horas após esta emissão ("+limite.Format("02/01/2006 15:04")+")")
+	default:
+		pg.Texto(md.margem, yProt, "Protocolo de autorização", textoNegrito)
+		pg.Texto(md.margem, yProt+3.6, protocoloMDFeDescrito(prot), pdf.Estilo{Fonte: pdf.Normal, Tamanho: 7.5})
+	}
+	if opc.Homologacao || ide.TpAmb == mdfe.Homologacao {
+		pg.Texto(md.margem, yProt+8, "EMITIDO EM AMBIENTE DE HOMOLOGAÇÃO – SEM VALOR FISCAL", pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7})
+	} else if !opc.Cancelada && !ide.TpEmis.Contingencia() && (prot == nil || !prot.Autorizado()) {
+		pg.Texto(md.margem, yProt+8, "SEM VALOR FISCAL", pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7})
+	}
+	return max(yChave+9, yProt+11)
+}
+
+// avisoMDFe desenha uma caixa escura com o aviso em branco, como o de
+// contingência do modelo do manual.
+func avisoMDFe(pg *pdf.Pagina, x, y, largura float64, titulo, detalhe string) {
+	altura := 6.0
+	if detalhe != "" {
+		altura = 9
+	}
+	pg.RetanguloPreenchido(x, y-1, largura, altura, 0.15)
+	pg.Texto(x+1.5, y, titulo, pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 8, Cinza: 1})
+	if detalhe != "" {
+		pg.Texto(x+1.5, y+4, pdf.Encurtar(detalhe, pdf.Normal, 5.5, largura-3), pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5, Cinza: 1})
+	}
+}
+
+func protocoloMDFeDescrito(prot *mdfe.ProtMDFe) string {
+	if prot == nil || prot.InfProt.NProt == "" {
+		return "DOCUMENTO SEM PROTOCOLO DE AUTORIZAÇÃO"
+	}
+	return prot.InfProt.NProt + " - " + dataHora(prot.InfProt.DhRecbto)
+}
+
+// desenharVeiculosECondutores imprime, lado a lado, os veículos (placa e
+// RNTRC) com o vale-pedágio embaixo, e os condutores (CPF e nome).
+func desenharVeiculosECondutores(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, y float64) float64 {
+	rodo := m.InfMDFe.InfModal.Rodo
+	if rodo == nil {
+		return y
+	}
+	metade := md.util / 2
+	rntrcEmitente := ""
+	if rodo.InfANTT != nil {
+		rntrcEmitente = rodo.InfANTT.RNTRC
+	}
+	rntrcDe := func(p *mdfe.Proprietario) string {
+		if p != nil && p.RNTRC != "" {
+			return p.RNTRC
+		}
+		return rntrcEmitente
+	}
+	veiculos := [][]string{{rodo.VeicTracao.Placa, rntrcDe(rodo.VeicTracao.Prop)}}
+	for _, r := range rodo.VeicReboque {
+		veiculos = append(veiculos, []string{r.Placa, rntrcDe(r.Prop)})
+	}
+	condutores := make([][]string, 0, len(rodo.VeicTracao.Condutor))
+	for _, c := range rodo.VeicTracao.Condutor {
+		condutores = append(condutores, []string{validacao.FormatarCPF(c.CPF), c.XNome})
+	}
+
+	fimEsquerda := tabelaLeve(pg, md.margem, y, metade-4, "Veículo", []string{"Placa", "RNTRC"}, []float64{0.4, 0.6}, veiculos)
+	fimDireita := tabelaLeve(pg, md.margem+metade, y, metade, "Condutor", []string{"CPF", "Nome"}, []float64{0.32, 0.68}, condutores)
+
+	if rodo.InfANTT != nil && rodo.InfANTT.ValePed != nil && len(rodo.InfANTT.ValePed.Disp) > 0 {
+		vales := make([][]string, 0, len(rodo.InfANTT.ValePed.Disp))
+		for _, d := range rodo.InfANTT.ValePed.Disp {
+			vales = append(vales, []string{formatarDocumento(d.CNPJPg, d.CPFPg), formatarDocumento(d.CNPJForn, ""), d.NCompra})
+		}
+		fimEsquerda = tabelaLeve(pg, md.margem, fimEsquerda+3, metade-4, "Vale Pedágio",
+			[]string{"Responsável CNPJ", "Fornecedor CNPJ", "Nº Comprovante"}, []float64{0.32, 0.32, 0.36}, vales)
+	}
+	return max(fimEsquerda, fimDireita)
+}
+
+// tabelaLeve desenha uma seção do modelo do manual: título, cabeçalho com linha
+// embaixo e linhas separadas por tracejado.
+func tabelaLeve(pg *pdf.Pagina, x, y, largura float64, titulo string, colunas []string, fracoes []float64, linhas [][]string) float64 {
+	pg.Texto(x, y, titulo, tituloSecao)
+	y += 5
+	cursor := x
+	for i, c := range colunas {
+		pg.Texto(cursor, y, c, rotuloCampo)
+		cursor += largura * fracoes[i]
+	}
+	y += 3
+	pg.Linha(x, y, x+largura, y, 0.2)
+	celula := pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7}
+	for i, linha := range linhas {
+		cursor = x
+		for j, conteudo := range linha {
+			pg.Texto(cursor, y+1.2, pdf.Encurtar(conteudo, celula.Fonte, celula.Tamanho, largura*fracoes[j]-1), celula)
+			cursor += largura * fracoes[j]
+		}
+		y += 5
+		if i < len(linhas)-1 {
+			tracejado(pg, x, y, largura)
+		}
+	}
+	return y
+}
+
+// desenharObservacoesMDFe imprime o último quadro do leiaute padrão: as
+// informações complementares do manifesto.
+func desenharObservacoesMDFe(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, y float64) float64 {
+	var partes []string
+	if ad := m.InfMDFe.InfAdic; ad != nil {
+		for _, campo := range []string{ad.InfCpl, ad.InfAdFisco} {
+			if campo != "" {
+				partes = append(partes, campo)
+			}
+		}
+	}
+	pg.Texto(md.margem, y, "Observações", textoNegrito)
+	y += 3.2
+	pg.Linha(md.margem, y, md.margem+md.util, y, 0.2)
+	if len(partes) == 0 {
+		return y + 3
+	}
+	return pg.TextoQuebrado(md.margem, y+1.5, md.util, strings.Join(partes, " | "), textoComum, 6) + 1.5
+}
+
+// desenharAdicionaisMDFe imprime, abaixo do leiaute padrão, o que o manual não
+// prevê: viagem, CIOT, veículos, carga e seguro.
+func desenharAdicionaisMDFe(pg *pdf.Pagina, md medidas, m *mdfe.MDFe, y float64) float64 {
+	ide := &m.InfMDFe.Ide
+	tot := &m.InfMDFe.Tot
+	// juntar monta uma linha só com os pares que têm valor.
+	juntar := func(pares ...string) string {
+		var partes []string
+		for i := 0; i+1 < len(pares); i += 2 {
+			if strings.TrimSpace(pares[i+1]) != "" {
+				partes = append(partes, pares[i]+": "+pares[i+1])
+			}
+		}
+		return strings.Join(partes, "    ")
+	}
+	qtdMDFe := ""
+	if tot.QMDFe > 0 {
+		qtdMDFe = fmt.Sprintf("%d", tot.QMDFe)
+	}
+	linhas := []string{
+		juntar("Emitente", tipoDoEmitente(ide.TpEmit), "Transportador", tipoDoTransportador(ide.TpTransp)),
+		juntar("Carregamento", municipiosDeCarregamento(ide.InfMunCarrega), "Percurso", percurso(ide.InfPercurso),
+			"Início da viagem", dataHoraOpcional(ide.DhIniViagem)),
+		juntar("Valor total da carga", "R$ "+moeda(tot.VCarga), "Qtd. MDF-e", qtdMDFe),
+	}
+	if p := m.InfMDFe.ProdPred; p != nil {
+		linhas = append(linhas, "Produto predominante: "+p.XProd)
+	}
+	if rodo := m.InfMDFe.InfModal.Rodo; rodo != nil {
+		if antt := rodo.InfANTT; antt != nil && len(antt.InfCIOT) > 0 {
+			ciots := make([]string, 0, len(antt.InfCIOT))
+			for _, c := range antt.InfCIOT {
+				ciots = append(ciots, c.CIOT)
+			}
+			linhas = append(linhas, "CIOT: "+strings.Join(ciots, ", "))
+		}
+		if rodo.CodAgPorto != "" {
+			linhas = append(linhas, "Código de agendamento no porto: "+rodo.CodAgPorto)
+		}
+		t := rodo.VeicTracao
+		linhas = append(linhas, "Tração "+t.Placa+" - "+juntar("RENAVAM", t.RENAVAM, "Tara (kg)", fmt.Sprint(t.Tara),
+			"Capacidade (kg)", fmt.Sprint(t.CapKG), "Rodado", rodado(t.TpRod), "Carroceria", carroceria(t.TpCar)))
+		for _, r := range rodo.VeicReboque {
+			linhas = append(linhas, "Reboque "+r.Placa+" - "+juntar("RENAVAM", r.RENAVAM, "Tara (kg)", fmt.Sprint(r.Tara),
+				"Capacidade (kg)", fmt.Sprint(r.CapKG), "Carroceria", carroceria(r.TpCar)))
+		}
+	}
+	for _, s := range m.InfMDFe.Seg {
+		texto := "Seguro: apólice " + s.NApol
+		if s.InfSeg != nil {
+			texto += ", " + s.InfSeg.XSeg + " (" + validacao.FormatarCNPJ(s.InfSeg.CNPJ) + ")"
+		}
+		if len(s.NAver) > 0 {
+			texto += ", averbação " + strings.Join(s.NAver, ", ")
+		}
+		linhas = append(linhas, texto)
+	}
+
+	pg.Texto(md.margem, y, "Informações adicionais", textoNegrito)
+	y += 3.2
+	pg.Linha(md.margem, y, md.margem+md.util, y, 0.2)
+	y += 1.5
+	for _, l := range linhas {
+		pg.Texto(md.margem, y, pdf.Encurtar(l, textoComum.Fonte, textoComum.Tamanho, md.util), textoComum)
+		y += 3.4
+	}
+	return y
+}
+
+// docMDFe é uma linha da relação de documentos.
 type docMDFe struct {
 	municipio, tipo, chave string
 }
 
-// paginarDocumentosMDFe divide os documentos entre as folhas.
-func paginarDocumentosMDFe(m *mdfe.MDFe, opc Opcoes) [][]docMDFe {
+// paginarDocumentosMDFe mede quantas linhas da relação de documentos cabem na
+// primeira folha e nas demais, e divide a relação entre as folhas.
+func paginarDocumentosMDFe(m *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes) ([][]docMDFe, error) {
 	docs := documentosDoManifesto(m)
-
-	altura := pdf.AlturaA4
-	if opc.Orientacao == Paisagem {
-		altura = pdf.LarguraA4
+	rascunho := pdf.Novo()
+	pg := novaFolha(rascunho, opc)
+	md := medidasDe(pg)
+	fim := desenharPrimeiraFolhaMDFe(pg, md, m, prot, opc, nil, 1, 1)
+	if err := cabeNaFolha(fim, md); err != nil {
+		return nil, err
 	}
-	// Espaço reservado aos demais blocos, em milímetros.
-	const reservadoPrimeira = 150
-	const reservadoDemais = 50
-	const rodape = 30
+	naPrimeira := 1 + max(int((md.altura-md.margem-fim)/alturaDocMDFe), 0)
+	topo := desenharCabecalhoMDFe(novaFolha(rascunho, opc), md, m, 2, 2, md.margem) + 2 + 3.4*2
+	nasDemais := max(int((md.altura-md.margem-topo)/alturaDocMDFe), 1)
 
-	naPrimeira := max(int((altura-reservadoPrimeira-rodape)/alturaDocMDFe), 1)
-	nasDemais := max(int((altura-reservadoDemais-rodape)/alturaDocMDFe), 1)
-
-	if len(docs) == 0 {
-		return [][]docMDFe{nil}
+	if len(docs) <= naPrimeira {
+		return [][]docMDFe{docs}, nil
 	}
-
-	var paginas [][]docMDFe
-	corte := min(naPrimeira, len(docs))
-	paginas = append(paginas, docs[:corte])
-	for corte < len(docs) {
-		fim := min(corte+nasDemais, len(docs))
-		paginas = append(paginas, docs[corte:fim])
-		corte = fim
+	paginas := [][]docMDFe{docs[:naPrimeira]}
+	for corte := naPrimeira; corte < len(docs); corte += nasDemais {
+		paginas = append(paginas, docs[corte:min(corte+nasDemais, len(docs))])
 	}
-	return paginas
+	return paginas, nil
 }
 
 // documentosDoManifesto achata os grupos por município de descarregamento em
@@ -114,89 +417,50 @@ func documentosDoManifesto(m *mdfe.MDFe) []docMDFe {
 	return docs
 }
 
-// desenharCabecalhoMDFe imprime o emitente, o bloco central e a chave de
-// acesso com o código de barras.
-func desenharCabecalhoMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, prot *mdfe.ProtMDFe, folha, folhas int, y float64) float64 {
-	const altura = 34
-	emit := &doc.InfMDFe.Emit
-	ide := &doc.InfMDFe.Ide
-	larguraEmit := m.util * 0.36
-	larguraCentro := m.util * 0.24
-	larguraChave := m.util - larguraEmit - larguraCentro
-
-	// Emitente.
-	pg.Retangulo(m.margem, y, larguraEmit, altura, 0.1)
-	pg.TextoCentralizado(m.margem, larguraEmit, y+2,
-		pdf.Encurtar(emit.XNome, pdf.Negrito, 7.5, larguraEmit-2),
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 7.5})
-	linhas := []string{
-		enderecoEmUmaLinha(emit.EnderEmit.XLgr, emit.EnderEmit.Nro, emit.EnderEmit.XCpl),
-		emit.EnderEmit.XBairro + " - CEP: " + validacao.FormatarCEP(emit.EnderEmit.CEP),
-		emit.EnderEmit.XMun + " - " + emit.EnderEmit.UF,
-		"CNPJ/CPF: " + formatarDocumento(emit.CNPJ, emit.CPF),
-		"IE: " + emit.IE,
+// desenharDocumentosMDFe imprime a relação de documentos por município de
+// descarregamento, com pelo menos minLinhas linhas.
+func desenharDocumentosMDFe(pg *pdf.Pagina, md medidas, docs []docMDFe, minLinhas int, y float64) float64 {
+	colunas := []struct {
+		nome   string
+		fracao float64
+	}{{"MUNICÍPIO DE DESCARREGAMENTO", 0.32}, {"TIPO", 0.10}, {"CHAVE DE ACESSO", 0.58}}
+	y = cabecalhoDeSecao(pg, md, y, "DOCUMENTOS VINCULADOS")
+	cursor := md.margem
+	for _, c := range colunas {
+		largura := md.util * c.fracao
+		pg.Retangulo(cursor, y, largura, 3.4, 0.1)
+		pg.Texto(cursor+0.8, y+0.4, c.nome, rotulo)
+		cursor += largura
 	}
-	for i, linha := range linhas {
-		pg.TextoCentralizado(m.margem, larguraEmit, y+7+float64(i)*3.4,
-			pdf.Encurtar(linha, pdf.Normal, 5.5, larguraEmit-2),
-			pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5})
+	y += 3.4
+	if len(docs) == 0 {
+		pg.Retangulo(md.margem, y, md.util, alturaDocMDFe, 0.1)
+		pg.Texto(md.margem+0.8, y+0.6, "SEM DOCUMENTOS VINCULADOS", miudo)
+		return y + alturaDocMDFe
 	}
-
-	// Bloco central.
-	x := m.margem + larguraEmit
-	pg.Retangulo(x, y, larguraCentro, altura, 0.1)
-	pg.TextoCentralizado(x, larguraCentro, y+1.5, "DAMDFE", titulo)
-	pg.TextoCentralizado(x, larguraCentro, y+6, "Documento Auxiliar do Manifesto", miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+9, "Eletrônico de Documentos Fiscais", miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+13,
-		"MODAL "+strings.ToUpper(ide.Modal.Descricao()),
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6})
-	pg.TextoCentralizado(x, larguraCentro, y+17.5,
-		fmt.Sprintf("MODELO %s   SÉRIE %03d", ide.Mod, ide.Serie), miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+21, fmt.Sprintf("Nº %09d", ide.NMDF), valorForte)
-	pg.TextoCentralizado(x, larguraCentro, y+25.5, "EMISSÃO "+dataHora(ide.DhEmi), miudo)
-	pg.TextoCentralizado(x, larguraCentro, y+29, fmt.Sprintf("FOLHA %d de %d", folha, folhas), miudo)
-
-	// Chave de acesso e código de barras.
-	x += larguraCentro
-	pg.Retangulo(x, y, larguraChave, 16, 0.1)
-	if ch := doc.Chave(); len(ch) == 44 {
-		if err := pg.CodigoDeBarras(x+2, y+2, larguraChave-4, 11, ch); err != nil {
-			pg.TextoCentralizado(x, larguraChave, y+6, "código de barras indisponível", miudo)
+	celula := pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5}
+	anterior := ""
+	for i := 0; i < max(len(docs), minLinhas); i++ {
+		var valores [3]string
+		if i < len(docs) {
+			d := docs[i]
+			valores = [3]string{d.municipio, d.tipo, d.chave}
+			// O município sai só na primeira linha do grupo.
+			if d.municipio == anterior {
+				valores[0] = ""
+			}
+			anterior = d.municipio
 		}
+		cursor = md.margem
+		for j, c := range colunas {
+			largura := md.util * c.fracao
+			pg.Retangulo(cursor, y, largura, alturaDocMDFe, 0.1)
+			pg.Texto(cursor+0.8, y+0.6, pdf.Encurtar(valores[j], celula.Fonte, celula.Tamanho, largura-1.6), celula)
+			cursor += largura
+		}
+		y += alturaDocMDFe
 	}
-	caixaCentro(pg, x, y+16, larguraChave, 8, "CHAVE DE ACESSO",
-		chaveFormatada(doc.Chave()), pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6})
-	caixaCentro(pg, x, y+24, larguraChave, altura-24, "PROTOCOLO DE AUTORIZAÇÃO DE USO",
-		protocoloMDFeDescrito(prot), valor)
-
-	return y + altura + 1.5
-}
-
-func protocoloMDFeDescrito(prot *mdfe.ProtMDFe) string {
-	if prot == nil || prot.InfProt.NProt == "" {
-		return "DOCUMENTO SEM PROTOCOLO DE AUTORIZAÇÃO"
-	}
-	return prot.InfProt.NProt + " - " + dataHora(prot.InfProt.DhRecbto)
-}
-
-// desenharViagemMDFe imprime a rota: origem, destino, carregamento e percurso.
-func desenharViagemMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, y float64) float64 {
-	ide := &doc.InfMDFe.Ide
-
-	caixa(pg, m.margem, y, m.util*0.34, 7, "TIPO DO EMITENTE", tipoDoEmitente(ide.TpEmit), valor)
-	caixa(pg, m.margem+m.util*0.34, y, m.util*0.34, 7,
-		"TIPO DO TRANSPORTADOR", tipoDoTransportador(ide.TpTransp), valor)
-	caixaCentro(pg, m.margem+m.util*0.68, y, m.util*0.16, 7, "UF INÍCIO", ide.UFIni, valorForte)
-	caixaCentro(pg, m.margem+m.util*0.84, y, m.util*0.16, 7, "UF FIM", ide.UFFim, valorForte)
-	y += 7
-
-	caixa(pg, m.margem, y, m.util*0.62, 7,
-		"MUNICÍPIOS DE CARREGAMENTO", municipiosDeCarregamento(ide.InfMunCarrega), valor)
-	caixa(pg, m.margem+m.util*0.62, y, m.util*0.20, 7, "PERCURSO", percurso(ide.InfPercurso), valor)
-	caixa(pg, m.margem+m.util*0.82, y, m.util*0.18, 7,
-		"INÍCIO DA VIAGEM", dataHoraOpcional(ide.DhIniViagem), valor)
-	return y + 7 + 1.5
+	return y
 }
 
 func tipoDoEmitente(t mdfe.TipoEmitente) string {
@@ -220,8 +484,6 @@ func tipoDoTransportador(t mdfe.TipoTransportador) string {
 		return "2 - TAC"
 	case mdfe.TransportadorCTC:
 		return "3 - CTC"
-	case "":
-		return ""
 	default:
 		return string(t)
 	}
@@ -240,93 +502,7 @@ func percurso(ufs []mdfe.InfPercurso) string {
 	for _, u := range ufs {
 		siglas = append(siglas, u.UFPer)
 	}
-	return strings.Join(siglas, " › ")
-}
-
-// desenharModalMDFe imprime o veículo, os reboques e os condutores.
-func desenharModalMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, y float64) float64 {
-	rodo := doc.InfMDFe.InfModal.Rodo
-	if rodo == nil {
-		return y
-	}
-
-	pg.RetanguloPreenchido(m.margem, y, m.util, 3.4, 0.88)
-	pg.Retangulo(m.margem, y, m.util, 3.4, 0.1)
-	pg.Texto(m.margem+0.8, y+0.4, "MODAL RODOVIÁRIO — VEÍCULO E CONDUTORES",
-		pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-	y += 3.4
-
-	rntrc, ciot := "", ""
-	if antt := rodo.InfANTT; antt != nil {
-		rntrc = antt.RNTRC
-		codigos := make([]string, 0, len(antt.InfCIOT))
-		for _, c := range antt.InfCIOT {
-			codigos = append(codigos, c.CIOT)
-		}
-		ciot = strings.Join(codigos, ", ")
-	}
-	caixa(pg, m.margem, y, m.util*0.25, 7, "RNTRC", rntrc, valor)
-	caixa(pg, m.margem+m.util*0.25, y, m.util*0.45, 7, "CIOT", ciot, valor)
-	caixa(pg, m.margem+m.util*0.70, y, m.util*0.30, 7,
-		"CÓDIGO DE AGENDAMENTO NO PORTO", rodo.CodAgPorto, valor)
-	y += 7
-
-	y = desenharVeiculos(pg, m, rodo, y)
-	return desenharCondutores(pg, m, rodo.VeicTracao.Condutor, y)
-}
-
-// desenharVeiculos imprime a tração e os reboques na mesma tabela, porque as
-// colunas são as mesmas e a diferença está só no papel de cada um.
-func desenharVeiculos(pg *pdf.Pagina, m medidas, rodo *mdfe.Rodo, y float64) float64 {
-	colunas := []struct {
-		nome   string
-		fracao float64
-	}{
-		{"VEÍCULO", 0.14},
-		{"PLACA", 0.13},
-		{"UF", 0.06},
-		{"RENAVAM", 0.19},
-		{"TARA (KG)", 0.13},
-		{"CAP. (KG)", 0.13},
-		{"RODADO", 0.11},
-		{"CARROCERIA", 0.11},
-	}
-
-	cursor := m.margem
-	for _, col := range colunas {
-		largura := m.util * col.fracao
-		pg.Retangulo(cursor, y, largura, 3.4, 0.1)
-		pg.Texto(cursor+0.8, y+0.4, col.nome, rotulo)
-		cursor += largura
-	}
-	y += 3.4
-
-	t := rodo.VeicTracao
-	linhas := [][]string{{
-		"TRAÇÃO", t.Placa, t.UF, t.RENAVAM,
-		separarMilhar(fmt.Sprint(t.Tara)), separarMilhar(fmt.Sprint(t.CapKG)),
-		rodado(t.TpRod), carroceria(t.TpCar),
-	}}
-	for i, r := range rodo.VeicReboque {
-		linhas = append(linhas, []string{
-			fmt.Sprintf("REBOQUE %d", i+1), r.Placa, r.UF, r.RENAVAM,
-			separarMilhar(fmt.Sprint(r.Tara)), separarMilhar(fmt.Sprint(r.CapKG)),
-			"", carroceria(r.TpCar),
-		})
-	}
-
-	for _, linha := range linhas {
-		cursor = m.margem
-		for i, col := range colunas {
-			largura := m.util * col.fracao
-			pg.Retangulo(cursor, y, largura, 4.5, 0.1)
-			pg.Texto(cursor+0.8, y+1, pdf.Encurtar(linha[i], pdf.Normal, 5.5, largura-1.6),
-				pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5})
-			cursor += largura
-		}
-		y += 4.5
-	}
-	return y
+	return strings.Join(siglas, " - ")
 }
 
 func rodado(t mdfe.TipoRodado) string {
@@ -359,48 +535,6 @@ func carroceria(t mdfe.TipoCarroceria) string {
 	return string(t)
 }
 
-// desenharCondutores imprime os motoristas, dois por linha.
-func desenharCondutores(pg *pdf.Pagina, m medidas, condutores []mdfe.Condutor, y float64) float64 {
-	if len(condutores) == 0 {
-		return y + 1.5
-	}
-
-	const porLinha = 2
-	largura := m.util / porLinha
-	for i, c := range condutores {
-		coluna := i % porLinha
-		if coluna == 0 && i > 0 {
-			y += 6
-		}
-		caixa(pg, m.margem+float64(coluna)*largura, y, largura, 6,
-			"CONDUTOR — CPF "+validacao.FormatarCPF(c.CPF), c.XNome, valor)
-	}
-	if len(condutores)%porLinha != 0 {
-		pg.Retangulo(m.margem+largura, y, largura, 6, 0.1)
-	}
-	return y + 6 + 1.5
-}
-
-// desenharTotaisMDFe imprime as contagens e o peso da carga.
-func desenharTotaisMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, y float64) float64 {
-	tot := &doc.InfMDFe.Tot
-
-	produto := ""
-	if p := doc.InfMDFe.ProdPred; p != nil {
-		produto = p.XProd
-	}
-
-	caixaCentro(pg, m.margem, y, m.util*0.10, 7, "QTD. NF-e", fmt.Sprint(tot.QNFe), valorForte)
-	caixaCentro(pg, m.margem+m.util*0.10, y, m.util*0.10, 7, "QTD. CT-e", fmt.Sprint(tot.QCTe), valorForte)
-	caixaCentro(pg, m.margem+m.util*0.20, y, m.util*0.10, 7, "QTD. MDF-e", fmt.Sprint(tot.QMDFe), valorForte)
-	caixaDireita(pg, m.margem+m.util*0.30, y, m.util*0.22, 7,
-		"VALOR TOTAL DA CARGA (R$)", moeda(tot.VCarga), valorForte)
-	caixaDireita(pg, m.margem+m.util*0.52, y, m.util*0.20, 7,
-		"PESO BRUTO ("+unidadeMDFe(tot.CUnid)+")", quantidade(tot.QCarga), valorForte)
-	caixa(pg, m.margem+m.util*0.72, y, m.util*0.28, 7, "PRODUTO PREDOMINANTE", produto, valor)
-	return y + 7 + 1.5
-}
-
 func unidadeMDFe(u mdfe.UnidadeDeMedida) string {
 	switch u {
 	case mdfe.UnidadeKG:
@@ -409,129 +543,5 @@ func unidadeMDFe(u mdfe.UnidadeDeMedida) string {
 		return "TON"
 	default:
 		return string(u)
-	}
-}
-
-// desenharSeguroMDFe imprime a averbação do seguro da carga.
-func desenharSeguroMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, y float64) float64 {
-	seguros := doc.InfMDFe.Seg
-	if len(seguros) == 0 {
-		return y
-	}
-
-	for _, s := range seguros {
-		seguradora, cnpj := "", ""
-		if s.InfSeg != nil {
-			seguradora = s.InfSeg.XSeg
-			cnpj = validacao.FormatarCNPJ(s.InfSeg.CNPJ)
-		}
-		caixa(pg, m.margem, y, m.util*0.34, 6, "SEGURADORA", seguradora, valor)
-		caixa(pg, m.margem+m.util*0.34, y, m.util*0.22, 6, "CNPJ DA SEGURADORA", cnpj, valor)
-		caixa(pg, m.margem+m.util*0.56, y, m.util*0.18, 6, "APÓLICE", s.NApol, valor)
-		caixa(pg, m.margem+m.util*0.74, y, m.util*0.26, 6,
-			"AVERBAÇÃO", strings.Join(s.NAver, ", "), valor)
-		y += 6
-	}
-	return y + 1.5
-}
-
-// desenharDocumentosMDFe imprime a relação de documentos da viagem.
-func desenharDocumentosMDFe(pg *pdf.Pagina, m medidas, docs []docMDFe, y float64) float64 {
-	colunas := []struct {
-		nome   string
-		fracao float64
-	}{
-		{"MUNICÍPIO DE DESCARREGAMENTO", 0.28},
-		{"TIPO", 0.09},
-		{"CHAVE DE ACESSO", 0.63},
-	}
-
-	pg.RetanguloPreenchido(m.margem, y, m.util, 3.4, 0.88)
-	cursor := m.margem
-	for _, col := range colunas {
-		largura := m.util * col.fracao
-		pg.Retangulo(cursor, y, largura, 3.4, 0.1)
-		pg.Texto(cursor+0.8, y+0.4, col.nome, pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
-		cursor += largura
-	}
-	y += 3.4
-
-	if len(docs) == 0 {
-		pg.Retangulo(m.margem, y, m.util, alturaDocMDFe, 0.1)
-		pg.Texto(m.margem+0.8, y+0.6, "MANIFESTO SEM DOCUMENTOS RELACIONADOS", miudo)
-		return y + alturaDocMDFe + 1.5
-	}
-
-	anterior := ""
-	for _, d := range docs {
-		// O município só aparece na primeira linha do grupo; repeti-lo em cada
-		// chave transformaria a coluna em ruído.
-		municipio := d.municipio
-		if municipio == anterior {
-			municipio = ""
-		}
-		anterior = d.municipio
-
-		valores := []string{municipio, d.tipo, d.chave}
-		cursor = m.margem
-		for i, col := range colunas {
-			largura := m.util * col.fracao
-			pg.Retangulo(cursor, y, largura, alturaDocMDFe, 0.1)
-			pg.Texto(cursor+0.8, y+0.6,
-				pdf.Encurtar(valores[i], pdf.Normal, 5.5, largura-1.6),
-				pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5})
-			cursor += largura
-		}
-		y += alturaDocMDFe
-	}
-	return y + 1.5
-}
-
-// desenharObservacoesMDFe imprime as informações adicionais e o aviso de
-// encerramento.
-func desenharObservacoesMDFe(pg *pdf.Pagina, m medidas, doc *mdfe.MDFe, opc Opcoes, y float64) float64 {
-	var partes []string
-	if ad := doc.InfMDFe.InfAdic; ad != nil {
-		for _, campo := range []string{ad.InfCpl, ad.InfAdFisco} {
-			if campo != "" {
-				partes = append(partes, campo)
-			}
-		}
-	}
-	if opc.Mensagem != "" {
-		partes = append(partes, opc.Mensagem)
-	}
-	texto := strings.Join(partes, " | ")
-
-	altura := 12.0
-	if texto != "" {
-		if usada := pg.TextoQuebrado(m.margem+0.8, y+4, m.util-1.6, texto, miudo, 4) + 5; usada > altura {
-			altura = usada
-		}
-	}
-	pg.Retangulo(m.margem, y, m.util, altura, 0.1)
-	pg.Texto(m.margem+0.8, y+0.5, "OBSERVAÇÕES", rotulo)
-	y += altura
-
-	// O encerramento é a causa número um de manifesto travado; o lembrete vale
-	// o espaço que ocupa.
-	pg.Texto(m.margem, y+1,
-		"Este manifesto deve ser encerrado ao término da viagem. Um MDF-e em aberto impede a emissão do seguinte.",
-		miudo)
-	return y + 5
-}
-
-// desenharTarjasMDFe imprime os avisos de homologação, contingência e
-// cancelamento.
-func desenharTarjasMDFe(pg *pdf.Pagina, doc *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes) {
-	switch {
-	case opc.Cancelada:
-		tarja(pg, "MDF-e CANCELADO")
-	case prot == nil || !prot.Autorizado():
-		tarja(pg, "SEM VALOR FISCAL")
-	case opc.Homologacao || doc.InfMDFe.Ide.TpAmb == mdfe.Homologacao:
-		tarja(pg, "AMBIENTE DE HOMOLOGAÇÃO — SEM VALOR FISCAL")
-	case doc.InfMDFe.Ide.TpEmis.Contingencia():
-		tarja(pg, "EMITIDO EM CONTINGÊNCIA")
 	}
 }

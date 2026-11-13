@@ -58,7 +58,7 @@ documento, err := danfe.Gerar(proc, danfe.Opcoes{})
 ```
 
 O pacote `danfe` gera os cinco documentos auxiliares — DANFE, cupom da NFC-e,
-DACTE, DACTE OS e DAMDFE — em Go puro, sem biblioteca gráfica. Veja
+DACTE, DACTE OS, DACTE do Simplificado e DAMDFE — em Go puro, sem biblioteca gráfica. Veja
 [Documentos auxiliares](danfe.md).
 
 O QR Code da NFC-e é a única peça que continua vindo de fora: a biblioteca

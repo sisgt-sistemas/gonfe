@@ -2,6 +2,7 @@ package danfe_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -102,6 +103,8 @@ func conhecimentoExemplo(documentos int) *cte.CTe {
 	}
 	c.InfCte.InfCTeNorm.InfDoc = &cte.InfDoc{InfNFe: notas}
 	c.InfCte.InfCTeNorm.InfModal.Rodo = &cte.Rodo{RNTRC: "12345678"}
+	c.InfCte.Emit.EnderEmit.Fone = "5133330000"
+	c.InfCTeSupl = &cte.InfCTeSupl{QrCodCTe: "https://dfe-portal.svrs.rs.gov.br/cte/qrCode?chCTe=43260312345678000195570010000009871112233442&tpAmb=2"}
 	return c
 }
 
@@ -166,7 +169,9 @@ func manifestoExemplo(notasPorMunicipio int) *mdfe.MDFe {
 	}
 
 	m.InfMDFe.InfModal.Rodo = &mdfe.Rodo{
-		InfANTT: &mdfe.InfANTT{RNTRC: "12345678"},
+		InfANTT: &mdfe.InfANTT{RNTRC: "12345678", ValePed: &mdfe.ValePed{Disp: []mdfe.DispositivoPedagio{
+			{CNPJForn: "11222333000181", CNPJPg: cnpjExemplo, NCompra: "VP-778899"},
+		}}},
 		VeicTracao: mdfe.VeicTracao{
 			Placa: "ABC1D23", RENAVAM: "12345678901", Tara: 8500, CapKG: 22000,
 			TpRod: mdfe.RodadoCavaloMec, TpCar: mdfe.CarroceriaFechadaBau, UF: "RS",
@@ -176,7 +181,9 @@ func manifestoExemplo(notasPorMunicipio int) *mdfe.MDFe {
 			},
 		},
 		VeicReboque: []mdfe.VeicReboque{
-			{Placa: "XYZ9K88", Tara: 6000, CapKG: 25000, TpCar: mdfe.CarroceriaFechadaBau, UF: "RS"},
+			{Placa: "XYZ9K88", Tara: 6000, CapKG: 25000, TpCar: mdfe.CarroceriaFechadaBau, UF: "RS",
+				// Reboque de terceiro: o RNTRC dele, não o do emitente, sai na tabela de veículos.
+				Prop: &mdfe.Proprietario{CNPJ: "99999999000191", RNTRC: "87654321", XNome: "AGREGADO EXEMPLO LTDA", TpProp: "0"}},
 		},
 	}
 
@@ -209,6 +216,7 @@ func manifestoExemplo(notasPorMunicipio int) *mdfe.MDFe {
 		CUnid:  mdfe.UnidadeKG,
 		QCarga: tipos.D("18400.0000"),
 	}
+	m.InfMDFeSupl = &mdfe.InfMDFeSupl{QrCodMDFe: "https://dfe-portal.svrs.rs.gov.br/mdfe/qrCode?chMDFe=43260312345678000195580010000000551445566773&tpAmb=2"}
 	return m
 }
 
@@ -423,7 +431,8 @@ func TestDACTECancelado(t *testing.T) {
 	}
 }
 
-func TestDACTEPaisagem(t *testing.T) {
+// Os documentos do transporte saem sempre em A4 retrato: em paisagem os quadros fixos não cabem.
+func TestDACTEIgnoraPaisagem(t *testing.T) {
 	proc := procCTeDe(t, conhecimentoExemplo(3))
 	retrato, err := danfe.GerarDACTE(proc, danfe.Opcoes{})
 	if err != nil {
@@ -434,8 +443,38 @@ func TestDACTEPaisagem(t *testing.T) {
 		t.Fatalf("GerarDACTE: %v", err)
 	}
 	conferirPDF(t, paisagem)
-	if bytes.Equal(retrato, paisagem) {
-		t.Error("a orientação não mudou nada no documento")
+	if !bytes.Equal(retrato, paisagem) {
+		t.Error("a orientação paisagem mudou o DACTE, que só sai em retrato")
+	}
+}
+
+// Quadros fixos que não cabem na folha são recusados com erro, em vez de sair cortados.
+func TestDACTEQueNaoCabeERecusado(t *testing.T) {
+	c := conhecimentoExemplo(1)
+	for i := range 60 {
+		c.InfCte.VPrest.Comp = append(c.InfCte.VPrest.Comp, cte.Componente{XNome: fmt.Sprintf("TAXA %d", i), VComp: tipos.D("1.00")})
+	}
+	if _, err := danfe.GerarDACTE(procCTeDe(t, c), danfe.Opcoes{}); !errors.Is(err, danfe.ErrNaoCabe) {
+		t.Errorf("erro = %v, queria ErrNaoCabe", err)
+	}
+}
+
+// Em contingência o DACTE é impresso antes da autorização: o aviso é o de contingência, não o de "sem protocolo".
+func TestDACTEEmContingenciaSemProtocolo(t *testing.T) {
+	c := conhecimentoExemplo(1)
+	c.InfCte.Ide.TpAmb = cte.Producao
+	c.InfCte.Ide.TpEmis = cte.EmissaoEPEC
+	c.InfCte.Ide.DhCont = tipos.Ptr(tipos.DH("2026-03-04T08:30:00-03:00"))
+	c.InfCte.Ide.XJust = "SEFAZ FORA DO AR NO MOMENTO DA EMISSAO"
+	if err := c.Preparar(); err != nil {
+		t.Fatal(err)
+	}
+	dados, err := danfe.DACTE(c, nil, danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(dados, []byte("EMITIDO EM CONTING")) {
+		t.Error("falta o aviso de contingência")
 	}
 }
 
@@ -519,13 +558,55 @@ func TestDAMDFEPaginaAutomaticamente(t *testing.T) {
 	}
 }
 
-func TestDAMDFEAvisaSobreOEncerramento(t *testing.T) {
+// O DAMDFE só leva o que está no XML (Manual do DAMDFE, §2.1): o antigo lembrete de encerramento, que não vinha do
+// documento, saiu.
+func TestDAMDFESoLevaOQueEstaNoXML(t *testing.T) {
 	dados, err := danfe.GerarDAMDFE(procMDFeDe(t, manifestoExemplo(1)), danfe.Opcoes{})
 	if err != nil {
 		t.Fatalf("GerarDAMDFE: %v", err)
 	}
-	if !bytes.Contains(dados, []byte("encerrado ao t")) {
-		t.Error("o lembrete de encerramento deveria estar no rodapé")
+	if bytes.Contains(dados, []byte("encerrado ao t")) {
+		t.Error("o DAMDFE traz um lembrete que não está no XML")
+	}
+}
+
+// O leiaute do manual (§2.7.1): QR Code, controle do fisco com a consulta, vale-pedágio e homologação na área do
+// protocolo.
+func TestDAMDFESegueOModeloDoManual(t *testing.T) {
+	com, err := danfe.GerarDAMDFE(procMDFeDe(t, manifestoExemplo(1)), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, trecho := range []string{"CONTROLE DO FISCO", "Consulte em https://dfe-portal", "Vale Ped", "VP-778899",
+		"RNTRC: 12345678", "87654321", "EMITIDO EM AMBIENTE DE HOMOLOGA"} {
+		if !bytes.Contains(com, []byte(trecho)) {
+			t.Errorf("falta %q", trecho)
+		}
+	}
+	semQR := manifestoExemplo(1)
+	semQR.InfMDFeSupl = nil
+	sem, err := danfe.GerarDAMDFE(procMDFeDe(t, semQR), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a, b := bytes.Count(com, []byte(" re\nf\n")), bytes.Count(sem, []byte(" re\nf\n")); a-b < 200 {
+		t.Errorf("com QR %d retângulos, sem %d: o QR Code não foi desenhado", a, b)
+	}
+}
+
+// Em contingência, o aviso com o prazo de 168 horas fica no lugar do protocolo (§2.4).
+func TestDAMDFEEmContingencia(t *testing.T) {
+	m := manifestoExemplo(1)
+	m.InfMDFe.Ide.TpEmis = mdfe.EmissaoContingencia
+	dados, err := danfe.DAMDFE(m, nil, danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(dados, []byte("EMISS")) || !bytes.Contains(dados, []byte("168 horas")) {
+		t.Error("falta o aviso de contingência com o prazo")
+	}
+	if bytes.Contains(dados, []byte("Protocolo de autoriza")) {
+		t.Error("em contingência o protocolo dá lugar ao aviso")
 	}
 }
 
@@ -643,6 +724,7 @@ func TestDACTEComTodosOsGruposDeICMS(t *testing.T) {
 	}
 }
 
+// O DACTE só leva o que está no XML (Manual do DACTE, §2.3): a mensagem livre das opções não sai nele.
 func TestMensagemDeRodapeNoTransporte(t *testing.T) {
 	const marca = "Emitido pelo sistema Exemplo 2.0"
 
@@ -651,8 +733,8 @@ func TestMensagemDeRodapeNoTransporte(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GerarDACTE: %v", err)
 	}
-	if !bytes.Contains(dacte, []byte(marca)) {
-		t.Error("a mensagem não aparece no DACTE")
+	if bytes.Contains(dacte, []byte(marca)) {
+		t.Error("a mensagem, que não está no XML, aparece no DACTE")
 	}
 
 	damdfe, err := danfe.GerarDAMDFE(procMDFeDe(t, manifestoExemplo(1)),
@@ -660,8 +742,8 @@ func TestMensagemDeRodapeNoTransporte(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GerarDAMDFE: %v", err)
 	}
-	if !bytes.Contains(damdfe, []byte(marca)) {
-		t.Error("a mensagem não aparece no DAMDFE")
+	if bytes.Contains(damdfe, []byte(marca)) {
+		t.Error("a mensagem, que não está no XML, aparece no DAMDFE")
 	}
 }
 
@@ -696,8 +778,41 @@ func TestDACTEComNotaEmPapel(t *testing.T) {
 	if !bytes.Contains(dados, []byte("NF mod. 01")) {
 		t.Error("a nota em papel não aparece na tabela")
 	}
-	if !bytes.Contains(dados, []byte("01/03/2026")) {
-		t.Error("a data de emissão da nota em papel deveria sair no formato brasileiro")
+	// As colunas do manual são tipo, emitente, série e número.
+	if !bytes.Contains(dados, []byte("1 / 4321")) {
+		t.Error("a série e o número da nota em papel não aparecem")
+	}
+}
+
+// O QR Code sai do qrCodCTe do documento (Manual do DACTE, §2.18); sem ele, o quadro avisa.
+func TestDACTEDesenhaOQRCode(t *testing.T) {
+	com, err := danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(1)), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	semQR := conhecimentoExemplo(1)
+	semQR.InfCTeSupl = nil
+	sem, err := danfe.GerarDACTE(procCTeDe(t, semQR), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// O QR Code são centenas de módulos desenhados como retângulos a mais.
+	if a, b := bytes.Count(com, []byte(" re\nf\n")), bytes.Count(sem, []byte(" re\nf\n")); a-b < 200 {
+		t.Errorf("com QR %d retângulos, sem %d: o QR Code não foi desenhado", a, b)
+	}
+}
+
+// A homologação sai como texto na área variável, sem tarja por cima dos valores (Manual do DACTE, §2.20).
+func TestDACTEHomologacaoNaAreaVariavel(t *testing.T) {
+	dados, err := danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(1)), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Contains(dados, []byte("EMITIDO EM AMBIENTE DE HOMOLOGA")) {
+		t.Error("falta o aviso de homologação")
+	}
+	if bytes.Contains(dados, []byte(" 30.00 Tf")) {
+		t.Error("ainda há tarja em corpo 30 por cima da folha")
 	}
 }
 

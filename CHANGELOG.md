@@ -9,6 +9,14 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
 
+- DACTE do CT-e Simplificado (`danfe.GerarDACTESimp`, `danfe.DACTESimp`): o
+  cabeçalho do Manual do DACTE e a tabela das entregas com os documentos de
+  cada uma, paginada.
+- QR Code no DACTE, no DACTE OS e no DAMDFE, a partir do `qrCodCTe` e do
+  `qrCodMDFe`, codificado com o `rsc.io/qr` (Go puro, sem CGO).
+- `make amostras` grava os PDFs de exemplo em `tmp/amostras`.
+- `cteos.Ide.InfPercurso`: as UF do percurso do veículo, que o esquema do CT-e
+  OS prevê.
 - Reforma tributária no CT-e, no CT-e OS e no CT-e Simplificado (NT 2026.004
   RTC), com os tipos no pacote `cte`: `IBSCBS` (IBS da UF e do município e CBS,
   com diferimento, devolução, redução, tributação regular, compra governamental
@@ -49,6 +57,23 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Alterado
 
+- DACTE, DACTE OS e DAMDFE refeitos pelos manuais oficiais (MOC CT-e 4.00 e
+  MDF-e 3.00b, Anexo II): código de barras de 15 mm com margem clara, consulta
+  impressa, telefone do emitente, país e telefone das partes, expedidor e
+  recebedor, CT-e globalizado, fluxo da carga, documentos originários em duas
+  colunas, percurso do veículo no DACTE OS; o DAMDFE no leiaute do manual, com
+  vale-pedágio, RNTRC por veículo e o aviso de contingência no lugar do
+  protocolo. A homologação sai como texto na área variável, sem tarja por cima
+  dos valores, e a paginação mede o espaço, sem deixar meia folha vazia.
+- **Incompatível:** `Opcoes.Mensagem` e o lembrete de encerramento não saem
+  mais no DACTE, no DACTE OS e no DAMDFE: os manuais só admitem o que está no
+  XML. A coluna "ICMS ST" do DACTE, que trazia a partilha, saiu; a partilha vai
+  para as informações adicionais.
+- **Incompatível:** DACTE, DACTE OS, DACTE do Simplificado e DAMDFE saem sempre
+  em A4 retrato (`Opcoes.Orientacao` é ignorada neles: em paisagem os quadros
+  fixos não cabem). Quando os quadros fixos não cabem nem em retrato
+  (componentes ou quantidades demais), a geração devolve erro com
+  `danfe.ErrNaoCabe`, em vez de cortar o conteúdo.
 - **Incompatível:** `cte.EmissaoContingencia` (5) sai, porque o leiaute 4.00
   não tem o código, e `cte.EmissaoFSDA` vira `cte.EmissaoRegimeEspecialNFF`: no
   leiaute atual o 3 é o Regime Especial da Nota Fiscal Fácil. O `Validar` recusa

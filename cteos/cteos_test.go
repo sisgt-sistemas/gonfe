@@ -87,6 +87,7 @@ func fretamentoExemplo() *cteos.CTeOS {
 			DhViagem:     tipos.Ptr(tipos.DH("2026-03-06T05:00:00-03:00")),
 		},
 	}
+	c.InfCte.Ide.InfPercurso = []cteos.Percurso{{UFPer: "SC"}}
 	return c
 }
 

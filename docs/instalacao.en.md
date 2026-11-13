@@ -17,9 +17,10 @@ the library does not use CGO.
 go get github.com/sisgt-sistemas/gonfe
 ```
 
-That also pulls in the single external dependency,
+That also pulls in the two external dependencies, both pure Go:
 `software.sslmate.com/src/go-pkcs12`, used to read PKCS#12 files encrypted with
-the modern algorithms certificate authorities issue today.
+the modern algorithms certificate authorities issue today, and `rsc.io/qr`,
+which encodes the QR Code on the DACTE and the DAMDFE.
 
 ## Checking the installation
 

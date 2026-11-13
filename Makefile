@@ -1,6 +1,6 @@
 # A interface única do projeto. Tudo roda no container de desenvolvimento: `make help` lista.
 .DEFAULT_GOAL := help
-.PHONY: help image shell go tidy fmt fmt-check vet lint vuln test test-short cover mutate ci
+.PHONY: help image shell go tidy fmt fmt-check vet lint vuln test test-short cover amostras mutate ci
 
 GREMLINS_VERSION := v0.5.1
 IMAGE := gonfe-dev
@@ -53,6 +53,11 @@ cover: ## Cobertura por pacote; detalhe em tmp/cover.html
 	$(RUN) go test -count=1 -coverprofile=tmp/cover.out ./... >/dev/null
 	$(RUN) go tool cover -html=tmp/cover.out -o tmp/cover.html
 	$(RUN) go tool cover -func=tmp/cover.out | tail -1
+
+amostras: ## PDFs de amostra do DACTE, DACTE OS e DAMDFE em tmp/amostras, para comparar com o manual
+	mkdir -p tmp/amostras
+	$(RUN) go test -count=1 -run TestGerarAmostras ./danfe/ -args -amostras=/src/tmp/amostras
+	@ls tmp/amostras
 
 mutate: ## Mutação por demanda, fora do gate: make mutate pkg=./validacao
 	@test -n "$(pkg)" || (echo "Informe o pacote: make mutate pkg=./validacao" && exit 2)
