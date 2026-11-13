@@ -1,0 +1,25 @@
+version: "2"
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - errorlint
+    - gosec
+    - nilerr
+    - unconvert
+    - unparam
+    - whitespace
+  settings:
+    gosec:
+      excludes: [G104, G115]
+  exclusions:
+    rules:
+      - path: _test\.go$
+        linters: [gosec]
+      - path: exemplos/
+        linters: [gosec]
+      # O leiaute manda SHA-1: a assinatura XMLDSig da SEFAZ é rsa-sha1 com resumo sha1 (MOC, assinatura digital) e o
+      # hash do QR Code da NFC-e é SHA-1 (NT 2015.002). Trocar quebraria a validação na SEFAZ.
+      - path: (xmldsig/xmldsig\.go|nfce/qrcode\.go)$
+        linters: [gosec]
+        text: "G401|G505"

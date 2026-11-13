@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# O cartão da issue no GitHub Project anda com o fluxo. Sem BOARD_PROJECT no
+# .workflow.conf, nada acontece: o fluxo segue igual em projeto sem board.
+#
+#   board link <branch> <issue>   liga a branch à issue e põe o cartão em andamento
+#   board validate                o cartão da branch atual vai para validação
+#   board done <branch> <sha> <issue>  fecha a issue com o commit e põe o cartão em concluído;
+#                                 a issue vem do finish, que a lê antes de apagar a branch
+#
+# A ligação fica em `git config branch.<branch>.issue`: local, e some com a branch.
+set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/flow-lib.sh"
+
+GH="${BOARD_GH:-gh}" # os testes trocam por um gh falso
+
+enabled() {
+  [ -n "$BOARD_PROJECT" ] && [ -n "$BOARD_OWNER" ] || return 1
+  if ! command -v "$GH" >/dev/null 2>&1; then
+    echo "board: gh não encontrado; o cartão não andou." >&2
+    return 1
+  fi
+}
+
+repo() {
+  [ -z "${BOARD_REPO:-}" ] || { echo "$BOARD_REPO"; return; } # os testes não têm origin no GitHub
+  git remote get-url origin | sed -E 's#^(git@github.com:|https://github.com/)##; s#\.git$##'
+}
+
+issue_of() {
+  git config --get "branch.$1.issue" || true
+}
+
+# O id do projeto, do campo de status e da opção pedida, lidos uma vez por chamada.
+status_ids() {
+  local status="$1"
+  "$GH" project view "$BOARD_PROJECT" --owner "$BOARD_OWNER" --format json --jq .id
+  "$GH" project field-list "$BOARD_PROJECT" --owner "$BOARD_OWNER" --format json \
+    --jq ".fields[] | select(.name == \"Status\") | .id, (.options[] | select(.name == \"$status\") | .id)"
+}
+
+move() {
+  local issue="$1" status="$2" url item ids
+  url="https://github.com/$(repo)/issues/$issue"
+  # Adicionar um item que já está no projeto devolve o mesmo item.
+  item="$("$GH" project item-add "$BOARD_PROJECT" --owner "$BOARD_OWNER" --url "$url" --format json --jq .id)"
+  mapfile -t ids < <(status_ids "$status")
+  if [ "${#ids[@]}" -ne 3 ] || [ -z "${ids[2]}" ]; then
+    echo "board: o projeto $BOARD_PROJECT não tem o status '$status'." >&2
+    return 1
+  fi
+  "$GH" project item-edit --id "$item" --project-id "${ids[0]}" --field-id "${ids[1]}" --single-select-option-id "${ids[2]}" >/dev/null
+  echo "board: #$issue em '$status'."
+}
+
+link() {
+  local branch="$1" issue="${2#\#}"
+  [ -n "$issue" ] || return 0
+  if ! [[ "$issue" =~ ^[0-9]+$ ]]; then
+    echo "board: issue '$issue' não é número." >&2
+    exit 1
+  fi
+  git config "branch.$branch.issue" "$issue"
+  enabled || return 0
+  move "$issue" "$BOARD_DOING"
+  "$GH" issue comment "$issue" --repo "$(repo)" --body "Em andamento na branch \`$branch\`." >/dev/null
+}
+
+validate() {
+  local branch issue
+  branch="$(current_branch)"
+  issue="$(issue_of "$branch")"
+  if [ -z "$issue" ]; then
+    echo "board: $branch não está ligada a uma issue (make feature ... issue=N)." >&2
+    exit 1
+  fi
+  enabled || return 0
+  move "$issue" "$BOARD_REVIEW"
+}
+
+done_() {
+  local branch="$1" sha="$2" issue="${3:-}"
+  [ -n "$issue" ] || return 0
+  enabled || return 0
+  "$GH" issue close "$issue" --repo "$(repo)" --comment "Integrado em \`$DEVELOP_BRANCH\` em $sha, pela branch \`$branch\`." >/dev/null
+  move "$issue" "$BOARD_DONE"
+}
+
+case "${1:-}" in
+  link) link "${2:?branch}" "${3:-}" ;;
+  validate) validate ;;
+  done) done_ "${2:?branch}" "${3:?sha}" "${4:-}" ;;
+  *)
+    echo "Uso: board link <branch> <issue> | validate | done <branch> <sha> <issue>" >&2
+    exit 1
+    ;;
+esac
