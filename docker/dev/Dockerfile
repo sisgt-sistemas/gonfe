@@ -4,7 +4,7 @@
 # Contém Go, golangci-lint, govulncheck e o xmllint (validação contra os esquemas da SEFAZ, pacote xsd).
 # O go.mod pede Go 1.23 como mínimo; a integração contínua confere 1.23, 1.24 e a estável.
 
-ARG GO_VERSION=1.26.10
+ARG GO_VERSION=1.26.11
 FROM golang:${GO_VERSION}-alpine
 
 ARG UID=1000
