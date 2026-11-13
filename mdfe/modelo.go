@@ -127,8 +127,12 @@ func (t TipoEmissao) Contingencia() bool { return t != "" && t != EmissaoNormal 
 // ProcessoEmissao identifica o programa emissor.
 type ProcessoEmissao string
 
-// EmissaoAplicativoContribuinte é o aplicativo do próprio contribuinte.
-const EmissaoAplicativoContribuinte ProcessoEmissao = "0"
+const (
+	// EmissaoAplicativoContribuinte é o aplicativo do próprio contribuinte.
+	EmissaoAplicativoContribuinte ProcessoEmissao = "0"
+	// EmissaoPAA é a emissão por Provedor de Assinatura e Autorização (NT 2025.001 v1.04).
+	EmissaoPAA ProcessoEmissao = "4"
+)
 
 // UnidadeDeMedida é a unidade do peso da carga.
 type UnidadeDeMedida string

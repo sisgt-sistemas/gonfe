@@ -39,6 +39,11 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Alterado
 
+- Esquemas do MDF-e atualizados para o pacote "Schemas NT 2025.001 v 1.04"
+  (25/04/2026): o processo de emissão aceita o 4, emissão por Provedor de
+  Assinatura e Autorização (`mdfe.EmissaoPAA`), e o CNPJ do contratante deixa
+  de aceitar vazio. O `Id` do manifesto continua só numérico, então o MDF-e de
+  emitente com CNPJ alfanumérico segue recusado pelo esquema.
 - **Incompatível:** `chave.Limpar` preserva as letras (em maiúsculas) e tira
   só a pontuação, o prefixo do atributo Id (`NFe`, `CTe`, `MDFe`) e um rótulo
   de letras antes da chave (`Chave: …`); antes devolvia só os dígitos. Outro

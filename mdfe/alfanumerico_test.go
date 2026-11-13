@@ -41,7 +41,7 @@ func TestManifestoLevaNFeDeCNPJAlfanumerico(t *testing.T) {
 	}
 }
 
-// O esquema embutido (PL_MDFe_300b, NT 2025.001 v1.03) ainda restringe o Id do infMDFe a MDFe[0-9]{44}: um MDF-e de
+// O esquema embutido (PL_MDFe_300b, NT 2025.001 v1.04, o mais novo em 2026-11-13) ainda restringe o Id do infMDFe a MDFe[0-9]{44}: um MDF-e de
 // emitente com CNPJ alfanumérico é recusado, embora a biblioteca o monte. Quando o pacote de esquemas for atualizado
 // e este teste falhar, o emitente alfanumérico passa a valer também no MDF-e: troque o teste pelo positivo.
 func TestEsquemaDoMDFeAindaRecusaEmitenteAlfanumerico(t *testing.T) {

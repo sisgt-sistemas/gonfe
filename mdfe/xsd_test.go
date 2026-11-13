@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
 	"github.com/sisgt-sistemas/gonfe/xsd"
 )
 
@@ -21,5 +22,23 @@ func TestManifestoPassaNoEsquema(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("o MDF-e de exemplo não passa no esquema: %v", err)
+	}
+}
+
+// O esquema da NT 2025.001 v1.04 aceita o processo de emissão 4 (Provedor de Assinatura e Autorização); o anterior
+// só aceitava o 0.
+func TestManifestoPorPAAPassaNoEsquema(t *testing.T) {
+	m := manifestoExemplo()
+	m.InfMDFe.Ide.ProcEmi = mdfe.EmissaoPAA
+	assinado, err := m.AssinarCom(certtest.MustGerar(certtest.Opcoes{CNPJ: cnpjTransportadora}))
+	if err != nil {
+		t.Fatalf("AssinarCom: %v", err)
+	}
+	err = xsd.ValidarMDFe(assinado)
+	if errors.Is(err, xsd.ErrSemXmllint) {
+		t.Skip(err)
+	}
+	if err != nil {
+		t.Fatalf("o MDF-e emitido por PAA não passa no esquema: %v", err)
 	}
 }
