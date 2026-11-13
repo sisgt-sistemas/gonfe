@@ -343,6 +343,10 @@ func (c *ClienteCTe) StatusServico(ctx context.Context) (*RetConsStatServCTe, er
 	return &resposta, nil
 }
 
+// ErrCTeSimpSemRecepcao diz que o CT-e Simplificado tem serviço de recepção próprio (o retorno é o retCTeSimp), que
+// este cliente ainda não implementa: o documento não vai para a recepção do CT-e.
+var ErrCTeSimpSemRecepcao = errors.New("sefaz: a recepção do CT-e Simplificado ainda não é implementada")
+
 // Autorizar transmite um conhecimento assinado para autorização.
 //
 // A recepção do leiaute 4.00 é síncrona e recebe um documento por vez,
@@ -353,11 +357,13 @@ func (c *ClienteCTe) StatusServico(ctx context.Context) (*RetConsStatServCTe, er
 // O mesmo serviço atende aos dois modelos: o 57 e o CT-e OS, modelo 67. O
 // modelo é reconhecido pelo elemento raiz do documento assinado.
 func (c *ClienteCTe) Autorizar(ctx context.Context, cteAssinado []byte) (*RetCTe, error) {
-	// A ordem importa: "<CTe" também é prefixo de "<CTeOS", então o modelo 67
-	// precisa ser testado primeiro.
+	// A ordem importa: "<CTe" também é prefixo de "<CTeOS" e de "<CTeSimp", então
+	// os dois precisam ser testados primeiro.
 	var mensagem []byte
 	var err error
 	switch {
+	case bytes.Contains(cteAssinado, []byte("<CTeSimp")):
+		return nil, ErrCTeSimpSemRecepcao
 	case bytes.Contains(cteAssinado, []byte("<CTeOS")):
 		mensagem, err = cteos.MontarEnvioSincrono(cteAssinado)
 	case bytes.Contains(cteAssinado, []byte("<CTe")):

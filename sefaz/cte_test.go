@@ -2,6 +2,7 @@ package sefaz_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -90,5 +91,15 @@ func TestCTeEnviarEventoRejeitaConteudoErrado(t *testing.T) {
 	// Um CT-e não é um evento, e "<CTe" nem sequer é prefixo de "<eventoCTe".
 	if _, err := c.EnviarEvento(context.Background(), []byte("<CTe/>")); err == nil {
 		t.Error("esperava erro ao enviar um documento que não é evento")
+	}
+}
+
+// O CT-e Simplificado não vai para a recepção do CT-e: "<CTe" é prefixo de "<CTeSimp", e sem o caso próprio o
+// documento seria montado como CT-e e recusado sem dizer por quê.
+func TestCTeAutorizarRecusaOCTeSimplificado(t *testing.T) {
+	c := clienteCTeApontando(t, "http://127.0.0.1:1")
+	_, err := c.Autorizar(context.Background(), []byte(`<CTeSimp xmlns="http://www.portalfiscal.inf.br/cte"><infCte/></CTeSimp>`))
+	if !errors.Is(err, sefaz.ErrCTeSimpSemRecepcao) {
+		t.Errorf("Autorizar(CTeSimp) = %v, queria ErrCTeSimpSemRecepcao", err)
 	}
 }
