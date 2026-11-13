@@ -5,6 +5,14 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Corrigido
+
+- `make release` podia recusar uma seção "Não lançado" cheia como vazia: com
+  `pipefail`, o `grep -q` saía no primeiro casamento e o `awk` tomava SIGPIPE.
+  A falha era intermitente e derrubou o gate do CI na v1.0.0.
+- Os testes dos scripts do fluxo (`internal/flowtest`) pulam no Windows, onde
+  os scripts bash não rodam.
+
 ## [1.0.0] — 2026-11-13
 
 Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).

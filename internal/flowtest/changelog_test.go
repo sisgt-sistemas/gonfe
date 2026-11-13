@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -31,6 +32,9 @@ type repo struct {
 // newRepo cria um repositório com o CHANGELOG à mão, o VERSION 0.1.0 num commit de baseline em main e o develop.
 func newRepo(t *testing.T, mode string) repo {
 	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("os scripts do fluxo são bash e rodam no container de docker/dev, não no Windows")
+	}
 	r := repo{t: t, dir: t.TempDir()}
 	r.env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t",
 		"GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
