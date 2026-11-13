@@ -7,7 +7,7 @@ seis documentos auxiliares em PDF.
 | --- | --- | --- | --- |
 | DANFE | NF-e, modelo 55 | `Gerar` ou `DANFE` | A4 |
 | Cupom | NFC-e, modelo 65 | `Gerar` ou `Cupom` | bobina |
-| DACTE | CT-e, modelo 57 | `GerarDACTE` ou `DACTE` | A4 |
+| DACTE | CT-e, modelo 57 | `GerarDACTE` ou `DACTE` | A4 ou meia folha (A5) |
 | DACTE OS | CT-e OS, modelo 67 | `GerarDACTEOS` ou `DACTEOS` | A4 |
 | DACTE do Simplificado | CT-e Simplificado, modelo 57 | `GerarDACTESimp` ou `DACTESimp` | A4 |
 | DAMDFE | MDF-e, modelo 58 | `GerarDAMDFE` ou `DAMDFE` | A4 |
@@ -110,6 +110,30 @@ flowchart TB
 - **O que o manual não prevê** (IBS e CBS, ordens de coleta, partilha do ICMS)
   vem em quadros depois do leiaute padrão.
 
+### Meia folha
+
+```go
+dacte, err := danfe.GerarDACTE(proc, danfe.Opcoes{Papel: danfe.PapelA5})
+```
+
+O manual admite o DACTE em A5 paisagem, 210 × 148 mm (§2.15): a meia folha de um
+A4. A largura é a do A4 em retrato, e os quadros ficam na mesma disposição, mais
+baixos (§2.16). O código de barras e o QR Code mantêm o tamanho, porque têm
+mínimo.
+
+- **Sem canhoto por padrão**, para caber. `CanhotoNaMeiaFolha: true` o põe no
+  topo da primeira folha; em paisagem, o manual não deixa levá-lo ao pé (§2.10).
+- **Compactada onde se repete.** A natureza da operação entra na linha do tipo do
+  CT-e; o tomador que é uma das partes, já impressas por inteiro acima, sai numa
+  linha (o de fora, `toma4`, leva o quadro completo); observações, uso do emissor
+  e reservado ao fisco ficam lado a lado.
+- **Folhas.** Os quadros entram em ordem, e o que não cabe vai para a folha
+  seguinte, que repete o cabeçalho (§2.12). Um conhecimento com até uns oito
+  documentos originários cabe numa folha; com mais, a tabela continua nas
+  seguintes.
+- **Só o DACTE.** O DACTE OS, o do Simplificado e o DAMDFE ignoram `Papel` e
+  saem em A4.
+
 ## O DACTE OS
 
 ```go
@@ -153,6 +177,8 @@ descarregamento. O DAMDFE não tem canhoto.
 ```go
 danfe.Opcoes{
     Orientacao:    danfe.Paisagem,  // padrão: retrato
+    Papel:         danfe.PapelA5,   // DACTE em meia folha; padrão: A4
+    CanhotoNaMeiaFolha: true,       // DACTE em meia folha: com o recibo
     SemCanhoto:    true,            // omite o recibo de entrega
     Cancelada:     true,            // marca o documento como cancelado
     Homologacao:   true,            // força o aviso de teste

@@ -7,7 +7,7 @@ generates the six auxiliary documents as PDFs.
 | --- | --- | --- | --- |
 | DANFE | NF-e, model 55 | `Gerar` or `DANFE` | A4 |
 | Receipt | NFC-e, model 65 | `Gerar` or `Cupom` | till roll |
-| DACTE | CT-e, model 57 | `GerarDACTE` or `DACTE` | A4 |
+| DACTE | CT-e, model 57 | `GerarDACTE` or `DACTE` | A4 or half sheet (A5) |
 | DACTE OS | CT-e OS, model 67 | `GerarDACTEOS` or `DACTEOS` | A4 |
 | Simplificado DACTE | CT-e Simplificado, model 57 | `GerarDACTESimp` or `DACTESimp` | A4 |
 | DAMDFE | MDF-e, model 58 | `GerarDAMDFE` or `DAMDFE` | A4 |
@@ -111,6 +111,30 @@ flowchart TB
 - **What the manual does not cover** (IBS and CBS, collection orders, ICMS
   sharing) comes in blocks after the standard layout.
 
+### Half sheet
+
+```go
+dacte, err := danfe.GerarDACTE(proc, danfe.Opcoes{Papel: danfe.PapelA5})
+```
+
+The manual allows the DACTE on A5 landscape, 210 × 148 mm (§2.15): half of an
+A4 sheet. The width is that of portrait A4, and the blocks keep the same
+arrangement, only shorter (§2.16). The barcode and the QR Code keep their size,
+since they have a minimum.
+
+- **No receipt stub by default**, so that it fits. `CanhotoNaMeiaFolha: true`
+  puts it at the top of the first sheet; in landscape the manual does not allow
+  it at the foot (§2.10).
+- **Compacted where it repeats.** The nature of the operation goes on the CT-e
+  type line; a payer that is one of the parties, already printed in full above,
+  takes a single line (an outside payer, `toma4`, gets the full block); notes,
+  issuer use and tax authority use sit side by side.
+- **Sheets.** The blocks go in order, and what does not fit moves to the next
+  sheet, which repeats the header (§2.12). A CT-e with up to about eight source
+  documents fits on one sheet; with more, the table continues on the next ones.
+- **DACTE only.** The DACTE OS, the Simplificado DACTE and the DAMDFE ignore
+  `Papel` and come out on A4.
+
 ## The DACTE OS
 
 ```go
@@ -155,6 +179,8 @@ municipality. The DAMDFE has no receipt stub.
 ```go
 danfe.Opcoes{
     Orientacao:    danfe.Paisagem,  // default: portrait
+    Papel:         danfe.PapelA5,   // DACTE on a half sheet; default: A4
+    CanhotoNaMeiaFolha: true,       // DACTE on a half sheet: with the stub
     SemCanhoto:    true,            // omits the delivery receipt stub
     Cancelada:     true,            // marks the document as cancelled
     Homologacao:   true,            // forces the test notice

@@ -140,6 +140,7 @@ func TestTudoCabeNaPagina(t *testing.T) {
 // (Manual do DACTE, §2.21.2): com e sem canhoto, em homologação e em produção, curtos e longos.
 func TestDocumentosDoTransporteCabemNaMargem(t *testing.T) {
 	semCanhoto := danfe.Opcoes{SemCanhoto: true}
+	meiaFolha := danfe.Opcoes{Papel: danfe.PapelA5}
 	producao := func(c *cte.CTe) *cte.CTe { c.InfCte.Ide.TpAmb = cte.Producao; return c }
 	casos := []struct {
 		nome  string
@@ -156,6 +157,21 @@ func TestDocumentosDoTransporteCabemNaMargem(t *testing.T) {
 		}},
 		{"DACTE em produção com 150 documentos", func(t *testing.T) ([]byte, error) {
 			return danfe.GerarDACTE(procCTeDe(t, producao(conhecimentoExemplo(150))), danfe.Opcoes{})
+		}},
+		{"DACTE em meia folha com 1 documento", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(1)), meiaFolha)
+		}},
+		{"DACTE em meia folha com 150 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), meiaFolha)
+		}},
+		{"DACTE em meia folha com canhoto e 150 documentos", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), danfe.Opcoes{Papel: danfe.PapelA5, CanhotoNaMeiaFolha: true})
+		}},
+		{"DACTE em meia folha com todas as partes", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, comTodasAsPartes(conhecimentoExemplo(20))), meiaFolha)
+		}},
+		{"DACTE em meia folha em produção", func(t *testing.T) ([]byte, error) {
+			return danfe.GerarDACTE(procCTeDe(t, producao(conhecimentoExemplo(30))), meiaFolha)
 		}},
 		{"DACTE pedido em paisagem", func(t *testing.T) ([]byte, error) {
 			return danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(150)), danfe.Opcoes{Orientacao: danfe.Paisagem})

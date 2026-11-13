@@ -5,6 +5,20 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Adicionado
+
+- DACTE em meia folha (`Opcoes.Papel: danfe.PapelA5`): A5 paisagem, que o
+  Manual do DACTE admite (§2.15), com os quadros do A4 mais baixos e o código de
+  barras e o QR Code no tamanho mínimo. Sai sem canhoto, a menos que
+  `Opcoes.CanhotoNaMeiaFolha` o peça; o que não cabe vai para a folha seguinte,
+  que repete o cabeçalho. `make amostras` grava `dacte-meia-folha.pdf`.
+
+### Corrigido
+
+- O código de barras da chave no DACTE, no DACTE OS e no do Simplificado fica
+  centrado na faixa: a conta da posição era feita em inteiros e o deixava
+  0,5 mm acima do centro.
+
 ## [1.0.2] — 2026-11-13
 
 ### Alterado

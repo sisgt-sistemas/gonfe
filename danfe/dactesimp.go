@@ -58,7 +58,7 @@ func desenharPrimeiraFolhaSimp(pg *pdf.Pagina, m medidas, c *ctesimp.CTeSimp, pr
 	caixa(pg, m.margem+m.util*0.5, y, m.util*0.5, 7, "UF DE TÉRMINO DA PRESTAÇÃO", ide.UFFim, valor)
 	y += 8.5
 	t := &c.InfCte.Toma
-	desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", &parte{
+	desenharParte(pg, m, m.margem, y, m.util, "TOMADOR DO SERVIÇO", &parte{
 		nome: t.XNome, documento: formatarDocumento(t.CNPJ, t.CPF), ie: t.IE, fone: t.Fone, endereco: &t.EnderToma,
 	})
 	y += alturaParte + 1.5

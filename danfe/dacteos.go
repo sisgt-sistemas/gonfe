@@ -169,11 +169,11 @@ func desenharPrestacaoOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) f
 func desenharTomadorOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) float64 {
 	t := c.InfCte.Toma
 	if t == nil {
-		desenharParte(pg, m.margem, y, m.util, "TOMADOR / USUÁRIO DO SERVIÇO", nil)
+		desenharParte(pg, m, m.margem, y, m.util, "TOMADOR / USUÁRIO DO SERVIÇO", nil)
 		return y + alturaParte + 1.5
 	}
 	p := &parte{nome: t.XNome, documento: formatarDocumento(t.CNPJ, t.CPF), ie: t.IE, fone: t.Fone, endereco: t.EnderToma}
-	desenharParte(pg, m.margem, y, m.util, "TOMADOR / USUÁRIO DO SERVIÇO", p)
+	desenharParte(pg, m, m.margem, y, m.util, "TOMADOR / USUÁRIO DO SERVIÇO", p)
 	return y + alturaParte + 1.5
 }
 

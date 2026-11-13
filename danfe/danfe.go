@@ -52,7 +52,25 @@ type Opcoes struct {
 	// NFC-e, para identificar o sistema emissor. Os documentos do transporte não
 	// a imprimem: os manuais deles só admitem o que está no XML.
 	Mensagem string
+	// Papel é o tamanho da folha do DACTE: A4 retrato (o padrão) ou a meia
+	// folha, A5 paisagem. Os demais documentos o ignoram e saem no formato deles.
+	Papel Papel
+	// CanhotoNaMeiaFolha imprime o canhoto no DACTE em meia folha, que por
+	// padrão sai sem ele para caber numa folha só. [Opcoes.SemCanhoto] vale
+	// para o A4.
+	CanhotoNaMeiaFolha bool
 }
+
+// Papel é o tamanho da folha do DACTE.
+type Papel int
+
+const (
+	// PapelA4 é o A4 em retrato, o padrão.
+	PapelA4 Papel = iota
+	// PapelA5 é a meia folha: A5 em paisagem, 210 × 148 mm, que o Manual do
+	// DACTE admite (MOC CT-e 4.00, Anexo II, §2.15).
+	PapelA5
+)
 
 // Orientacao é o sentido de impressão do DANFE.
 type Orientacao int
@@ -87,11 +105,29 @@ func Gerar(procNFe []byte, opc Opcoes) ([]byte, error) {
 	}
 }
 
-// medidas reúne as dimensões do desenho, em milímetros.
+// medidas reúne as dimensões do desenho, em milímetros, e as alturas dos
+// quadros: as do A4 em [medidasDe] e as da meia folha em [medidasA5].
 type medidas struct {
 	largura, altura float64
 	margem          float64
 	util            float64 // largura útil, descontadas as margens
+
+	// campo é a altura de uma linha de campos; secao, a da barra com o título
+	// de um quadro; respiro, o espaço entre quadros.
+	campo, secao, respiro float64
+	// linhaParte é cada uma das três linhas de um participante, e parte, o
+	// quadro inteiro, com o título.
+	linhaParte, parte float64
+	// linhaDoc é a altura de cada linha da tabela de documentos originários.
+	linhaDoc float64
+	// faixaIdentificacao, faixaChave e faixaSituacao são as faixas do
+	// cabeçalho dos documentos do transporte.
+	faixaIdentificacao, faixaChave, faixaSituacao float64
+	// valor e valorForte são os corpos dos valores dos campos.
+	valor, valorForte pdf.Estilo
+	// compacta diz que é a meia folha: o cabeçalho e o canhoto se rearranjam
+	// para caber na altura menor.
+	compacta bool
 }
 
 // margem é a margem das páginas dos documentos auxiliares, em milímetros.
@@ -103,8 +139,48 @@ func medidasDe(pg *pdf.Pagina) medidas {
 		altura:  pg.Altura(),
 		margem:  margem,
 		util:    pg.Largura() - 2*margem,
+
+		campo: 7, secao: 3.4, respiro: 1.5,
+		linhaParte: 6, parte: alturaParte,
+		linhaDoc:           alturaDocOrig,
+		faixaIdentificacao: alturaFaixaIdentificacao, faixaChave: alturaFaixaChave, faixaSituacao: alturaSituacao,
+		valor: valor, valorForte: valorForte,
 	}
 }
+
+// medidasA5 são as medidas da meia folha. A largura é a do A4 em retrato, e a
+// disposição dos quadros é a mesma; só as alturas diminuem (§2.16), menos a do
+// código de barras e a do QR Code, que têm mínimo.
+func medidasA5(pg *pdf.Pagina) medidas {
+	m := medidasDe(pg)
+	m.campo, m.secao, m.respiro = alturaCampoA5, 2.6, 0.6
+	m.linhaParte = alturaCampoA5
+	m.parte = m.secao + 3*m.linhaParte
+	m.linhaDoc = 3
+	m.faixaIdentificacao, m.faixaChave, m.faixaSituacao = 25, 17, 4.5
+	m.valor = pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5.5}
+	m.valorForte = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5.5}
+	m.compacta = true
+	return m
+}
+
+// alturaCampoA5 é a linha de campos da meia folha. Abaixo de alturaCampoCompacto, a caixa usa o rótulo menor e
+// encosta o valor no pé, para os dois caberem.
+const (
+	alturaCampoA5       = 4.4
+	alturaCampoCompacto = 5
+)
+
+// posicoesNaCaixa devolve o estilo do rótulo e onde ficam o rótulo e o valor, a partir do topo da caixa.
+func posicoesNaCaixa(altura float64, e pdf.Estilo) (estiloRotulo pdf.Estilo, yRotulo, yValor float64) {
+	if altura < alturaCampoCompacto {
+		return rotuloCompacto, 0.3, altura - e.Tamanho*mmPorPonto*0.8 - 0.5
+	}
+	return rotulo, 0.5, altura - e.Tamanho/2.4 - 1.2
+}
+
+// mmPorPonto converte o corpo da fonte, em pontos, para milímetros.
+const mmPorPonto = 25.4 / 72
 
 // Estilos usados no desenho. Os corpos seguem o que cabe em um A4 com a
 // densidade de informação que o DANFE exige.
@@ -114,30 +190,34 @@ var (
 	valorForte = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 6.5}
 	titulo     = pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 9}
 	miudo      = pdf.Estilo{Fonte: pdf.Normal, Tamanho: 5}
+	// rotuloCompacto é o rótulo dos campos da meia folha.
+	rotuloCompacto = pdf.Estilo{Fonte: pdf.Normal, Tamanho: 3.8}
 )
 
 // caixa desenha um campo do formulário: uma moldura com o rótulo em cima e o
 // valor embaixo.
 func caixa(pg *pdf.Pagina, x, y, largura, altura float64, nome, conteudo string, e pdf.Estilo) {
 	pg.Retangulo(x, y, largura, altura, 0.1)
+	estiloRotulo, yRotulo, yValor := posicoesNaCaixa(altura, e)
 	if nome != "" {
-		pg.Texto(x+0.8, y+0.5, nome, rotulo)
+		pg.Texto(x+0.8, y+yRotulo, nome, estiloRotulo)
 	}
 	if conteudo != "" {
 		texto := pdf.Encurtar(conteudo, e.Fonte, e.Tamanho, largura-1.6)
-		pg.Texto(x+0.8, y+altura-e.Tamanho/2.4-1.2, texto, e)
+		pg.Texto(x+0.8, y+yValor, texto, e)
 	}
 }
 
 // caixaCentro é como caixa, com o valor centralizado.
 func caixaCentro(pg *pdf.Pagina, x, y, largura, altura float64, nome, conteudo string, e pdf.Estilo) {
 	pg.Retangulo(x, y, largura, altura, 0.1)
+	estiloRotulo, yRotulo, yValor := posicoesNaCaixa(altura, e)
 	if nome != "" {
-		pg.Texto(x+0.8, y+0.5, nome, rotulo)
+		pg.Texto(x+0.8, y+yRotulo, nome, estiloRotulo)
 	}
 	if conteudo != "" {
 		texto := pdf.Encurtar(conteudo, e.Fonte, e.Tamanho, largura-1.6)
-		pg.TextoCentralizado(x, largura, y+altura-e.Tamanho/2.4-1.2, texto, e)
+		pg.TextoCentralizado(x, largura, y+yValor, texto, e)
 	}
 }
 
@@ -145,12 +225,13 @@ func caixaCentro(pg *pdf.Pagina, x, y, largura, altura float64, nome, conteudo s
 // campos monetários.
 func caixaDireita(pg *pdf.Pagina, x, y, largura, altura float64, nome, conteudo string, e pdf.Estilo) {
 	pg.Retangulo(x, y, largura, altura, 0.1)
+	estiloRotulo, yRotulo, yValor := posicoesNaCaixa(altura, e)
 	if nome != "" {
-		pg.Texto(x+0.8, y+0.5, nome, rotulo)
+		pg.Texto(x+0.8, y+yRotulo, nome, estiloRotulo)
 	}
 	if conteudo != "" {
 		texto := pdf.Encurtar(conteudo, e.Fonte, e.Tamanho, largura-1.6)
-		pg.TextoDireita(x, largura-0.8, y+altura-e.Tamanho/2.4-1.2, texto, e)
+		pg.TextoDireita(x, largura-0.8, y+yValor, texto, e)
 	}
 }
 
