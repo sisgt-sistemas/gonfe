@@ -127,7 +127,7 @@ type InfCte struct {
 	// tomador entre as partes do transporte, aqui ele é declarado uma vez só.
 	Toma   *Toma      `xml:"toma,omitempty"`
 	VPrest cte.VPrest `xml:"vPrest"`
-	Imp    cte.Imp    `xml:"imp"`
+	Imp    Imp        `xml:"imp"`
 	// PgtoVinc são os pagamentos vinculados (reforma tributária).
 	PgtoVinc *cte.PgtoVinc `xml:"pgtoVinc,omitempty"`
 	// InfCTeNorm descreve a prestação.
@@ -354,4 +354,28 @@ type InfCteComp struct {
 // Percurso é uma UF do percurso do veículo.
 type Percurso struct {
 	UFPer string `xml:"UFPer" norm:"upper"`
+}
+
+// Imp são os tributos do CT-e OS. Diferente do CT-e, o grupo tem os tributos
+// federais (infTribFed), entre a partilha do ICMS e o IBS/CBS.
+type Imp struct {
+	ICMS       cte.ICMS       `xml:"ICMS"`
+	VTotTrib   *tipos.Decimal `xml:"vTotTrib,omitempty" dec:"2"`
+	InfAdFisco string         `xml:"infAdFisco,omitempty"`
+	ICMSUFFim  *cte.ICMSUFFim `xml:"ICMSUFFim,omitempty"`
+	// InfTribFed são os tributos federais retidos ou destacados na prestação.
+	InfTribFed *InfTribFed `xml:"infTribFed,omitempty"`
+	// IBSCBS é o IBS e a CBS da prestação (reforma tributária).
+	IBSCBS *cte.IBSCBS `xml:"IBSCBS,omitempty"`
+	// VTotDFe é o valor total do documento com os tributos da reforma.
+	VTotDFe *tipos.Decimal `xml:"vTotDFe,omitempty" dec:"2"`
+}
+
+// InfTribFed são os tributos federais da prestação: PIS, COFINS, IR, INSS e CSLL.
+type InfTribFed struct {
+	VPIS    *tipos.Decimal `xml:"vPIS,omitempty" dec:"2"`
+	VCOFINS *tipos.Decimal `xml:"vCOFINS,omitempty" dec:"2"`
+	VIR     *tipos.Decimal `xml:"vIR,omitempty" dec:"2"`
+	VINSS   *tipos.Decimal `xml:"vINSS,omitempty" dec:"2"`
+	VCSLL   *tipos.Decimal `xml:"vCSLL,omitempty" dec:"2"`
 }

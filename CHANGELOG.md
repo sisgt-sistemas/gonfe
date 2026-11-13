@@ -9,6 +9,9 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
 
+- Tributos federais do CT-e OS (`cteos.InfTribFed`: PIS, COFINS, IR, INSS e
+  CSLL), que o esquema prevê no `imp`, conferidos no `Validar` e impressos no
+  DACTE OS.
 - DACTE do CT-e Simplificado (`danfe.GerarDACTESimp`, `danfe.DACTESimp`): o
   cabeçalho do Manual do DACTE e a tabela das entregas com os documentos de
   cada uma, paginada.
@@ -57,6 +60,9 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Alterado
 
+- **Incompatível:** o grupo de impostos do CT-e OS passa a ser `cteos.Imp`, e
+  não mais `cte.Imp`, para levar o `infTribFed`; os campos comuns têm os mesmos
+  nomes.
 - DACTE, DACTE OS e DAMDFE refeitos pelos manuais oficiais (MOC CT-e 4.00 e
   MDF-e 3.00b, Anexo II): código de barras de 15 mm com margem clara, consulta
   impressa, telefone do emitente, país e telefone das partes, expedidor e

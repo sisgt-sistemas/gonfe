@@ -95,6 +95,7 @@ func fretamentoExemplo(referenciados int) *cteos.CTeOS {
 	c.InfCte.Ide.InfPercurso = []cteos.Percurso{{UFPer: "SC"}, {UFPer: "PR"}}
 	c.InfCte.Emit.EnderEmit.Fone = "5133330000"
 	c.InfCTeSupl = &cteos.InfCTeSupl{QrCodCTe: "https://dfe-portal.svrs.rs.gov.br/cte/qrCode?chCTe=43260312345678000195670010000004321556677880&tpAmb=2"}
+	c.InfCte.Imp.InfTribFed = &cteos.InfTribFed{VPIS: tipos.Ptr(tipos.D("16.25")), VCOFINS: tipos.Ptr(tipos.D("75.00"))}
 	return c
 }
 
@@ -291,4 +292,16 @@ func TestDACTEOSSemPanicoComDocumentoMinimo(t *testing.T) {
 	}
 	conferirPDF(t, dados)
 	conferirCabeNaPagina(t, "DACTE OS mínimo", dados, true)
+}
+
+func TestDACTEOSMostraOsTributosFederais(t *testing.T) {
+	dados, err := danfe.GerarDACTEOS(procOSDe(t, fretamentoExemplo(1)), danfe.Opcoes{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, trecho := range []string{"TRIBUTOS FEDERAIS", "16,25", "75,00"} {
+		if !bytes.Contains(dados, []byte(trecho)) {
+			t.Errorf("falta %q", trecho)
+		}
+	}
 }

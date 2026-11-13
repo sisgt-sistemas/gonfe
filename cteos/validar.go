@@ -294,6 +294,18 @@ func (c *CTeOS) validarPrestacao() Erros {
 func (c *CTeOS) validarImposto() Erros {
 	var e Erros
 	e = append(e, deCTe(cte.ValidarIBSCBS("imp.IBSCBS", c.InfCte.Imp.IBSCBS))...)
+	if f := c.InfCte.Imp.InfTribFed; f != nil {
+		for _, v := range []struct {
+			campo string
+			valor *tipos.Decimal
+		}{
+			{"vPIS", f.VPIS}, {"vCOFINS", f.VCOFINS}, {"vIR", f.VIR}, {"vINSS", f.VINSS}, {"vCSLL", f.VCSLL},
+		} {
+			if v.valor != nil && v.valor.Negativo() {
+				e = append(e, erro("imp.infTribFed."+v.campo, "o valor não pode ser negativo"))
+			}
+		}
+	}
 	if !c.InfCte.Imp.ICMS.Preenchido() {
 		return append(e, erro("imp.ICMS", "preencha exatamente uma variação do grupo ICMS"))
 	}

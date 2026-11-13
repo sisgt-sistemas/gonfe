@@ -7,6 +7,7 @@ import (
 	"github.com/sisgt-sistemas/gonfe/cte"
 	"github.com/sisgt-sistemas/gonfe/cteos"
 	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // GerarDACTEOS produz o documento auxiliar a partir do XML de distribuição do
@@ -57,6 +58,7 @@ func desenharPrimeiraFolhaOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, prot *ct
 	y = desenharServicoOS(pg, m, c, y)
 	y = desenharValoresCTe(pg, m, c.InfCte.VPrest, y)
 	y = desenharICMS(pg, m, &c.InfCte.Imp.ICMS, y)
+	y = desenharTributosFederais(pg, m, c.InfCte.Imp.InfTribFed, y)
 	y = desenharIBSCBS(pg, m, c.InfCte.Imp.IBSCBS, c.InfCte.Imp.VTotDFe, y)
 	gerais, emissor, fisco := observacoesDoCTe(c.InfCte.Compl)
 	y = quadroDeTexto(pg, m.margem, y, m.util, 10, "OBSERVAÇÕES GERAIS", gerais, 4)
@@ -297,7 +299,7 @@ func desenharAdicionaisOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) 
 			partes = append(partes, texto)
 		}
 	}
-	if p := partilhaICMS(&c.InfCte.Imp); p != "" {
+	if p := partilhaICMS(c.InfCte.Imp.ICMSUFFim); p != "" {
 		partes = append(partes, p)
 	}
 	if ad := c.InfCte.Imp.InfAdFisco; ad != "" {
@@ -349,4 +351,28 @@ func desenharReferenciadosOS(pg *pdf.Pagina, m medidas, docs []docReferenciado, 
 		y += alturaDocOrig
 	}
 	return y
+}
+
+// desenharTributosFederais imprime PIS, COFINS, IR, INSS e CSLL da prestação
+// (infTribFed), quando o documento os traz.
+func desenharTributosFederais(pg *pdf.Pagina, m medidas, f *cteos.InfTribFed, y float64) float64 {
+	if f == nil {
+		return y
+	}
+	texto := func(v *tipos.Decimal) string {
+		if v == nil {
+			return ""
+		}
+		return moeda(*v)
+	}
+	y = cabecalhoDeSecao(pg, m, y, "TRIBUTOS FEDERAIS")
+	campos := [][2]string{
+		{"VALOR DO PIS", texto(f.VPIS)}, {"VALOR DA COFINS", texto(f.VCOFINS)}, {"VALOR DO IR", texto(f.VIR)},
+		{"VALOR DO INSS", texto(f.VINSS)}, {"VALOR DA CSLL", texto(f.VCSLL)},
+	}
+	largura := m.util / float64(len(campos))
+	for i, c := range campos {
+		caixaDireita(pg, m.margem+float64(i)*largura, y, largura, 7, c[0], c[1], valor)
+	}
+	return y + 7 + 1.5
 }

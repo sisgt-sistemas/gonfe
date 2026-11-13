@@ -760,7 +760,7 @@ func desenharAdicionaisCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) flo
 			partes = append(partes, "ORDENS DE COLETA: "+occ)
 		}
 	}
-	if p := partilhaICMS(&c.InfCte.Imp); p != "" {
+	if p := partilhaICMS(c.InfCte.Imp.ICMSUFFim); p != "" {
 		partes = append(partes, p)
 	}
 	if ad := c.InfCte.Imp.InfAdFisco; ad != "" {
@@ -773,8 +773,7 @@ func desenharAdicionaisCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) flo
 }
 
 // partilhaICMS descreve o ICMS de partilha com a UF de término (ICMSUFFim).
-func partilhaICMS(imp *cte.Imp) string {
-	p := imp.ICMSUFFim
+func partilhaICMS(p *cte.ICMSUFFim) string {
 	if p == nil {
 		return ""
 	}

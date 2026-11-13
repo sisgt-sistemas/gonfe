@@ -278,9 +278,8 @@ func observacoesDoSimp(compl *ctesimp.Compl) (gerais, emissor, fisco string) {
 // informação adicional ao fisco.
 func desenharAdicionaisSimp(pg *pdf.Pagina, m medidas, c *ctesimp.CTeSimp, y float64) float64 {
 	var partes []string
-	if p := c.InfCte.Imp.ICMSUFFim; p != nil {
-		partes = append(partes, fmt.Sprintf("PARTILHA DO ICMS: BC %s, ICMS UF FIM %s, ICMS UF INÍCIO %s, FCP %s",
-			moeda(p.VBCUFFim), moeda(p.VICMSUFFim), moeda(p.VICMSUFIni), moeda(p.VFCPUFFim)))
+	if p := partilhaICMS(c.InfCte.Imp.ICMSUFFim); p != "" {
+		partes = append(partes, p)
 	}
 	if ad := c.InfCte.Imp.InfAdFisco; ad != "" {
 		partes = append(partes, "INFORMAÇÕES ADICIONAIS DE INTERESSE DO FISCO: "+ad)
