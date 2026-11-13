@@ -38,6 +38,8 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 - CT-e OS: a raiz leva a `versao`, o `indIEToma` vem antes do `cMunIni` e o
   veículo segue a ordem do esquema (placa, RENAVAM, prop, UF). O exemplo passa
   a ser validado contra o esquema nos testes.
+- A tarifa do modal dutoviário do CT-e (`vTar`) sai com seis casas
+  (`TDec_0906Opc`); com quatro, o esquema recusava.
 - `Validar()` confere o nome do componente (até 15) no CT-e e no CT-e OS e a
   descrição do serviço do CT-e OS (até 30).
 - Ler um `cteProc`, `mdfeProc` ou evento com o protocolo aberto e não fechado
