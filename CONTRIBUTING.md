@@ -22,7 +22,7 @@ infraestrutura comum já existe e vale reaproveitar.
 
 ## Ambiente
 
-Para **usar** a biblioteca basta Go 1.23 ou mais recente: ela não usa CGO nem
+Para **usar** a biblioteca basta Go 1.26 ou mais recente: ela não usa CGO nem
 programa externo.
 
 Para **desenvolver**, tudo roda no container de `docker/dev` (Go,
@@ -128,7 +128,7 @@ mkdocs serve
 2. Trabalhe em um branch `feat/…` ou `fix/…` a partir de `develop`. O `main`
    só guarda versões lançadas.
 3. Deixe o `make ci` verde. A CI roda também `-race`, `govulncheck` e os
-   testes no Go 1.23 e no Windows.
+   testes no Go 1.26 e no Windows.
 4. Escreva o commit em [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
    `<tipo>(<escopo>): <assunto>`, com o assunto em inglês, no imperativo, até
    72 caracteres, e o porquê no corpo. Se o commit corrige uma rejeição da

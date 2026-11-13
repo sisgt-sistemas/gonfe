@@ -23,7 +23,7 @@ Mais distribuição de DF-e (só da NF-e), inutilização de numeração e consu
 cadastro.
 
 O CI roda a cada push em `develop`: o `make ci` no container (`gofmt`, `go vet`,
-golangci-lint com o `staticcheck`, testes), os testes no Linux com Go 1.23 (o
+golangci-lint com o `staticcheck`, testes), os testes no Linux com Go 1.26 (o
 mínimo do `go.mod`) e no Windows com o Go estável, o detector de corrida, a
 cobertura e o `govulncheck`.
 

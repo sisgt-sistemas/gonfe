@@ -36,9 +36,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # O mínimo do go.mod; a versão recente já roda no gate.
+          # O mínimo do go.mod, o mesmo do tms; a versão do container já roda no gate.
           - os: ubuntu-latest
-            go: '1.23'
+            go: '1.26'
           # Caminhos e quebras de linha de outro sistema.
           - os: windows-latest
             go: stable

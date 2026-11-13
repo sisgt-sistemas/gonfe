@@ -1,6 +1,6 @@
 module github.com/sisgt-sistemas/gonfe
 
-go 1.23
+go 1.26
 
 require (
 	rsc.io/qr v0.2.0

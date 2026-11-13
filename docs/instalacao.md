@@ -2,7 +2,7 @@
 
 ## Requisitos
 
-- **Go 1.23** ou mais recente.
+- **Go 1.26** ou mais recente.
 - Um **certificado digital A1** da ICP-Brasil, em arquivo `.pfx` ou `.p12`, com
   a senha.
 - Para NFC-e, o **CSC** — Código de Segurança do Contribuinte — emitido pela
@@ -75,7 +75,7 @@ tudo certo: o ambiente está em operação
 Sem CGO, a compilação estática é direta:
 
 ```dockerfile
-FROM golang:1.24 AS build
+FROM golang:1.26 AS build
 WORKDIR /src
 COPY . .
 RUN CGO_ENABLED=0 go build -o /bin/emissor ./cmd/emissor

@@ -24,7 +24,7 @@ registration lookup.
 
 CI runs on every push to `develop`: `make ci` in the container (`gofmt`,
 `go vet`, golangci-lint with `staticcheck`, tests), the tests on Linux with Go
-1.23 (the `go.mod` minimum) and on Windows with stable Go, the race detector,
+1.26 (the `go.mod` minimum) and on Windows with stable Go, the race detector,
 coverage and `govulncheck`.
 
 ## Conventions the code follows

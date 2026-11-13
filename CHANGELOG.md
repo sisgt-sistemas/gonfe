@@ -5,6 +5,11 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Alterado
+
+- O módulo pede Go 1.26 (antes, 1.23), a mesma versão do tms; a integração
+  contínua confere o mínimo e a estável.
+
 ## [1.1.0] — 2026-11-13
 
 ### Adicionado

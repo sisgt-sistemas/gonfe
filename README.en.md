@@ -61,7 +61,7 @@ and printed.
 go get github.com/sisgt-sistemas/gonfe
 ```
 
-Requires Go 1.23 or newer.
+Requires Go 1.26 or newer.
 
 ## Use in five steps
 

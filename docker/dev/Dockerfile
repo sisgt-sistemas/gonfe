@@ -2,7 +2,7 @@
 #
 # Imagem de DESENVOLVIMENTO. O código NÃO é copiado: entra por bind mount.
 # Contém Go, golangci-lint, govulncheck e o xmllint (validação contra os esquemas da SEFAZ, pacote xsd).
-# O go.mod pede Go 1.23 como mínimo; a integração contínua confere 1.23, 1.24 e a estável.
+# O go.mod pede Go 1.26 como mínimo, o mesmo do tms; a integração contínua confere 1.26 e a estável.
 
 ARG GO_VERSION=1.26.11
 FROM golang:${GO_VERSION}-alpine

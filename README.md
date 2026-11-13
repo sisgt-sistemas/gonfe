@@ -57,7 +57,7 @@ PDF e o ciclo de vida posterior — correção, cancelamento e inutilização.
 go get github.com/sisgt-sistemas/gonfe
 ```
 
-Requer Go 1.23 ou mais recente.
+Requer Go 1.26 ou mais recente.
 
 ## Uso em cinco passos
 
