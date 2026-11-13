@@ -1,6 +1,7 @@
 package nfe_test
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/sisgt-sistemas/gonfe/nfe"
@@ -100,7 +101,8 @@ func ExampleNFe_Validar() {
 	n.InfNFe.Ide.DhEmi = tipos.DH("2026-03-04T14:20:00-03:00")
 	n.InfNFe.Emit.CNPJ = "12345678000100" // dígito verificador errado
 
-	erros, ok := n.Validar().(nfe.Erros)
+	var erros nfe.Erros
+	ok := errors.As(n.Validar(), &erros)
 	if !ok {
 		fmt.Println("sem erros")
 		return

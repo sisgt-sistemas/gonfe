@@ -93,7 +93,10 @@ type medidas struct {
 	util            float64 // largura útil, descontadas as margens
 }
 
-func medidasDe(pg *pdf.Pagina, margem float64) medidas {
+// margem é a margem das páginas dos documentos auxiliares, em milímetros.
+const margem = 5
+
+func medidasDe(pg *pdf.Pagina) medidas {
 	return medidas{
 		largura: pg.Largura(),
 		altura:  pg.Altura(),

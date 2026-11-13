@@ -1,6 +1,7 @@
 package mdfe_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -205,7 +206,8 @@ func camposComErro(t *testing.T, err error) map[string]string {
 	if err == nil {
 		return nil
 	}
-	erros, ok := err.(mdfe.Erros)
+	var erros mdfe.Erros
+	ok := errors.As(err, &erros)
 	if !ok {
 		t.Fatalf("erro do tipo %T, queria mdfe.Erros: %v", err, err)
 	}

@@ -62,14 +62,14 @@ func DH(s string) DataHora {
 }
 
 // Vazia informa se a data/hora não foi preenchida.
-func (d DataHora) Vazia() bool { return d.Time.IsZero() }
+func (d DataHora) Vazia() bool { return d.IsZero() }
 
 // String devolve o texto no formato do leiaute.
 func (d DataHora) String() string {
 	if d.Vazia() {
 		return ""
 	}
-	return d.Time.Format(LayoutDataHora)
+	return d.Format(LayoutDataHora)
 }
 
 // MarshalText implementa [encoding.TextMarshaler].
@@ -153,14 +153,14 @@ func DT(s string) Data {
 }
 
 // Vazia informa se a data não foi preenchida.
-func (d Data) Vazia() bool { return d.Time.IsZero() }
+func (d Data) Vazia() bool { return d.IsZero() }
 
 // String devolve o texto no formato AAAA-MM-DD.
 func (d Data) String() string {
 	if d.Vazia() {
 		return ""
 	}
-	return d.Time.Format(LayoutData)
+	return d.Format(LayoutData)
 }
 
 // MarshalText implementa [encoding.TextMarshaler].

@@ -39,7 +39,7 @@ func DAMDFE(m *mdfe.MDFe, prot *mdfe.ProtMDFe, opc Opcoes) ([]byte, error) {
 
 	for i := range paginas {
 		pg := novaFolha(documento, opc)
-		med := medidasDe(pg, 5)
+		med := medidasDe(pg)
 
 		y := med.margem
 		y = desenharCabecalhoMDFe(pg, med, m, prot, i+1, len(paginas), y)

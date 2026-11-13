@@ -315,7 +315,7 @@ func transmitirEnvelope(ctx context.Context, cliente *http.Client, endereco, aca
 	if err != nil {
 		return nil, fmt.Errorf("sefaz: falha na comunicação com %s: %w", endereco, err)
 	}
-	defer resposta.Body.Close()
+	defer func() { _ = resposta.Body.Close() }() // Já lido; fechar não muda a resposta.
 
 	corpo, err := io.ReadAll(io.LimitReader(resposta.Body, TamanhoMaximoResposta))
 	if err != nil {
@@ -468,6 +468,6 @@ func resumir(dados []byte) string {
 
 func escapar(s string) string {
 	var b bytes.Buffer
-	xml.EscapeText(&b, []byte(s))
+	_ = xml.EscapeText(&b, []byte(s)) // Escrever num bytes.Buffer não falha.
 	return b.String()
 }

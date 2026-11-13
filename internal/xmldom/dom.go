@@ -18,6 +18,7 @@ package xmldom
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -201,7 +202,7 @@ func Ler(dados []byte) (*Documento, error) {
 	for {
 		anterior := dec.InputOffset()
 		tok, err := dec.Token()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

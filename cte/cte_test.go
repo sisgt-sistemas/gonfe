@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/base64"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -267,7 +268,8 @@ func camposComErro(t *testing.T, err error) map[string]string {
 	if err == nil {
 		return nil
 	}
-	erros, ok := err.(cte.Erros)
+	var erros cte.Erros
+	ok := errors.As(err, &erros)
 	if !ok {
 		t.Fatalf("erro do tipo %T, queria cte.Erros: %v", err, err)
 	}
@@ -515,7 +517,7 @@ func TestMontarEnvioSincrono(t *testing.T) {
 	if err != nil {
 		t.Fatalf("a mensagem não é gzip: %v", err)
 	}
-	defer leitor.Close()
+	defer func() { _ = leitor.Close() }()
 	original, err := io.ReadAll(leitor)
 	if err != nil {
 		t.Fatalf("falha ao descomprimir: %v", err)
@@ -619,5 +621,25 @@ func TestValidarExigeORegimeDoEmitente(t *testing.T) {
 		if _, ok := camposComErro(t, c.Validar())["emit.CRT"]; !ok {
 			t.Errorf("CRT %q passou", crt)
 		}
+	}
+}
+
+// Sem protocolo, o CT-e volta sem ele e sem erro; com o protocolo aberto e não fechado (arquivo cortado), é erro, e
+// não um CT-e "ainda não autorizado".
+func TestLerCTeProcDistingueAusenteDeCortado(t *testing.T) {
+	cert := certtest.MustGerar(certtest.Opcoes{CNPJ: cnpjTransportadora})
+	assinado, err := conhecimentoExemplo().AssinarCom(cert)
+	if err != nil {
+		t.Fatalf("AssinarCom: %v", err)
+	}
+	semProtocolo := []byte(`<cteProc xmlns="http://www.portalfiscal.inf.br/cte" versao="4.00">` + string(assinado) + `</cteProc>`)
+	c, prot, err := cte.LerCTeProc(semProtocolo)
+	if err != nil || c == nil || prot != nil {
+		t.Fatalf("sem protocolo: %v %v %v", c, prot, err)
+	}
+	cortado := []byte(`<cteProc xmlns="http://www.portalfiscal.inf.br/cte" versao="4.00">` + string(assinado) +
+		`<protCTe versao="4.00"><infProt><tpAmb>2</tpAmb>`)
+	if _, prot, err := cte.LerCTeProc(cortado); err == nil || prot != nil {
+		t.Fatalf("um protocolo cortado passou como ausente: %v %v", prot, err)
 	}
 }

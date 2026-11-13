@@ -96,7 +96,9 @@ func cancelar(ctx context.Context, c *sefaz.Cliente, cert *certificado.Certifica
 	protocolo := fs.String("protocolo", "", "número do protocolo de autorização")
 	just := fs.String("just", "", "justificativa, de 15 a 255 caracteres")
 	seq := fs.Int("seq", 1, "número sequencial do evento")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	e, err := evento.NovoCancelamento(evento.DadosCancelamento{
 		Chave: *chave, CNPJ: cnpj, UF: unidade, Ambiente: nfe.Homologacao,
@@ -115,7 +117,9 @@ func corrigir(ctx context.Context, c *sefaz.Cliente, cert *certificado.Certifica
 	chave := fs.String("chave", "", "chave de acesso da nota")
 	texto := fs.String("texto", "", "texto da correção, de 15 a 1000 caracteres")
 	seq := fs.Int("seq", 1, "número sequencial da carta")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	// Lembre que cada carta substitui a anterior: a de número 2 precisa
 	// repetir o que a de número 1 corrigiu.
@@ -137,7 +141,9 @@ func manifestar(ctx context.Context, c *sefaz.Cliente, cert *certificado.Certifi
 	tipo := fs.String("tipo", "ciencia", "ciencia, confirmacao, desconhecimento ou nao-realizada")
 	just := fs.String("just", "", "justificativa, exigida apenas em nao-realizada")
 	seq := fs.Int("seq", 1, "número sequencial do evento")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	tipos := map[string]evento.Tipo{
 		"ciencia":         evento.TipoCienciaOperacao,
@@ -204,7 +210,9 @@ func inutilizar(ctx context.Context, c *sefaz.Cliente, cert *certificado.Certifi
 	ate := fs.Int("ate", 0, "último número da faixa")
 	just := fs.String("just", "", "justificativa, de 15 a 255 caracteres")
 	ano := fs.Int("ano", time.Now().Year()%100, "ano da faixa, com dois dígitos")
-	fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 
 	i, err := evento.NovaInutilizacao(evento.DadosInutilizacao{
 		UF: unidade, Ambiente: nfe.Homologacao, CNPJ: cnpj, Ano: *ano,

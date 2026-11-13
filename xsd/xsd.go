@@ -63,7 +63,7 @@ func Validar(documento []byte, esquema Esquema) error {
 	if err != nil {
 		return fmt.Errorf("xsd: pasta temporária: %w", err)
 	}
-	defer os.RemoveAll(pasta)
+	defer func() { _ = os.RemoveAll(pasta) }() // Pasta temporária: sobra, o sistema limpa.
 	// O esquema inclui os vizinhos pelo nome: a pasta inteira vai para o disco.
 	if err := os.CopyFS(pasta, esquemas); err != nil {
 		return fmt.Errorf("xsd: extrair os esquemas: %w", err)
@@ -72,7 +72,8 @@ func Validar(documento []byte, esquema Esquema) error {
 	if err := os.WriteFile(arquivo, documento, 0o600); err != nil {
 		return fmt.Errorf("xsd: gravar o documento: %w", err)
 	}
-	comando := exec.Command(xmllint, "--noout", "--nonet", "--schema",
+	comando := exec.Command(xmllint, //nolint:gosec // G204: o xmllint vem do exec.LookPath, e os argumentos são caminhos que este pacote cria.
+		"--noout", "--nonet", "--schema",
 		filepath.Join(pasta, "esquemas", filepath.FromSlash(string(esquema))), arquivo)
 	var saida bytes.Buffer
 	comando.Stdout, comando.Stderr = &saida, &saida

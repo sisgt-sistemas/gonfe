@@ -31,8 +31,8 @@ type transporteFalso struct {
 func (t *transporteFalso) RoundTrip(r *http.Request) (*http.Response, error) {
 	t.url.Store(r.URL.String())
 	if r.Body != nil {
-		io.Copy(io.Discard, r.Body)
-		r.Body.Close()
+		_, _ = io.Copy(io.Discard, r.Body)
+		_ = r.Body.Close()
 	}
 	cabecalho := make(http.Header)
 	cabecalho.Set("Content-Type", "application/soap+xml; charset=utf-8")

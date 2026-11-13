@@ -43,7 +43,7 @@ func DACTE(c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) ([]byte, error) {
 
 	for i := range paginas {
 		pg := novaFolha(documento, opc)
-		m := medidasDe(pg, 5)
+		m := medidasDe(pg)
 
 		y := m.margem
 		if !opc.SemCanhoto && i == 0 {
@@ -407,30 +407,31 @@ func desenharPartesCTe(pg *pdf.Pagina, m medidas, c *cte.CTe, y float64) float64
 		if linha[0].p == nil && linha[1].p == nil {
 			continue
 		}
-		alturaBloco := desenharParte(pg, m.margem, y, metade, linha[0].rotulo, linha[0].p)
-		if a := desenharParte(pg, m.margem+metade, y, metade, linha[1].rotulo, linha[1].p); a > alturaBloco {
-			alturaBloco = a
-		}
-		y += alturaBloco
+		desenharParte(pg, m.margem, y, metade, linha[0].rotulo, linha[0].p)
+		desenharParte(pg, m.margem+metade, y, metade, linha[1].rotulo, linha[1].p)
+		y += alturaParte
 	}
 
 	if t := tomador(c); t != nil {
-		y += desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", t)
+		desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", t)
+		y += alturaParte
 	}
 	return y + 1.5
 }
 
-// desenharParte desenha um participante em três linhas de campos e devolve a
-// altura ocupada.
-func desenharParte(pg *pdf.Pagina, x, y, largura float64, nome string, p *parte) float64 {
-	const altura = 21
+// alturaParte é a altura do quadro de um participante: três linhas de campos.
+const alturaParte = 21
+
+// desenharParte desenha um participante em três linhas de campos, em alturaParte.
+func desenharParte(pg *pdf.Pagina, x, y, largura float64, nome string, p *parte) {
+	const altura = alturaParte
 	pg.Retangulo(x, y, largura, altura, 0.1)
 	pg.RetanguloPreenchido(x, y, largura, 3.4, 0.88)
 	pg.Texto(x+0.8, y+0.4, nome, pdf.Estilo{Fonte: pdf.Negrito, Tamanho: 5})
 
 	if p == nil {
 		pg.Texto(x+0.8, y+6, "NÃO INFORMADO", miudo)
-		return altura
+		return
 	}
 
 	var end cte.Endereco
@@ -452,8 +453,6 @@ func desenharParte(pg *pdf.Pagina, x, y, largura float64, nome string, p *parte)
 	caixa(pg, x+largura*0.34, interna, largura*0.08, 6, "UF", end.UF, valor)
 	caixa(pg, x+largura*0.42, interna, largura*0.20, 6, "CEP", validacao.FormatarCEP(end.CEP), valor)
 	caixa(pg, x+largura*0.62, interna, largura*0.38, 6, "INSCRIÇÃO ESTADUAL", p.ie, valor)
-
-	return altura
 }
 
 // desenharCargaCTe imprime o produto predominante e as quantidades.

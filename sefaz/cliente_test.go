@@ -37,7 +37,7 @@ func novoServidor(t *testing.T, responder func(chamada int32, corpo string) (int
 		codigo, resposta := responder(n, string(corpo))
 		w.Header().Set("Content-Type", "application/soap+xml; charset=utf-8")
 		w.WriteHeader(codigo)
-		io.WriteString(w, resposta)
+		_, _ = io.WriteString(w, resposta)
 	}))
 	t.Cleanup(s.Close)
 	return s
@@ -51,11 +51,9 @@ func envelopar(conteudo string) string {
 		`</nfeResultMsg></soap:Body></soap:Envelope>`
 }
 
-func clienteApontando(t *testing.T, endereco string, servicos ...sefaz.Servico) *sefaz.Cliente {
+func clienteApontando(t *testing.T, endereco string) *sefaz.Cliente {
 	t.Helper()
-	if len(servicos) == 0 {
-		servicos = sefaz.Servicos()
-	}
+	servicos := sefaz.Servicos()
 	endpoints := make(map[sefaz.Servico]string, len(servicos))
 	for _, s := range servicos {
 		endpoints[s] = endereco

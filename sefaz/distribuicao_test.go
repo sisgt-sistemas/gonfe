@@ -38,9 +38,9 @@ func envelopeDeDistribuicao(t *testing.T, cStat int, motivo, ultNSU, maxNSU stri
 	return envelopar(b.String())
 }
 
-func resumoDe(chave, nome string) string {
+func resumoDe(nome string) string {
 	return `<resNFe versao="1.01" xmlns="http://www.portalfiscal.inf.br/nfe">` +
-		`<chNFe>` + chave + `</chNFe><CNPJ>99999999000191</CNPJ><xNome>` + nome + `</xNome>` +
+		`<chNFe>` + chaveEvento + `</chNFe><CNPJ>99999999000191</CNPJ><xNome>` + nome + `</xNome>` +
 		`<IE>0987654321</IE><dhEmi>2026-03-04T10:00:00-03:00</dhEmi><tpNF>1</tpNF>` +
 		`<vNF>100.00</vNF><digVal>abc</digVal><dhRecbto>2026-03-04T10:00:05-03:00</dhRecbto>` +
 		`<nProt>143260000011111</nProt><cSitNFe>1</cSitNFe></resNFe>`
@@ -68,7 +68,7 @@ func TestDistribuicaoDFe(t *testing.T) {
 	s := novoServidor(t, func(int32, string) (int, string) {
 		return 200, envelopeDeDistribuicao(t, dfe.StatusComDocumentos, "Documento(s) localizado(s)",
 			"000000000000003", "000000000000003",
-			[2]string{"000000000000003", resumoDe(chaveEvento, "FORNECEDOR EXEMPLO LTDA")})
+			[2]string{"000000000000003", resumoDe("FORNECEDOR EXEMPLO LTDA")})
 	})
 	c := clienteDeDistribuicao(t, s.URL)
 
@@ -185,8 +185,8 @@ func TestConsumirDFeParaNoFimDaFila(t *testing.T) {
 	s := novoServidor(t, func(int32, string) (int, string) {
 		return 200, envelopeDeDistribuicao(t, dfe.StatusComDocumentos, "Documento(s) localizado(s)",
 			"000000000000002", "000000000000002",
-			[2]string{"000000000000001", resumoDe(chaveEvento, "PRIMEIRO FORNECEDOR")},
-			[2]string{"000000000000002", resumoDe(chaveEvento, "SEGUNDO FORNECEDOR")})
+			[2]string{"000000000000001", resumoDe("PRIMEIRO FORNECEDOR")},
+			[2]string{"000000000000002", resumoDe("SEGUNDO FORNECEDOR")})
 	})
 	c := clienteDeDistribuicao(t, s.URL)
 
@@ -213,9 +213,9 @@ func TestConsumirDFeInterrompeNoErroDoProcessamento(t *testing.T) {
 	s := novoServidor(t, func(int32, string) (int, string) {
 		return 200, envelopeDeDistribuicao(t, dfe.StatusComDocumentos, "Documento(s) localizado(s)",
 			"000000000000003", "000000000000099",
-			[2]string{"000000000000001", resumoDe(chaveEvento, "PRIMEIRO")},
-			[2]string{"000000000000002", resumoDe(chaveEvento, "SEGUNDO")},
-			[2]string{"000000000000003", resumoDe(chaveEvento, "TERCEIRO")})
+			[2]string{"000000000000001", resumoDe("PRIMEIRO")},
+			[2]string{"000000000000002", resumoDe("SEGUNDO")},
+			[2]string{"000000000000003", resumoDe("TERCEIRO")})
 	})
 	c := clienteDeDistribuicao(t, s.URL)
 
@@ -244,7 +244,7 @@ func TestConsumirDFeRespeitaCancelamento(t *testing.T) {
 	s := novoServidor(t, func(chamada int32, _ string) (int, string) {
 		return 200, envelopeDeDistribuicao(t, dfe.StatusComDocumentos, "Documento(s) localizado(s)",
 			"000000000000001", "000000000000999",
-			[2]string{"000000000000001", resumoDe(chaveEvento, "FORNECEDOR")})
+			[2]string{"000000000000001", resumoDe("FORNECEDOR")})
 	})
 	c := clienteDeDistribuicao(t, s.URL)
 

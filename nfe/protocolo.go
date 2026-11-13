@@ -198,6 +198,6 @@ func ProximoIdLote(contador int64) string {
 
 func xmlEscapado(s string) string {
 	var b bytes.Buffer
-	xml.EscapeText(&b, []byte(s))
+	_ = xml.EscapeText(&b, []byte(s)) // Escrever num bytes.Buffer não falha.
 	return b.String()
 }

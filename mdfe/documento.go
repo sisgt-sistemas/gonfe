@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -219,8 +220,11 @@ func LerMDFeProc(dados []byte) (*MDFe, *ProtMDFe, error) {
 		return nil, nil, err
 	}
 	recorte, err := recortar(dados, "protMDFe")
+	if errors.Is(err, errAusente) {
+		return m, nil, nil // Sem protocolo: o documento ainda não foi autorizado.
+	}
 	if err != nil {
-		return m, nil, nil
+		return m, nil, err
 	}
 	var prot ProtMDFe
 	if err := xml.Unmarshal(recorte, &prot); err != nil {
@@ -304,6 +308,9 @@ func XMLDeclarado(documento []byte) []byte {
 	return append(saida, documento...)
 }
 
+// errAusente é o elemento que o documento não traz; elemento aberto e não fechado é outro erro.
+var errAusente = errors.New("elemento ausente")
+
 func recortar(dados []byte, nome string) ([]byte, error) {
 	s := string(dados)
 	abertura := -1
@@ -313,7 +320,7 @@ func recortar(dados []byte, nome string) ([]byte, error) {
 		}
 	}
 	if abertura < 0 {
-		return nil, fmt.Errorf("mdfe: o documento não contém um elemento <%s>", nome)
+		return nil, fmt.Errorf("mdfe: o documento não contém um elemento <%s>: %w", nome, errAusente)
 	}
 	fechamento := "</" + nome + ">"
 	fim := strings.LastIndex(s, fechamento)

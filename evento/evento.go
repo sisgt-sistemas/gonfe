@@ -14,6 +14,7 @@ package evento
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -240,6 +241,9 @@ func TipoDoXML(dados []byte) (Tipo, error) {
 
 // recortar isola o primeiro elemento com o nome informado, preservando os bytes
 // originais. Aceita o elemento com ou sem prefixo de namespace.
+// errAusente é o elemento que o documento não traz; elemento aberto e não fechado é outro erro.
+var errAusente = errors.New("elemento ausente")
+
 func recortar(dados []byte, nome string) ([]byte, error) {
 	s := string(dados)
 	abertura := -1
@@ -250,7 +254,7 @@ func recortar(dados []byte, nome string) ([]byte, error) {
 		}
 	}
 	if abertura < 0 {
-		return nil, fmt.Errorf("evento: o documento não contém um elemento <%s>", nome)
+		return nil, fmt.Errorf("evento: o documento não contém um elemento <%s>: %w", nome, errAusente)
 	}
 	fechamento := "</" + prefixo + nome + ">"
 	fim := strings.LastIndex(s, fechamento)

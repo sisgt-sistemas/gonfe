@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -210,8 +211,11 @@ func LerCTeProc(dados []byte) (*CTe, *ProtCTe, error) {
 		return nil, nil, err
 	}
 	recorte, err := recortar(dados, "protCTe")
+	if errors.Is(err, errAusente) {
+		return c, nil, nil // Sem protocolo: o documento ainda não foi autorizado.
+	}
 	if err != nil {
-		return c, nil, nil
+		return c, nil, err
 	}
 	var prot ProtCTe
 	if err := xml.Unmarshal(recorte, &prot); err != nil {
@@ -307,6 +311,9 @@ func XMLDeclarado(documento []byte) []byte {
 
 // recortar isola o primeiro elemento com o nome informado, preservando os bytes
 // originais.
+// errAusente é o elemento que o documento não traz; elemento aberto e não fechado é outro erro.
+var errAusente = errors.New("elemento ausente")
+
 func recortar(dados []byte, nome string) ([]byte, error) {
 	s := string(dados)
 	abertura := -1
@@ -316,7 +323,7 @@ func recortar(dados []byte, nome string) ([]byte, error) {
 		}
 	}
 	if abertura < 0 {
-		return nil, fmt.Errorf("cte: o documento não contém um elemento <%s>", nome)
+		return nil, fmt.Errorf("cte: o documento não contém um elemento <%s>: %w", nome, errAusente)
 	}
 	fechamento := "</" + nome + ">"
 	fim := strings.LastIndex(s, fechamento)

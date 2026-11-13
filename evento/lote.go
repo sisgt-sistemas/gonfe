@@ -3,6 +3,7 @@ package evento
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -78,8 +79,11 @@ func LerProcEvento(dados []byte) (*Evento, *RetEvento, error) {
 		return nil, nil, err
 	}
 	recorte, err := recortar(dados, "retEvento")
+	if errors.Is(err, errAusente) {
+		return e, nil, nil // Sem retorno: o evento ainda não foi registrado.
+	}
 	if err != nil {
-		return e, nil, nil
+		return e, nil, err
 	}
 	var ret RetEvento
 	if err := xml.Unmarshal(recorte, &ret); err != nil {
@@ -122,6 +126,6 @@ func ProximoIdLote(contador int64) string {
 
 func escapar(s string) string {
 	var b bytes.Buffer
-	xml.EscapeText(&b, []byte(s))
+	_ = xml.EscapeText(&b, []byte(s)) // Escrever num bytes.Buffer não falha.
 	return b.String()
 }

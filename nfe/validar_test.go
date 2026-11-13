@@ -1,6 +1,7 @@
 package nfe_test
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -34,7 +35,8 @@ func camposComErro(t *testing.T, err error) map[string]string {
 	if err == nil {
 		return nil
 	}
-	erros, ok := err.(nfe.Erros)
+	var erros nfe.Erros
+	ok := errors.As(err, &erros)
 	if !ok {
 		t.Fatalf("erro do tipo %T, queria nfe.Erros: %v", err, err)
 	}

@@ -77,7 +77,7 @@ func Carregar(dados []byte, senha string) (*Certificado, error) {
 
 // CarregarArquivo lê e decifra um arquivo PKCS#12 do disco.
 func CarregarArquivo(caminho, senha string) (*Certificado, error) {
-	dados, err := os.ReadFile(caminho)
+	dados, err := os.ReadFile(caminho) //nolint:gosec // G304: ler o arquivo que quem chama indica é a função.
 	if err != nil {
 		return nil, fmt.Errorf("certificado: não foi possível ler %s: %w", caminho, err)
 	}

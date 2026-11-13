@@ -30,7 +30,7 @@ func DANFE(n *nfe.NFe, prot *nfe.ProtNFe, opc Opcoes) ([]byte, error) {
 
 	for i := range paginas {
 		pg := novaFolha(documento, opc)
-		m := medidasDe(pg, 5)
+		m := medidasDe(pg)
 
 		y := m.margem
 		if !opc.SemCanhoto && i == 0 {

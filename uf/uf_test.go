@@ -88,21 +88,22 @@ func TestFusoHorario(t *testing.T) {
 		uf.AC: -5 * 3600,
 	}
 	for u, esperado := range casos {
-		_, offset := timeNoFuso(u)
+		offset := timeNoFuso(u)
 		if offset != esperado {
 			t.Errorf("%s: offset %d s, queria %d s", u, offset, esperado)
 		}
 	}
 	// Sigla desconhecida cai no horário de Brasília em vez de devolver nil.
-	if _, offset := timeNoFuso(uf.UF("XX")); offset != -3*3600 {
+	if offset := timeNoFuso(uf.UF("XX")); offset != -3*3600 {
 		t.Errorf("UF desconhecida: offset %d s, queria %d s", offset, -3*3600)
 	}
 }
 
-func timeNoFuso(u uf.UF) (string, int) {
+func timeNoFuso(u uf.UF) int {
 	loc := u.Fuso()
 	if loc == nil {
-		return "", 0
+		return 0
 	}
-	return time.Date(2026, time.June, 1, 12, 0, 0, 0, loc).Zone()
+	_, offset := time.Date(2026, time.June, 1, 12, 0, 0, 0, loc).Zone()
+	return offset
 }

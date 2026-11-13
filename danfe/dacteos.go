@@ -36,7 +36,7 @@ func DACTEOS(c *cteos.CTeOS, prot *cte.ProtCTe, opc Opcoes) ([]byte, error) {
 
 	for i := range paginas {
 		pg := novaFolha(documento, opc)
-		m := medidasDe(pg, 5)
+		m := medidasDe(pg)
 
 		y := m.margem
 		y = desenharCabecalhoOS(pg, m, c, prot, i+1, len(paginas), y)
@@ -193,13 +193,15 @@ func desenharPrestacaoOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) f
 func desenharTomadorOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) float64 {
 	t := c.InfCte.Toma
 	if t == nil {
-		return y + desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", nil) + 1.5
+		desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", nil)
+		return y + alturaParte + 1.5
 	}
 	p := &parte{
 		nome: t.XNome, documento: formatarDocumento(t.CNPJ, t.CPF),
 		ie: t.IE, fone: t.Fone, email: t.Email, endereco: t.EnderToma,
 	}
-	return y + desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", p) + 1.5
+	desenharParte(pg, m.margem, y, m.util, "TOMADOR DO SERVIÇO", p)
+	return y + alturaParte + 1.5
 }
 
 func desenharServicoOS(pg *pdf.Pagina, m medidas, c *cteos.CTeOS, y float64) float64 {

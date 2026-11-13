@@ -7,13 +7,13 @@ import (
 	"github.com/sisgt-sistemas/gonfe/internal/xmldom"
 )
 
-func canonicalizar(t *testing.T, entrada string, opc xmldom.OpcoesC14N) string {
+func canonicalizar(t *testing.T, entrada string) string {
 	t.Helper()
 	doc, err := xmldom.Ler([]byte(entrada))
 	if err != nil {
 		t.Fatalf("Ler: %v", err)
 	}
-	return string(xmldom.Canonicalizar(doc.Raiz, opc))
+	return string(xmldom.Canonicalizar(doc.Raiz, xmldom.OpcoesC14N{}))
 }
 
 // TestW3CEspacoEmBranco reproduz o caso 3.2 da especificação Canonical XML 1.0:
@@ -27,7 +27,7 @@ func TestW3CEspacoEmBranco(t *testing.T) {
       <dirty>   A   B   </dirty>
    </mixed>
 </doc>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != entrada {
+	if got := canonicalizar(t, entrada); got != entrada {
 		t.Errorf("a forma canônica alterou o documento:\nobtido:   %q\nesperado: %q", got, entrada)
 	}
 }
@@ -67,7 +67,7 @@ func TestW3CTagsEAtributos(t *testing.T) {
       </e7>
    </e6>
 </doc>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != esperado {
+	if got := canonicalizar(t, entrada); got != esperado {
 		t.Errorf("forma canônica divergente:\nobtido:\n%s\n\nesperado:\n%s", got, esperado)
 	}
 }
@@ -110,7 +110,7 @@ func TestEscapeDeTextoEAtributos(t *testing.T) {
 		},
 	}
 	for _, c := range casos {
-		if got := canonicalizar(t, c.entrada, xmldom.OpcoesC14N{}); got != c.esperado {
+		if got := canonicalizar(t, c.entrada); got != c.esperado {
 			t.Errorf("%s: obtido %q, queria %q", c.nome, got, c.esperado)
 		}
 	}
@@ -118,7 +118,7 @@ func TestEscapeDeTextoEAtributos(t *testing.T) {
 
 func TestComentariosSaoDescartados(t *testing.T) {
 	entrada := `<a><!-- some -->texto<!-- outro --></a>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != `<a>texto</a>` {
+	if got := canonicalizar(t, entrada); got != `<a>texto</a>` {
 		t.Errorf("obtido %q", got)
 	}
 }
@@ -186,7 +186,7 @@ func TestRemoverAssinaturas(t *testing.T) {
 func TestNamespacePrefixadoEhPreservado(t *testing.T) {
 	entrada := `<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">` +
 		`<soap:Body><m:eco xmlns:m="urn:teste">oi</m:eco></soap:Body></soap:Envelope>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != entrada {
+	if got := canonicalizar(t, entrada); got != entrada {
 		t.Errorf("obtido:   %s\nesperado: %s", got, entrada)
 	}
 }
@@ -195,7 +195,7 @@ func TestAtributoXmlLangEhOrdenadoPorURI(t *testing.T) {
 	entrada := `<a zebra="1" xml:lang="pt-BR" alfa="2"></a>`
 	// Atributos sem namespace vêm antes dos que têm URI; entre si, por nome.
 	esperado := `<a alfa="2" zebra="1" xml:lang="pt-BR"></a>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != esperado {
+	if got := canonicalizar(t, entrada); got != esperado {
 		t.Errorf("obtido:   %s\nesperado: %s", got, esperado)
 	}
 }
@@ -248,7 +248,7 @@ func TestInicioTagFinalEmElementoVazio(t *testing.T) {
 
 func TestDeclaracaoXMLNaoEntraNaArvore(t *testing.T) {
 	entrada := `<?xml version="1.0" encoding="UTF-8"?><a>x</a>`
-	if got := canonicalizar(t, entrada, xmldom.OpcoesC14N{}); got != `<a>x</a>` {
+	if got := canonicalizar(t, entrada); got != `<a>x</a>` {
 		t.Errorf("obtido %q", got)
 	}
 }

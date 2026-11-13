@@ -264,7 +264,7 @@ func Descompactar(base64Gzip string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("conteúdo não é gzip válido: %w", err)
 	}
-	defer leitor.Close()
+	defer func() { _ = leitor.Close() }() // O que importa é a leitura, conferida abaixo.
 
 	// Um docZip legítimo tem alguns quilobytes; o limite protege contra uma
 	// resposta maliciosa que se expanda sem parar.
