@@ -11,7 +11,10 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
   `infCteAnu`, e `refCteAnu` e `tomaICMS` no `infCteSub`. Os campos
   (`InfCte.InfCteAnu`, `InfCteSub.RefCteAnu`, `InfCteSub.TomaICMS`) ficam por
   compatibilidade, marcados `Deprecated`: não saem no XML, e `Validar` os
-  recusa. O `tpCTe` 2 (anulação), que o leiaute 4.00 não tem, também é recusado.
+  recusa.
+- O `Validar` do CT-e e do CT-e OS confere o `tpCTe` contra o esquema (0, 1 ou
+  3): antes aceitava qualquer valor, inclusive o 2 (anulação), que o leiaute
+  4.00 não tem. A conferência fica em `cte.ValidarTipoCTe`.
 - O CT-e OS recusa, no `Validar`, o que os tipos compartilhados com o CT-e
   admitem e o esquema do OS não tem: `Entrega`, `fluxo`, `origCalc` e `destCalc`
   no `compl`, CPF no emitente, `ICMS60` e `indAlteraToma`.

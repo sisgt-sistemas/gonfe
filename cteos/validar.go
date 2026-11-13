@@ -77,6 +77,7 @@ func (c *CTeOS) validarIde() Erros {
 	if ide.Mod != cte.ModeloCTeOS {
 		e = append(e, erro("ide.mod", "modelo %q; este pacote implementa o 67", ide.Mod))
 	}
+	e = append(e, deCTe(cte.ValidarTipoCTe(ide.TpCTe))...)
 	if ide.NatOp == "" {
 		e = append(e, erro("ide.natOp", "natureza da operação é obrigatória"))
 	}
@@ -497,10 +498,13 @@ func (c *CTeOS) validarForaDoLeiaute() Erros {
 	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfCteSub != nil {
 		sub := norm.InfCteSub
 		if sub.IndAlteraToma != "" {
-			e = append(e, erro("infCteSub.indAlteraToma", "o CT-e OS não tem o indAlteraToma"))
+			e = append(e, erro("infCTeNorm.infCteSub.indAlteraToma", "o CT-e OS não tem o indAlteraToma"))
 		}
-		if sub.RefCteAnu != "" || sub.TomaICMS != nil { //nolint:staticcheck // Recusa os campos que só existem por compatibilidade.
-			e = append(e, erro("infCteSub", "o leiaute 4.00 não tem o refCteAnu nem o tomaICMS"))
+		if sub.RefCteAnu != "" { //nolint:staticcheck // Recusa o campo que só existe por compatibilidade.
+			e = append(e, erro("infCTeNorm.infCteSub.refCteAnu", "o leiaute 4.00 não tem o refCteAnu"))
+		}
+		if sub.TomaICMS != nil { //nolint:staticcheck // Recusa o campo que só existe por compatibilidade.
+			e = append(e, erro("infCTeNorm.infCteSub.tomaICMS", "o leiaute 4.00 não tem o tomaICMS"))
 		}
 	}
 	return e

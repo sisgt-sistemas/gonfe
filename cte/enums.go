@@ -112,8 +112,8 @@ const (
 	CTeNormal TipoCTe = "0"
 	// CTeComplemento complementa valores de outro conhecimento.
 	CTeComplemento TipoCTe = "1"
-	// Deprecated: o leiaute 4.00 não tem o CT-e de anulação (o tpCTe vai de 0
-	// a 6, sem o 2), e Validar o recusa.
+	// Deprecated: o leiaute 4.00 não tem o CT-e de anulação: o tpCTe do CT-e e
+	// do CT-e OS aceita 0, 1 e 3. Validar o recusa.
 	CTeAnulacao TipoCTe = "2"
 	// CTeSubstituto substitui outro conhecimento.
 	CTeSubstituto TipoCTe = "3"

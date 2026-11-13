@@ -296,15 +296,16 @@ func TestValidarApontaCampo(t *testing.T) {
 		{"sem tomador", func(c *cte.CTe) { c.InfCte.Ide.Toma3 = nil }, "ide.toma"},
 		// O leiaute 4.00 não tem o CT-e de anulação nem os campos de substituição do 3.00.
 		{"CT-e de anulação", func(c *cte.CTe) { c.InfCte.Ide.TpCTe = cte.TipoCTe("2") }, "ide.tpCTe"},
+		{"finalidade do Simplificado", func(c *cte.CTe) { c.InfCte.Ide.TpCTe = cte.TipoCTe("5") }, "ide.tpCTe"},
 		{"grupo do CT-e de anulação", func(c *cte.CTe) {
 			c.InfCte.InfCteAnu = &cte.InfCteAnu{Chave: "43260312345678000195570010000009871122334411"} //nolint:staticcheck // O teste prova a recusa.
 		}, "infCteAnu"},
 		{"refCteAnu do 3.00", func(c *cte.CTe) {
 			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{ChCte: "43260312345678000195570010000009871122334411", RefCteAnu: "43260312345678000195570010000009871122334411"} //nolint:staticcheck // O teste prova a recusa.
-		}, "infCteSub.refCteAnu"},
+		}, "infCTeNorm.infCteSub.refCteAnu"},
 		{"tomaICMS do 3.00", func(c *cte.CTe) {
 			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{ChCte: "43260312345678000195570010000009871122334411", TomaICMS: &cte.TomaICMS{RefCte: "43260312345678000195570010000009871122334411"}} //nolint:staticcheck // O teste prova a recusa.
-		}, "infCteSub.tomaICMS"},
+		}, "infCTeNorm.infCteSub.tomaICMS"},
 		{"produto predominante ausente", func(c *cte.CTe) {
 			c.InfCte.InfCTeNorm.InfCarga.ProPred = ""
 		}, "infCTeNorm.infCarga.proPred"},

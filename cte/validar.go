@@ -76,6 +76,7 @@ func (c *CTe) validarIde() Erros {
 	if ide.Mod != ModeloCTe {
 		e = append(e, erro("ide.mod", "modelo %q; este pacote implementa o 57", ide.Mod))
 	}
+	e = append(e, ValidarTipoCTe(ide.TpCTe)...)
 	if ide.NatOp == "" {
 		e = append(e, erro("ide.natOp", "natureza da operação é obrigatória"))
 	}
@@ -342,7 +343,8 @@ func (c *CTe) validarNorm() Erros {
 		}
 		return e
 	case CTeAnulacao:
-		return append(e, erro("ide.tpCTe", "o leiaute 4.00 não tem o CT-e de anulação (tpCTe 2)"))
+		// Recusado em ValidarTipoCTe; sem infCTeNorm, como o complementar.
+		return e
 	}
 
 	norm := c.InfCte.InfCTeNorm
@@ -439,11 +441,24 @@ func (c *CTe) validarForaDoLeiaute() Erros {
 	}
 	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfCteSub != nil {
 		if norm.InfCteSub.RefCteAnu != "" {
-			e = append(e, erro("infCteSub.refCteAnu", "o leiaute 4.00 não tem o refCteAnu"))
+			e = append(e, erro("infCTeNorm.infCteSub.refCteAnu", "o leiaute 4.00 não tem o refCteAnu"))
 		}
 		if norm.InfCteSub.TomaICMS != nil {
-			e = append(e, erro("infCteSub.tomaICMS", "o leiaute 4.00 não tem o tomaICMS"))
+			e = append(e, erro("infCTeNorm.infCteSub.tomaICMS", "o leiaute 4.00 não tem o tomaICMS"))
 		}
 	}
 	return e
+}
+
+// ValidarTipoCTe confere a finalidade do CT-e e do CT-e OS: o esquema 4.00 (TFinCTe) aceita 0 (normal),
+// 1 (complemento) e 3 (substituto). O 2, a anulação, existia no leiaute 3.00.
+func ValidarTipoCTe(t TipoCTe) Erros {
+	switch t {
+	case CTeNormal, CTeComplemento, CTeSubstituto:
+		return nil
+	case CTeAnulacao:
+		return Erros{erro("ide.tpCTe", "o leiaute 4.00 não tem o CT-e de anulação (tpCTe 2)")}
+	default:
+		return Erros{erro("ide.tpCTe", "finalidade %q; o leiaute 4.00 aceita 0 (normal), 1 (complemento) e 3 (substituto)", t)}
+	}
 }

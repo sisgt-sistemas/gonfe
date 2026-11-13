@@ -441,7 +441,8 @@ func TestValidarPegaOsErros(t *testing.T) {
 			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{
 				ChCte: "43260312345678000195570010000009871122334411", IndAlteraToma: "1",
 			}
-		}, "infCteSub.indAlteraToma"},
+		}, "infCTeNorm.infCteSub.indAlteraToma"},
+		{"CT-e OS de anulação", func(c *cteos.CTeOS) { c.InfCte.Ide.TpCTe = cte.TipoCTe("2") }, "ide.tpCTe"},
 	}
 
 	for _, caso := range casos {
