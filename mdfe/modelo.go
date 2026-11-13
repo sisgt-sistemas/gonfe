@@ -380,8 +380,12 @@ type InfSeg struct {
 
 // ProdPred descreve o produto predominante da carga.
 type ProdPred struct {
-	TpCarga    string      `xml:"tpCarga"`
-	XProd      string      `xml:"xProd"`
+	TpCarga string `xml:"tpCarga"`
+	XProd   string `xml:"xProd"`
+	// CEAN é o GTIN (código de barras) do produto: 8, 12, 13 ou 14 dígitos, ou "SEM GTIN". Opcional.
+	CEAN string `xml:"cEAN,omitempty" norm:"upper"`
+	// NCM é o código NCM do produto: 8 dígitos, ou só os 2 do capítulo. Opcional; pontos são removidos.
+	NCM        string      `xml:"NCM,omitempty" norm:"num"`
 	InfLotacao *InfLotacao `xml:"infLotacao,omitempty"`
 }
 

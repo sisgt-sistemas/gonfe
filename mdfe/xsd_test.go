@@ -1,6 +1,7 @@
 package mdfe_test
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 
@@ -40,5 +41,31 @@ func TestManifestoPorPAAPassaNoEsquema(t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("o MDF-e emitido por PAA não passa no esquema: %v", err)
+	}
+}
+
+// O produto predominante completo, com GTIN, NCM e carga lotação, sai na ordem do esquema.
+func TestProdutoPredominantePassaNoEsquema(t *testing.T) {
+	m := manifestoExemplo()
+	m.InfMDFe.ProdPred = &mdfe.ProdPred{
+		TpCarga: "05", XProd: "BEBIDAS EM GERAL", CEAN: "SEM GTIN", NCM: "2202.10.00",
+		InfLotacao: &mdfe.InfLotacao{
+			InfLocalCarrega:    mdfe.InfLocal{CEP: "01310-100"},
+			InfLocalDescarrega: mdfe.InfLocal{CEP: "20040-020"},
+		},
+	}
+	assinado, err := m.AssinarCom(certtest.MustGerar(certtest.Opcoes{CNPJ: cnpjTransportadora}))
+	if err != nil {
+		t.Fatalf("AssinarCom: %v", err)
+	}
+	if !bytes.Contains(assinado, []byte("<cEAN>SEM GTIN</cEAN><NCM>22021000</NCM><infLotacao>")) {
+		t.Errorf("GTIN e NCM fora do lugar ou sem normalizar:\n%s", assinado)
+	}
+	err = xsd.ValidarMDFe(assinado)
+	if errors.Is(err, xsd.ErrSemXmllint) {
+		t.Skip(err)
+	}
+	if err != nil {
+		t.Fatalf("o produto predominante não passa no esquema: %v", err)
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/sisgt-sistemas/gonfe/chave"
@@ -428,6 +429,7 @@ func (m *MDFe) Validar() error {
 	e = append(e, m.validarModal()...)
 	e = append(e, m.validarDocumentos()...)
 	e = append(e, m.validarTotais()...)
+	e = append(e, m.validarProdPred()...)
 
 	if len(e) == 0 {
 		return nil
@@ -538,6 +540,32 @@ func (m *MDFe) validarDocumentos() Erros {
 		e = append(e, erro("infDoc", "o manifesto precisa relacionar ao menos um documento"))
 	}
 	return e
+}
+
+// validarProdPred confere o GTIN e o NCM do produto predominante pelos padrões do esquema 3.00.
+func (m *MDFe) validarProdPred() Erros {
+	p := m.InfMDFe.ProdPred
+	if p == nil {
+		return nil
+	}
+	var e Erros
+	if p.CEAN != "" && p.CEAN != "SEM GTIN" && !digitos(p.CEAN, 8, 12, 13, 14) {
+		e = append(e, erro("prodPred.cEAN", `GTIN %q; informe 8, 12, 13 ou 14 dígitos, ou "SEM GTIN"`, p.CEAN))
+	}
+	if p.NCM != "" && !digitos(p.NCM, 2, 8) {
+		e = append(e, erro("prodPred.NCM", "NCM %q; informe 8 dígitos, ou os 2 do capítulo", p.NCM))
+	}
+	return e
+}
+
+// digitos diz se s tem só dígitos e um dos tamanhos dados.
+func digitos(s string, tamanhos ...int) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return slices.Contains(tamanhos, len(s))
 }
 
 func (m *MDFe) validarTotais() Erros {

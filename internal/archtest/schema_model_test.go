@@ -151,7 +151,7 @@ func raizesDosEsquemas() []raizDoEsquema {
 				faltas(aModelar, "MDFe/infMDFe",
 					"infDoc/infMunDescarga/infCTe/indPrestacaoParcial", "infDoc/infMunDescarga/infCTe/infEntregaParcial",
 					"infDoc/infMunDescarga/infCTe/infNFePrestParcial", "infModal/rodo/infANTT/infPag/indAntecipaAdiant",
-					"infModal/rodo/infANTT/infPag/tpAntecip", "infPAA", "infSolicNFF", "prodPred/NCM", "prodPred/cEAN"),
+					"infModal/rodo/infANTT/infPag/tpAntecip", "infPAA", "infSolicNFF"),
 			),
 		},
 	}

@@ -5,6 +5,13 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Adicionado
+
+- GTIN e NCM do produto predominante do MDF-e (`ProdPred.CEAN` e
+  `ProdPred.NCM`), que o esquema 3.00 já aceitava. Os dois são opcionais; o
+  NCM perde os pontos no `Preparar`, e o `Validar` confere os tamanhos do
+  esquema (GTIN de 8, 12, 13 ou 14 dígitos, ou "SEM GTIN"; NCM de 8 ou 2).
+
 ### Corrigido
 
 - O CT-e não leva mais grupos do leiaute 3.00 que o esquema 4.00 recusa:

@@ -259,6 +259,12 @@ func TestValidarApontaCampo(t *testing.T) {
 		}, "infDoc.infMunDescarga[0].infNFe[0].chNFe"},
 		{"peso zero", func(m *mdfe.MDFe) { m.InfMDFe.Tot.QCarga = tipos.D("0") }, "tot.qCarga"},
 		{"unidade desconhecida", func(m *mdfe.MDFe) { m.InfMDFe.Tot.CUnid = "99" }, "tot.cUnid"},
+		{"GTIN com 11 dígitos", func(m *mdfe.MDFe) {
+			m.InfMDFe.ProdPred = &mdfe.ProdPred{TpCarga: "05", XProd: "BEBIDAS", CEAN: "78912345678"}
+		}, "prodPred.cEAN"},
+		{"NCM com 4 dígitos", func(m *mdfe.MDFe) {
+			m.InfMDFe.ProdPred = &mdfe.ProdPred{TpCarga: "05", XProd: "BEBIDAS", NCM: "2202"}
+		}, "prodPred.NCM"},
 	}
 
 	for _, caso := range casos {
@@ -271,6 +277,24 @@ func TestValidarApontaCampo(t *testing.T) {
 				t.Errorf("erro em %s não foi apontado; apontados: %v", caso.campo, chaves(campos))
 			}
 		})
+	}
+}
+
+// O GTIN e o NCM do produto predominante aceitam o que o esquema aceita, depois de normalizados.
+func TestValidarAceitaGTINeNCMDoEsquema(t *testing.T) {
+	casos := []struct{ cEAN, ncm string }{
+		{"", ""}, {"sem gtin", "22"}, {"78912345", "2202.10.00"}, {"789123456789", "22021000"},
+		{"7891234567895", ""}, {"17891234567892", ""},
+	}
+	for _, c := range casos {
+		m := manifestoExemplo()
+		m.InfMDFe.ProdPred = &mdfe.ProdPred{TpCarga: "05", XProd: "BEBIDAS", CEAN: c.cEAN, NCM: c.ncm}
+		if err := m.Preparar(); err != nil {
+			t.Fatalf("Preparar: %v", err)
+		}
+		if err := m.Validar(); err != nil {
+			t.Errorf("cEAN %q e NCM %q recusados: %v", c.cEAN, c.ncm, err)
+		}
 	}
 }
 
