@@ -5,6 +5,8 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.1.0] — 2026-11-13
+
 ### Adicionado
 
 - DACTE em meia folha (`Opcoes.Papel: danfe.PapelA5`): A5 paisagem, que o
