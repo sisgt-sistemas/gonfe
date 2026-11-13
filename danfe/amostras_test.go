@@ -38,6 +38,14 @@ func TestGerarAmostras(t *testing.T) {
 		pdf, err := danfe.GerarDACTE(procCTeDe(t, conhecimentoExemplo(documentos)), danfe.Opcoes{Papel: danfe.PapelA5})
 		gerar(nome, pdf, err)
 	}
+	{
+		var procs [][]byte
+		for _, documentos := range []int{4, 40, 1} {
+			procs = append(procs, procCTeDe(t, conhecimentoExemplo(documentos)))
+		}
+		pdf, err := danfe.GerarDACTEsEmA4(procs, danfe.Opcoes{})
+		gerar("dacte-meia-folha-duas-por-a4.pdf", pdf, err)
+	}
 	for nome, referenciados := range map[string]int{"dacte-os.pdf": 1, "dacte-os-muitos-documentos.pdf": 40} {
 		pdf, err := danfe.GerarDACTEOS(procOSDe(t, fretamentoExemplo(referenciados)), danfe.Opcoes{})
 		gerar(nome, pdf, err)

@@ -106,6 +106,18 @@ func (p *PDF) NovaPaginaA4() *Pagina { return p.NovaPagina(LarguraA4, AlturaA4) 
 // Paginas devolve quantas páginas o documento tem.
 func (p *PDF) Paginas() int { return len(p.paginas) }
 
+// Pagina devolve a página de índice i, a partir de zero.
+func (p *PDF) Pagina(i int) *Pagina { return p.paginas[i] }
+
+// Incluir desenha nesta página o conteúdo de outra, em tamanho real, com o canto
+// superior esquerdo dela em (posX, posY). As páginas de um documento usam as
+// mesmas fontes, então basta deslocar o desenho.
+func (pg *Pagina) Incluir(outra *Pagina, posX, posY float64) {
+	fmt.Fprintf(&pg.conteudo, "q\n1 0 0 1 %.2f %.2f cm\n", x(posX), pg.y(posY+outra.altura))
+	pg.conteudo.Write(outra.conteudo.Bytes())
+	pg.conteudo.WriteString("\nQ\n")
+}
+
 // Largura devolve a largura da página em milímetros.
 func (pg *Pagina) Largura() float64 { return pg.largura }
 

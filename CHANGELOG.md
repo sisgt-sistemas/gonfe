@@ -12,6 +12,10 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
   barras e o QR Code no tamanho mínimo. Sai sem canhoto, a menos que
   `Opcoes.CanhotoNaMeiaFolha` o peça; o que não cabe vai para a folha seguinte,
   que repete o cabeçalho. `make amostras` grava `dacte-meia-folha.pdf`.
+- Duas meias folhas por A4 (`danfe.GerarDACTEsEmA4` e `danfe.DACTEsEmA4`): os
+  DACTEs em meia folha um em cima do outro, em tamanho real, com borda em cada um
+  e a linha de corte no meio. `make amostras` grava
+  `dacte-meia-folha-duas-por-a4.pdf`.
 
 ### Corrigido
 

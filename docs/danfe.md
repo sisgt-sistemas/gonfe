@@ -134,6 +134,20 @@ mínimo.
 - **Só o DACTE.** O DACTE OS, o do Simplificado e o DAMDFE ignoram `Papel` e
   saem em A4.
 
+#### Duas por folha A4
+
+```go
+pdf, err := danfe.GerarDACTEsEmA4([][]byte{proc1, proc2, proc3}, danfe.Opcoes{})
+```
+
+Duas meias folhas cabem num A4 em retrato. `GerarDACTEsEmA4` (ou `DACTEsEmA4`,
+com os conhecimentos já lidos) as põe uma em cima da outra, **em tamanho real**,
+na ordem dada: o código de barras e o QR Code não encolhem, como encolheriam na
+opção "2 páginas por folha" da impressora. Cada meia folha sai com uma borda,
+porque o DACTE menor que o papel vai delimitado, e uma linha tracejada marca o
+corte. Um DACTE de mais de uma folha ocupa as metades seguintes; para duas vias
+do mesmo conhecimento, passe-o duas vezes.
+
 ## O DACTE OS
 
 ```go

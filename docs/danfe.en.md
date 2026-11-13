@@ -135,6 +135,20 @@ since they have a minimum.
 - **DACTE only.** The DACTE OS, the Simplificado DACTE and the DAMDFE ignore
   `Papel` and come out on A4.
 
+#### Two per A4 sheet
+
+```go
+pdf, err := danfe.GerarDACTEsEmA4([][]byte{proc1, proc2, proc3}, danfe.Opcoes{})
+```
+
+Two half sheets fit on a portrait A4. `GerarDACTEsEmA4` (or `DACTEsEmA4`, with
+the CT-e already parsed) stacks them **at full size**, in the given order: the
+barcode and the QR Code do not shrink, as they would with the printer's "2 pages
+per sheet" option. Each half sheet gets a border, since a DACTE smaller than the
+paper must be outlined, and a dashed line marks the cut. A DACTE with more than
+one sheet takes the following halves; for two copies of the same CT-e, pass it
+twice.
+
 ## The DACTE OS
 
 ```go

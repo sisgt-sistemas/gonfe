@@ -155,3 +155,80 @@ func TestDACTEMeiaFolhaQueNaoCabeERecusada(t *testing.T) {
 		t.Errorf("erro = %v, queria ErrNaoCabe", err)
 	}
 }
+
+// Duas meias folhas por A4, em tamanho real e na ordem dada; o DACTE de várias folhas ocupa as metades seguintes.
+func TestDACTEsEmA4(t *testing.T) {
+	var procs [][]byte
+	documentos := 0
+	for _, n := range []int{4, 40, 1} { // a de 40 ocupa duas meias folhas: são quatro metades
+		procs = append(procs, procCTeDe(t, conhecimentoExemplo(n)))
+		documentos += n
+	}
+	dados, err := danfe.GerarDACTEsEmA4(procs, danfe.Opcoes{})
+	if err != nil {
+		t.Fatalf("GerarDACTEsEmA4: %v", err)
+	}
+	conferirPDF(t, dados)
+	if paginas := paginasDe(dados); paginas != 2 {
+		t.Errorf("quatro meias folhas saíram em %d folhas A4, queria 2", paginas)
+	}
+	if n := bytes.Count(dados, []byte("/MediaBox [0 0 595.28 841.89]")); n != 2 {
+		t.Errorf("%d folhas A4, queria 2", n)
+	}
+	if vezes := bytes.Count(dados, []byte("(DACTE) Tj")); vezes != 4 {
+		t.Errorf("o cabeçalho saiu %d vezes, queria 4", vezes)
+	}
+	if vezes := bytes.Count(dados, []byte("(NF-e) Tj")); vezes != documentos {
+		t.Errorf("as tabelas têm %d documentos, queria %d", vezes, documentos)
+	}
+	// Em tamanho real: o conteúdo só é deslocado, nunca reduzido.
+	if bytes.Contains(dados, []byte(" cm\n")) && !bytes.Contains(dados, []byte("q\n1 0 0 1 ")) {
+		t.Error("a meia folha foi transformada além do deslocamento")
+	}
+	// A borda de cada meia folha fica dentro da margem dela, a 4,45 mm da beira do A4: basta nada sair da folha.
+	conferirCabeNaPagina(t, "duas por A4", dados, false)
+}
+
+// Um só conhecimento ocupa a metade de cima; a de baixo fica em branco, sem linha de corte.
+func TestDACTEsEmA4ComUmSo(t *testing.T) {
+	dados, err := danfe.GerarDACTEsEmA4([][]byte{procCTeDe(t, conhecimentoExemplo(1))}, danfe.Opcoes{})
+	if err != nil {
+		t.Fatalf("GerarDACTEsEmA4: %v", err)
+	}
+	if paginas := paginasDe(dados); paginas != 1 {
+		t.Errorf("%d folhas, queria 1", paginas)
+	}
+	if vezes := bytes.Count(dados, []byte("(DACTE) Tj")); vezes != 1 {
+		t.Errorf("o cabeçalho saiu %d vezes, queria 1", vezes)
+	}
+}
+
+// O papel pedido não muda nada: as folhas são as da meia folha.
+func TestDACTEsEmA4IgnoraOPapel(t *testing.T) {
+	procs := [][]byte{procCTeDe(t, conhecimentoExemplo(2)), procCTeDe(t, conhecimentoExemplo(3))}
+	padrao, err := danfe.GerarDACTEsEmA4(procs, danfe.Opcoes{})
+	if err != nil {
+		t.Fatalf("GerarDACTEsEmA4: %v", err)
+	}
+	a5, err := danfe.GerarDACTEsEmA4(procs, meiaFolha)
+	if err != nil {
+		t.Fatalf("GerarDACTEsEmA4: %v", err)
+	}
+	if !bytes.Equal(padrao, a5) {
+		t.Error("Papel mudou as meias folhas em A4")
+	}
+}
+
+func TestDACTEsEmA4Recusa(t *testing.T) {
+	if _, err := danfe.GerarDACTEsEmA4(nil, danfe.Opcoes{}); err == nil {
+		t.Error("aceitou uma lista vazia")
+	}
+	procs := [][]byte{procCTeDe(t, conhecimentoExemplo(1)), []byte("<nao-e-cte/>")}
+	_, err := danfe.GerarDACTEsEmA4(procs, danfe.Opcoes{})
+	if err == nil || !bytes.Contains([]byte(err.Error()), []byte("dacte 2")) {
+		t.Errorf("erro = %v, queria apontar o segundo XML", err)
+	}
+	if _, err := danfe.DACTEsEmA4([]danfe.CTeAutorizado{{}}, danfe.Opcoes{}); err == nil {
+		t.Error("aceitou um conhecimento ausente")
+	}
+}

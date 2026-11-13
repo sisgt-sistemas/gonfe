@@ -18,16 +18,25 @@ const (
 
 // dacteA5 gera o DACTE em meia folha.
 func dacteA5(c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) ([]byte, error) {
-	// O campo FL traz o total de folhas: a primeira passada só conta, a segunda desenha.
-	folhas, err := montarDACTEA5(pdf.Novo(), c, prot, opc, 0)
+	documento, err := meiasFolhasDACTE(c, prot, opc)
 	if err != nil {
 		return nil, fmt.Errorf("dacte: %w", err)
 	}
+	return documento.Bytes()
+}
+
+// meiasFolhasDACTE desenha o DACTE em meia folha e devolve o documento, com uma página A5 por folha.
+func meiasFolhasDACTE(c *cte.CTe, prot *cte.ProtCTe, opc Opcoes) (*pdf.PDF, error) {
+	// O campo FL traz o total de folhas: a primeira passada só conta, a segunda desenha.
+	folhas, err := montarDACTEA5(pdf.Novo(), c, prot, opc, 0)
+	if err != nil {
+		return nil, err
+	}
 	documento := pdf.Novo()
 	if _, err := montarDACTEA5(documento, c, prot, opc, folhas); err != nil {
-		return nil, fmt.Errorf("dacte: %w", err)
+		return nil, err
 	}
-	return documento.Bytes()
+	return documento, nil
 }
 
 // blocoA5 desenha um quadro a partir de y e devolve onde ele terminou.

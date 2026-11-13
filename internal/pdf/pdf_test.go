@@ -427,3 +427,21 @@ func TestValoresCode128ComecaNoConjuntoA(t *testing.T) {
 		t.Errorf("decodificado %s", got)
 	}
 }
+
+// Incluir desloca o desenho da outra página para a posição pedida, sem mudar a escala.
+func TestIncluirDeslocaSemEscala(t *testing.T) {
+	origem := Novo().NovaPagina(210, 148)
+	origem.Retangulo(10, 10, 20, 5, 0.1)
+
+	destino := Novo().NovaPaginaA4()
+	destino.Incluir(origem, 0, 149)
+
+	conteudo := destino.conteudo.String()
+	// O canto inferior da meia folha, a 149 + 148 mm do topo, fica a 0 mm da base do A4.
+	if !strings.HasPrefix(conteudo, "q\n1 0 0 1 0.00 0.00 cm\n") {
+		t.Errorf("transformação inesperada:\n%s", conteudo)
+	}
+	if !strings.Contains(conteudo, origem.conteudo.String()) || !strings.HasSuffix(conteudo, "\nQ\n") {
+		t.Errorf("o desenho da origem não foi incluído inteiro:\n%s", conteudo)
+	}
+}
