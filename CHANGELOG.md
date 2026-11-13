@@ -5,6 +5,8 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.2.0] — 2026-11-13
+
 ### Adicionado
 
 - GTIN e NCM do produto predominante do MDF-e (`ProdPred.CEAN` e
