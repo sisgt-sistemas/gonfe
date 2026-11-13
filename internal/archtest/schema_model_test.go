@@ -39,6 +39,7 @@ type raizDoEsquema struct {
 	foraDoEscopo []string          // grupos do modelo que o gate não confere
 	semCampo     map[string]string // caminho → por que o modelo não o tem
 	semEsquema   map[string]string // caminho → por que o modelo o tem, se o esquema não
+	semLista     map[string]string // caminho → por que o modelo guarda um só, se o esquema admite vários
 }
 
 type modalDoEsquema struct {
@@ -49,6 +50,7 @@ type modalDoEsquema struct {
 const (
 	assinatura = "a assinatura é inserida pelo xmldsig ao assinar"
 	aModelar   = "a modelar (tms#116)"
+	comoLista  = "a modelar como lista (tms#116): mudar o tipo quebra a API da v1"
 	naDCe      = "entra com a DC-e (tms#114)"
 	herdadoOS  = "tipo compartilhado com o CT-e; o leiaute do OS não o tem, e o Validar do OS o recusa"
 )
@@ -71,6 +73,11 @@ func juntarExcecoes(mapas ...map[string]string) map[string]string {
 		}
 	}
 	return m
+}
+
+// listasDoCTe são os elementos que o esquema da família CT-e repete e o modelo guarda um só.
+func listasDoCTe(infCte string) map[string]string {
+	return faltas(comoLista, infCte, "ide/gPagAntecipado/chDFePagAnt", "infCteComp")
 }
 
 // icmsAModelar são o cBenef e o vICMSDeson dos grupos do ICMS e o ICMS previsto no pagamento antecipado.
@@ -99,6 +106,7 @@ func raizesDosEsquemas() []raizDoEsquema {
 			nome: "CT-e", esquema: "cte/cte_v4.00.xsd", elemento: "CTe", modelo: reflect.TypeFor[cte.CTe](),
 			modais:       []modalDoEsquema{{"cte/cteModalRodoviario_v4.00.xsd", "rodo"}},
 			foraDoEscopo: outrosModais("CTe/infCte/infCTeNorm/infModal", modaisCTe...),
+			semLista:     listasDoCTe("CTe/infCte"),
 			semCampo: juntarExcecoes(
 				map[string]string{"CTe/Signature": assinatura, "CTe/infCte/emit/ISUFEmit": aModelar},
 				icmsAModelar("CTe/infCte/imp", "ICMS20", "ICMS45", "ICMS60", "ICMS90", "ICMSOutraUF"),
@@ -110,7 +118,8 @@ func raizesDosEsquemas() []raizDoEsquema {
 		},
 		{
 			nome: "CT-e OS", esquema: "cte/cteOS_v4.00.xsd", elemento: "CTeOS", modelo: reflect.TypeFor[cteos.CTeOS](),
-			modais: []modalDoEsquema{{"cte/cteModalRodoviarioOS_v4.00.xsd", "rodoOS"}},
+			modais:   []modalDoEsquema{{"cte/cteModalRodoviarioOS_v4.00.xsd", "rodoOS"}},
+			semLista: listasDoCTe("CTeOS/infCte"),
 			semCampo: juntarExcecoes(
 				map[string]string{
 					"CTeOS/Signature": assinatura, "CTeOS/infCte/emit/ISUFEmit": aModelar,
@@ -127,6 +136,7 @@ func raizesDosEsquemas() []raizDoEsquema {
 			modelo:       reflect.TypeFor[ctesimp.CTeSimp](),
 			modais:       []modalDoEsquema{{"cte/cteModalRodoviario_v4.00.xsd", "rodo"}},
 			foraDoEscopo: outrosModais("CTeSimp/infCte/infModal", modaisCTe...),
+			semLista:     faltas(comoLista, "CTeSimp/infCte", "ide/gPagAntecipado/chDFePagAnt"),
 			semCampo: juntarExcecoes(
 				map[string]string{"CTeSimp/Signature": assinatura},
 				icmsAModelar("CTeSimp/infCte/imp", "ICMS20", "ICMS45", "ICMS60", "ICMS90", "ICMSOutraUF"),
@@ -150,9 +160,11 @@ func raizesDosEsquemas() []raizDoEsquema {
 func TestModelFollowsTheSchema(t *testing.T) {
 	for _, raiz := range raizesDosEsquemas() {
 		t.Run(raiz.nome, func(t *testing.T) {
-			doEsquema := caminhosDoEsquema(t, raiz)
-			doModelo := map[string]bool{raiz.elemento: true}
-			caminhosDoModelo(raiz.modelo, raiz.elemento, doModelo, 0)
+			esquema := arvoreDoEsquema(t, raiz)
+			modelo := novaArvore()
+			modelo.caminhos[raiz.elemento] = true
+			modelo.percorrerModelo(t, raiz.modelo, raiz.elemento, 0)
+			doEsquema, doModelo := esquema.caminhos, modelo.caminhos
 
 			var faltam, sobram, excecoesVelhas []string
 			for _, grupo := range raiz.foraDoEscopo {
@@ -186,8 +198,78 @@ func TestModelFollowsTheSchema(t *testing.T) {
 			relatar(t, "o esquema tem e o modelo não", faltam)
 			relatar(t, "o modelo tem e o esquema não (tag com nome ou lugar errado)", sobram)
 			relatar(t, "exceção que não é mais necessária", excecoesVelhas)
+			repeticao, listasVelhas := repeticaoDiferente(esquema, modelo, raiz.semLista)
+			relatar(t, "repetição diferente do esquema (slice onde o esquema tem um só, ou o contrário)", repeticao)
+			relatar(t, "exceção de lista que não é mais necessária", listasVelhas)
+			relatar(t, "ordem diferente da sequência do esquema", ordemDiferente(esquema, modelo))
 		})
 	}
+}
+
+// arvore é o que se lê de um lado, esquema ou modelo: os caminhos, os elementos que se repetem e a posição de cada
+// filho no pai. Os ramos de um xs:choice têm a mesma posição, porque só um sai.
+type arvore struct {
+	caminhos map[string]bool
+	repete   map[string]bool
+	posicao  map[string]int // caminho do filho → posição entre os irmãos
+	proxima  map[string]int // pai → próxima posição livre
+}
+
+func novaArvore() *arvore {
+	return &arvore{caminhos: map[string]bool{}, repete: map[string]bool{}, posicao: map[string]int{}, proxima: map[string]int{}}
+}
+
+// posicaoNova reserva a próxima posição entre os filhos do pai.
+func (a *arvore) posicaoNova(pai string) int {
+	p := a.proxima[pai]
+	a.proxima[pai] = p + 1
+	return p
+}
+
+// repeticaoDiferente lista os elementos dos dois lados que se repetem num e não no outro, fora as exceções, e as
+// exceções que não cobrem nenhum.
+func repeticaoDiferente(esquema, modelo *arvore, excecoes map[string]string) (diferentes, velhas []string) {
+	usadas := map[string]bool{}
+	for caminho := range modelo.caminhos {
+		if esquema.caminhos[caminho] && esquema.repete[caminho] != modelo.repete[caminho] {
+			if _, ok := excecoes[caminho]; ok && esquema.repete[caminho] {
+				usadas[caminho] = true
+				continue
+			}
+			lado := "o esquema admite vários, o modelo um só"
+			if modelo.repete[caminho] {
+				lado = "o modelo é lista, o esquema admite um só"
+			}
+			diferentes = append(diferentes, caminho+": "+lado)
+		}
+	}
+	for caminho := range excecoes {
+		if !usadas[caminho] {
+			velhas = append(velhas, caminho)
+		}
+	}
+	return diferentes, velhas
+}
+
+// ordemDiferente lista os irmãos que o modelo põe em ordem contrária à da sequência do esquema.
+func ordemDiferente(esquema, modelo *arvore) []string {
+	irmaos := map[string][]string{} // pai → filhos do modelo, na ordem do modelo
+	for caminho := range modelo.posicao {
+		if esquema.caminhos[caminho] {
+			pai := caminho[:strings.LastIndex(caminho, "/")]
+			irmaos[pai] = append(irmaos[pai], caminho)
+		}
+	}
+	var diferentes []string
+	for _, filhos := range irmaos {
+		slices.SortFunc(filhos, func(a, b string) int { return modelo.posicao[a] - modelo.posicao[b] })
+		for i := 1; i < len(filhos); i++ {
+			if esquema.posicao[filhos[i]] < esquema.posicao[filhos[i-1]] {
+				diferentes = append(diferentes, filhos[i-1]+" vem antes de "+filhos[i][strings.LastIndex(filhos[i], "/")+1:])
+			}
+		}
+	}
+	return diferentes
 }
 
 // cobertos devolve os caminhos do conjunto que a chave cobre: ela mesma e a subárvore.
@@ -275,14 +357,15 @@ func lerEsquema(t *testing.T, arquivo string) esquemaLido {
 	return e
 }
 
-// caminhosDoEsquema percorre o esquema a partir da raiz e devolve cada caminho de elemento e de atributo (@nome).
-func caminhosDoEsquema(t *testing.T, raiz raizDoEsquema) map[string]bool {
+// arvoreDoEsquema percorre o esquema a partir da raiz e devolve cada caminho de elemento e de atributo (@nome), com
+// a repetição e a posição de cada elemento.
+func arvoreDoEsquema(t *testing.T, raiz raizDoEsquema) *arvore {
 	t.Helper()
-	caminhos := map[string]bool{}
+	a := novaArvore()
 	documento := lerEsquema(t, raiz.esquema)
 	var anys []string
-	documento.percorrerElemento(documento.elementos[raiz.elemento], "", caminhos, &anys)
-	if len(caminhos) == 0 {
+	documento.percorrerElemento(documento.elementos[raiz.elemento], "", a, &anys, false, -1)
+	if len(a.caminhos) == 0 {
 		t.Fatalf("%s: o elemento %s não está no esquema", raiz.esquema, raiz.elemento)
 	}
 	for _, lugar := range anys {
@@ -296,51 +379,74 @@ func caminhosDoEsquema(t *testing.T, raiz raizDoEsquema) map[string]bool {
 				t.Fatalf("%s: o elemento %s não está no esquema", modal.esquema, modal.elemento)
 			}
 			var semAny []string
-			esquema.percorrerElemento(elemento, lugar, caminhos, &semAny)
+			esquema.percorrerElemento(elemento, lugar, a, &semAny, false, -1)
 			if len(semAny) > 0 {
 				t.Fatalf("%s: xs:any em %v", modal.esquema, semAny)
 			}
 		}
 	}
-	return caminhos
+	return a
 }
 
-func (e esquemaLido) percorrerElemento(elemento noXSD, pai string, caminhos map[string]bool, anys *[]string) {
+// varios diz se o maxOccurs admite mais de uma ocorrência.
+func varios(n noXSD) bool {
+	m := n.attr("maxOccurs")
+	return m != "" && m != "1"
+}
+
+// percorrerElemento registra o elemento no pai. repeteHerdado vem de um sequence ou choice que se repete; posicao,
+// quando não é -1, é a do choice em que o elemento está.
+func (e esquemaLido) percorrerElemento(elemento noXSD, pai string, a *arvore, anys *[]string, repeteHerdado bool, posicao int) {
+	nome := elemento.attr("name")
 	if ref := elemento.attr("ref"); ref != "" {
+		nome = local(ref)
+	}
+	caminho := juntar(pai, nome)
+	a.caminhos[caminho] = true
+	a.repete[caminho] = repeteHerdado || varios(elemento)
+	if posicao < 0 {
+		posicao = a.posicaoNova(pai)
+	}
+	a.posicao[caminho] = posicao
+	if elemento.attr("ref") != "" {
 		// Só a assinatura vem por referência, de outro namespace: o caminho entra, o conteúdo não.
-		caminhos[juntar(pai, local(ref))] = true
 		return
 	}
-	caminho := juntar(pai, elemento.attr("name"))
-	caminhos[caminho] = true
 	if tipo, ok := e.tipos[local(elemento.attr("type"))]; ok {
-		e.percorrerTipo(tipo, caminho, caminhos, anys)
+		e.percorrerTipo(tipo, caminho, a, anys, false, -1)
 	}
 	for _, filho := range elemento.Filhos {
 		if filho.XMLName.Local == "complexType" {
-			e.percorrerTipo(filho, caminho, caminhos, anys)
+			e.percorrerTipo(filho, caminho, a, anys, false, -1)
 		}
 	}
 }
 
-func (e esquemaLido) percorrerTipo(tipo noXSD, caminho string, caminhos map[string]bool, anys *[]string) {
+func (e esquemaLido) percorrerTipo(tipo noXSD, caminho string, a *arvore, anys *[]string, repete bool, posicao int) {
 	for _, filho := range tipo.Filhos {
 		switch filho.XMLName.Local {
-		case "sequence", "choice":
-			e.percorrerTipo(filho, caminho, caminhos, anys)
+		case "sequence":
+			e.percorrerTipo(filho, caminho, a, anys, repete || varios(filho), posicao)
+		case "choice":
+			// Os ramos dividem uma posição; dentro de um choice que já tem posição, ficam com ela.
+			if posicao < 0 {
+				e.percorrerTipo(filho, caminho, a, anys, repete || varios(filho), a.posicaoNova(caminho))
+			} else {
+				e.percorrerTipo(filho, caminho, a, anys, repete || varios(filho), posicao)
+			}
 		case "element":
-			e.percorrerElemento(filho, caminho, caminhos, anys)
+			e.percorrerElemento(filho, caminho, a, anys, repete, posicao)
 		case "attribute":
-			caminhos[caminho+"/@"+filho.attr("name")] = true
+			a.caminhos[caminho+"/@"+filho.attr("name")] = true
 		case "any":
 			*anys = append(*anys, caminho)
 		case "complexContent", "simpleContent":
-			e.percorrerTipo(filho, caminho, caminhos, anys)
+			e.percorrerTipo(filho, caminho, a, anys, repete, posicao)
 		case "extension", "restriction":
 			if base, ok := e.tipos[local(filho.attr("base"))]; ok {
-				e.percorrerTipo(base, caminho, caminhos, anys)
+				e.percorrerTipo(base, caminho, a, anys, repete, posicao)
 			}
-			e.percorrerTipo(filho, caminho, caminhos, anys)
+			e.percorrerTipo(filho, caminho, a, anys, repete, posicao)
 		}
 	}
 }
@@ -364,16 +470,21 @@ var (
 	marshalerText = reflect.TypeFor[encoding.TextMarshaler]()
 )
 
-// caminhosDoModelo percorre as tags xml do tipo Go e devolve os caminhos que ele produz, no mesmo formato do esquema.
-// Um tipo que se serializa sozinho (Marshaler) ou que não é struct é folha.
-func caminhosDoModelo(tipo reflect.Type, caminho string, caminhos map[string]bool, profundidade int) {
+// percorrerModelo percorre as tags xml do tipo Go e registra os caminhos que ele produz, no mesmo formato do esquema:
+// slice é repetição, e a ordem dos campos é a ordem em que o encoding/xml os escreve. Um tipo que se serializa sozinho
+// (Marshaler) ou que não é struct é folha.
+func (a *arvore) percorrerModelo(t *testing.T, tipo reflect.Type, caminho string, profundidade int) {
+	t.Helper()
 	for tipo.Kind() == reflect.Pointer || tipo.Kind() == reflect.Slice {
 		tipo = tipo.Elem()
 	}
-	if tipo.Kind() != reflect.Struct || profundidade > 30 ||
+	if tipo.Kind() != reflect.Struct ||
 		tipo.Implements(marshalerXML) || reflect.PointerTo(tipo).Implements(marshalerXML) ||
 		tipo.Implements(marshalerText) || reflect.PointerTo(tipo).Implements(marshalerText) {
 		return
+	}
+	if profundidade > 30 {
+		t.Fatalf("%s: modelo com mais de 30 níveis; o gate não percorre além disso", caminho)
 	}
 	for i := range tipo.NumField() {
 		campo := tipo.Field(i)
@@ -389,18 +500,20 @@ func caminhosDoModelo(tipo reflect.Type, caminho string, caminhos map[string]boo
 			nome = nome[i+1:]
 		}
 		if campo.Anonymous && nome == "" {
-			caminhosDoModelo(campo.Type, caminho, caminhos, profundidade+1)
+			a.percorrerModelo(t, campo.Type, caminho, profundidade+1)
 			continue
 		}
 		if nome == "" {
 			nome = campo.Name
 		}
 		if slices.Contains(strings.Split(opcoes, ","), "attr") {
-			caminhos[caminho+"/@"+nome] = true
+			a.caminhos[caminho+"/@"+nome] = true
 			continue
 		}
 		filho := juntar(caminho, nome)
-		caminhos[filho] = true
-		caminhosDoModelo(campo.Type, filho, caminhos, profundidade+1)
+		a.caminhos[filho] = true
+		a.repete[filho] = campo.Type.Kind() == reflect.Slice
+		a.posicao[filho] = a.posicaoNova(caminho)
+		a.percorrerModelo(t, campo.Type, filho, profundidade+1)
 	}
 }
