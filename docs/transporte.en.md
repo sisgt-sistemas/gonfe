@@ -254,6 +254,45 @@ canc, _ := cte.NovoCancelamento(cte.DadosCancelamento{
     [Auxiliary documents](danfe.md#the-dacte-os), with the same fidelity warning
     as the others.
 
+## CT-e Simplificado
+
+The CT-e Simplificado is model 57 with its own root, `<CTeSimp>`: it gathers in
+one document several services for the same payer. There is no sender, shipper,
+receiver or consignee; the payer is declared once, the cargo is described as a
+whole, and each delivery is a `det` item, with the leg, the amount and what it
+carries.
+
+```go
+c := ctesimp.Novo() // purpose 5, road modal, normal service
+
+c.InfCte.Toma = ctesimp.Toma{
+    Toma: cte.TomadorRemetente, IndIEToma: cte.ContribuinteICMS,
+    CNPJ: "11222333000181", IE: "1234567890", XNome: "INDUSTRIA REMETENTE SA",
+    EnderToma: cte.Endereco{ /* … */ },
+}
+c.InfCte.Det = []ctesimp.Det{{
+    CMunIni: 4314902, XMunIni: "PORTO ALEGRE", CMunFim: 4305108, XMunFim: "CAXIAS DO SUL",
+    Comp:   []cte.Componente{{XNome: "FRETE PESO", VComp: tipos.D("1500.00")}},
+    InfNFe: []ctesimp.InfNFe{{ChNFe: nfeKey}},
+}}
+// ide, emit, infCarga, the road modal and ICMS as in the CT-e.
+
+// Preparar numbers the items, adds the components into each vPrest and the
+// services into the total group.
+signed, err := c.AssinarCom(cert)
+```
+
+Each item carries the NF-e (`infNFe`, with the cargo or transport units) or, for
+subcontracting and redispatch, the previous CT-e (`infDocAnt`). Events are those
+of the `cte` package.
+
+!!! warning "No transmission yet"
+
+    The CT-e Simplificado has its own reception service, which the SEFAZ client
+    does not implement yet: `sefaz.ClienteCTe.Autorizar` refuses the document
+    with `sefaz.ErrCTeSimpSemRecepcao`. The tax reform groups (`IBSCBS`) and the
+    simplified DACTE also come later.
+
 ## MDF-e
 
 ```go

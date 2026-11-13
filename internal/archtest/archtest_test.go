@@ -81,7 +81,7 @@ func TestOnlyXSDRunsProcesses(t *testing.T) {
 }
 
 // schemaChecked são os pacotes de documento validados contra o esquema oficial: cada um tem teste que chama o xsd.
-var schemaChecked = []string{"cte", "cteos", "mdfe"}
+var schemaChecked = []string{"cte", "cteos", "ctesimp", "mdfe"}
 
 // TestEveryDocumentPassesTheSchema: todo documento validado contra o esquema tem teste que o confere com o xsd.
 // Tirar o teste não passa despercebido.
@@ -114,8 +114,9 @@ func TestEveryDocumentPassesTheSchema(t *testing.T) {
 // casas é o intervalo de casas decimais que o esquema aceita para um elemento.
 type casas struct{ min, max int }
 
-// tdec lê o nome do tipo decimal do leiaute: TDec_1302 (2 casas), TDec_0302a04 (2 a 4), com ou sem Opc.
-var tdec = regexp.MustCompile(`^TDec_\d{2}(\d{2})(?:a(\d{2}))?(?:Opc)?$`)
+// tdec lê o nome do tipo decimal do leiaute: TDec_1302 (2 casas), TDec_0302a04 e TDec_0302_0303 (2 a 4 e 2 a 3),
+// com ou sem Opc.
+var tdec = regexp.MustCompile(`^TDec_\d{2}(\d{2})(?:(?:a|_\d{2})(\d{2}))?(?:Opc)?$`)
 
 // schemaDecimals lê, dos esquemas de uma família, as casas decimais de cada elemento de tipo TDec. Um nome que aparece
 // com tipos diferentes em grupos diferentes junta os intervalos.
@@ -151,7 +152,7 @@ func schemaDecimals(t *testing.T, folder string) map[string][]casas {
 }
 
 // familyOf é a pasta de esquemas de cada pacote de documento.
-var familyOf = map[string]string{"cte": "cte", "cteos": "cte", "mdfe": "mdfe"}
+var familyOf = map[string]string{"cte": "cte", "cteos": "cte", "ctesimp": "cte", "mdfe": "mdfe"}
 
 // TestDecimalPlacesFollowTheSchema: a tag dec:"N" de cada campo decimal está dentro das casas que o esquema dá ao
 // elemento (TDec_*). O pICMS com quatro casas, que a SEFAZ recusava, não volta.

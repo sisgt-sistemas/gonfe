@@ -247,6 +247,59 @@ canc, _ := cte.NovoCancelamento(cte.DadosCancelamento{
     [Documentos auxiliares](danfe.md#o-dacte-os), com o mesmo aviso de
     fidelidade dos demais.
 
+## CT-e Simplificado
+
+O CT-e Simplificado é o modelo 57 com raiz própria, `<CTeSimp>`: reúne num
+documento várias prestações de um mesmo tomador. Não há remetente, expedidor,
+recebedor nem destinatário; o tomador é declarado uma vez, a carga é descrita no
+conjunto, e cada entrega é um item `det`, com o trecho, o valor e o que ela leva.
+
+```go
+c := ctesimp.Novo() // finalidade 5, modal rodoviário, serviço normal
+
+ide := &c.InfCte.Ide
+ide.CFOP = "5353"
+ide.NatOp = "PRESTACAO DE SERVICO DE TRANSPORTE"
+ide.Serie, ide.NCT = 1, 1234
+ide.DhEmi = tipos.AgoraEm(uf.RS.Fuso())
+ide.TpAmb = cte.Homologacao
+ide.CMunEnv, ide.XMunEnv, ide.UFEnv = 4314902, "PORTO ALEGRE", "RS"
+ide.UFIni, ide.UFFim = "RS", "RS" // os municípios ficam em cada det
+
+c.InfCte.Emit = ctesimp.Emit{ /* a transportadora */ }
+c.InfCte.Toma = ctesimp.Toma{
+    Toma: cte.TomadorRemetente, IndIEToma: cte.ContribuinteICMS,
+    CNPJ: "11222333000181", IE: "1234567890", XNome: "INDUSTRIA REMETENTE SA",
+    EnderToma: cte.Endereco{ /* … */ },
+}
+c.InfCte.InfCarga = cte.InfCarga{
+    VCarga: tipos.Ptr(tipos.D("85000.00")), ProPred: "PECAS AUTOMOTIVAS",
+    InfQ: []cte.InfQ{{CUnid: cte.UnidadeKG, TpMed: "03", QCarga: tipos.D("4200.5")}},
+}
+c.InfCte.Det = []ctesimp.Det{{
+    CMunIni: 4314902, XMunIni: "PORTO ALEGRE", CMunFim: 4305108, XMunFim: "CAXIAS DO SUL",
+    Comp:   []cte.Componente{{XNome: "FRETE PESO", VComp: tipos.D("1500.00")}},
+    InfNFe: []ctesimp.InfNFe{{ChNFe: chaveDaNFe}},
+}}
+c.InfCte.InfModal.Rodo = &cte.Rodo{RNTRC: "12345678"}
+c.InfCte.Imp.ICMS.ICMS00 = &cte.ICMS00{ /* … */ }
+
+// O Preparar numera os itens, soma os componentes no vPrest de cada um e as
+// prestações no grupo total.
+assinado, err := c.AssinarCom(cert)
+```
+
+Cada item leva as NF-e (`infNFe`, com as unidades de carga ou de transporte) ou,
+na subcontratação e no redespacho, os CT-e anteriores (`infDocAnt`). Os eventos
+são os do pacote `cte`.
+
+!!! warning "Ainda sem transmissão"
+
+    O CT-e Simplificado tem serviço de recepção próprio, que o cliente da SEFAZ
+    ainda não implementa: `sefaz.ClienteCTe.Autorizar` recusa o documento com
+    `sefaz.ErrCTeSimpSemRecepcao`. Os grupos da reforma tributária (`IBSCBS`) e
+    o DACTE simplificado também ficam para depois.
+
 ## MDF-e
 
 ```go

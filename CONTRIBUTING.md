@@ -68,8 +68,8 @@ decimais vêm do esquema oficial da versão em vigor (em `xsd/esquemas`, com a
 origem e o sha256 no README da pasta), não de exemplo nem de outra biblioteca.
 O Manual de Orientação explica; o esquema decide.
 
-**Todo documento passa no esquema.** CT-e, CT-e OS e MDF-e têm teste que monta o
-documento, assina e confere com o pacote `xsd`. Campo novo entra no exemplo
+**Todo documento passa no esquema.** CT-e, CT-e OS, CT-e Simplificado e MDF-e
+têm teste que monta o documento, assina e confere com o pacote `xsd`. Campo novo entra no exemplo
 desse teste. Esquema novo entra em `xsd/esquemas` byte a byte, com o sha256 no
 README.
 

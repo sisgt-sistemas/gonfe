@@ -9,6 +9,16 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
 
+- Pacote `ctesimp`: CT-e Simplificado (modelo 57, raiz `CTeSimp`), com várias
+  prestações de um tomador por documento. Modelo na ordem do esquema,
+  `Preparar` (numera os itens e soma componentes e totais), `Validar()`,
+  assinatura, leitura e montagem do `cteSimpProc` e envio síncrono. Modal
+  rodoviário; os grupos da reforma tributária ficam para depois. Os exemplos
+  são validados contra o esquema oficial nos testes.
+- `cte.EmissaoContingenciaOffline` (tpEmis 2), que o leiaute 4.00 aceita.
+- `sefaz.ErrCTeSimpSemRecepcao`: o `ClienteCTe.Autorizar` recusa o CT-e
+  Simplificado, que tem recepção própria ainda não implementada, em vez de
+  montá-lo como CT-e.
 - Pacote `xsd`: valida CT-e, CT-e Simplificado e MDF-e contra os esquemas
   oficiais (CT-e 4.00 da NT 2026.004 RTC v1.01; MDF-e 3.00b), embutidos, pelo
   `xmllint`. É ferramenta de teste e não usa CGO; sem `xmllint`, devolve

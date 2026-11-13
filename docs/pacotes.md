@@ -23,6 +23,7 @@ flowchart TD
     nfe --> evento
     nfe --> dfe
     cte --> cteos
+    cte --> ctesimp
 
     danfe --> nfe
     danfe --> cte
@@ -110,6 +111,13 @@ transportados, os componentes do frete e os modais. Veja
 
 CT-e Outros Serviços, modelo 67 — transporte de pessoas, de valores e excesso de
 bagagem. Tem raiz própria e importa do `cte` tudo o que os dois compartilham.
+
+### `ctesimp`
+
+CT-e Simplificado, modelo 57 com raiz própria (`<CTeSimp>`): várias prestações de
+um mesmo tomador num documento só, cada uma com o seu trecho, o seu valor e as
+NF-e ou os CT-e anteriores que leva. Modal rodoviário. Também importa do `cte` o
+que é comum.
 
 ### `mdfe`
 

@@ -23,6 +23,7 @@ flowchart TD
     nfe --> evento
     nfe --> dfe
     cte --> cteos
+    cte --> ctesimp
 
     danfe --> nfe
     danfe --> cte
@@ -111,6 +112,13 @@ documents, the freight components and the modals. See
 CT-e Outros Serviços, model 67 — passenger transport, valuables transport and
 excess baggage. It has its own root and imports from `cte` everything the two
 share.
+
+### `ctesimp`
+
+CT-e Simplificado, model 57 with its own root (`<CTeSimp>`): several services for
+the same payer in a single document, each with its own leg, its own amount and
+the NF-e or previous CT-e it carries. Road modal. It also imports what is common
+from `cte`.
 
 ### `mdfe`
 

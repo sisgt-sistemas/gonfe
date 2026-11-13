@@ -175,6 +175,7 @@ canc, _ := evento.NovoCancelamento(evento.DadosCancelamento{
 | [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) | Cancelamento, carta de correção, manifestação do destinatário e inutilização |
 | [`cte`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cte) | Conhecimento de Transporte modelo 57, leiaute 4.00 |
 | [`cteos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cteos) | CT-e Outros Serviços modelo 67: pessoas, valores e excesso de bagagem |
+| [`ctesimp`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/ctesimp) | CT-e Simplificado (modelo 57): várias entregas de um tomador num documento |
 | [`mdfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/mdfe) | Manifesto de Documentos Fiscais modelo 58, com encerramento de viagem |
 | [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, cupom da NFC-e, DACTE e DAMDFE em PDF |
 | [`dfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/dfe) | Distribuição de DF-e: documentos de interesse do CNPJ |

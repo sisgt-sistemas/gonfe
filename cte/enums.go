@@ -124,6 +124,8 @@ type TipoEmissao string
 const (
 	// EmissaoNormal é a emissão normal, sem contingência.
 	EmissaoNormal TipoEmissao = "1"
+	// EmissaoContingenciaOffline é a contingência offline, que o leiaute 4.00 aceita (TCTe e TCTeSimp).
+	EmissaoContingenciaOffline TipoEmissao = "2"
 	// EmissaoFSDA é a contingência em Formulário de Segurança.
 	EmissaoFSDA TipoEmissao = "3"
 	// EmissaoEPEC é a contingência por Evento Prévio de Emissão em

@@ -179,6 +179,7 @@ canc, _ := evento.NovoCancelamento(evento.DadosCancelamento{
 | [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) | Cancellation, letter of correction, recipient acknowledgement and voiding |
 | [`cte`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cte) | Bill of lading model 57, layout 4.00 |
 | [`cteos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cteos) | CT-e Outros Serviços model 67: passengers, valuables and excess baggage |
+| [`ctesimp`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/ctesimp) | CT-e Simplificado (model 57): several deliveries for one payer in one document |
 | [`mdfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/mdfe) | Freight manifest model 58, with trip close-out |
 | [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDF |
 | [`dfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/dfe) | DF-e distribution: documents of interest to a CNPJ |
