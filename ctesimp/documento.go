@@ -102,6 +102,87 @@ func (c *CTeSimp) CalcularTotais() {
 	}
 	c.InfCte.Total.VTPrest = totalPrest.ComCasas(2)
 	c.InfCte.Total.VTRec = totalRec.ComCasas(2)
+	c.InfCte.Total.IBSCBSTot = SomarIBSCBS(c.InfCte.Det)
+	c.InfCte.Total.VTPrestLiq = somarPrestLiq(c.InfCte.Det)
+}
+
+// somarPrestLiq soma os vPrestLiq das prestações no vTPrestLiq; sem nenhum, o total fica de fora.
+func somarPrestLiq(itens []Det) *tipos.Decimal {
+	var total *tipos.Decimal
+	for _, det := range itens {
+		if det.VPrestLiq == nil {
+			continue
+		}
+		if total == nil {
+			total = tipos.Ptr(tipos.NovoDecimal(0, 2))
+		}
+		*total = total.Somar(*det.VPrestLiq).ComCasas(2)
+	}
+	return total
+}
+
+// SomarIBSCBS soma o IBS e a CBS das prestações no total (IBSCBSTot): base, valores
+// diferidos, devolvidos e devidos de cada esfera, e o estorno de crédito. Sem
+// nenhuma prestação com gIBSCBS, devolve nil, e o grupo não vai ao documento.
+func SomarIBSCBS(itens []Det) *cte.IBSCBSTot {
+	zero := func() tipos.Decimal { return tipos.NovoDecimal(0, 2) }
+	t := &cte.IBSCBSTot{
+		VBCIBSCBS: zero(),
+		GIBS: cte.IBSTot{
+			GIBSUF:  cte.TotalIBSUF{VDif: zero(), VDevTrib: zero(), VIBSUF: zero()},
+			GIBSMun: cte.TotalIBSMun{VDif: zero(), VDevTrib: zero(), VIBSMun: zero()},
+			VIBS:    zero(),
+		},
+		GCBS: cte.TotalTributo{VDif: zero(), VDevTrib: zero(), VCBS: zero()},
+	}
+	algum := false
+	somar := func(total *tipos.Decimal, v tipos.Decimal) { *total = total.Somar(v).ComCasas(2) }
+	for _, det := range itens {
+		if det.IBSCBS == nil {
+			continue
+		}
+		if est := det.IBSCBS.GEstornoCred; est != nil {
+			if t.GEstornoCred == nil {
+				t.GEstornoCred = &cte.EstornoCred{VIBSEstCred: zero(), VCBSEstCred: zero()}
+			}
+			somar(&t.GEstornoCred.VIBSEstCred, est.VIBSEstCred)
+			somar(&t.GEstornoCred.VCBSEstCred, est.VCBSEstCred)
+			algum = true
+		}
+		g := det.IBSCBS.GIBSCBS
+		if g == nil {
+			continue
+		}
+		algum = true
+		somar(&t.VBCIBSCBS, g.VBC)
+		uf, mun, cbs := &t.GIBS.GIBSUF, &t.GIBS.GIBSMun, &t.GCBS
+		if g.GIBSUF.GDif != nil {
+			somar(&uf.VDif, g.GIBSUF.GDif.VDif)
+		}
+		if g.GIBSUF.GDevTrib != nil {
+			somar(&uf.VDevTrib, g.GIBSUF.GDevTrib.VDevTrib)
+		}
+		somar(&uf.VIBSUF, g.GIBSUF.VIBSUF)
+		if g.GIBSMun.GDif != nil {
+			somar(&mun.VDif, g.GIBSMun.GDif.VDif)
+		}
+		if g.GIBSMun.GDevTrib != nil {
+			somar(&mun.VDevTrib, g.GIBSMun.GDevTrib.VDevTrib)
+		}
+		somar(&mun.VIBSMun, g.GIBSMun.VIBSMun)
+		somar(&t.GIBS.VIBS, g.VIBS)
+		if g.GCBS.GDif != nil {
+			somar(&cbs.VDif, g.GCBS.GDif.VDif)
+		}
+		if g.GCBS.GDevTrib != nil {
+			somar(&cbs.VDevTrib, g.GCBS.GDevTrib.VDevTrib)
+		}
+		somar(&cbs.VCBS, g.GCBS.VCBS)
+	}
+	if !algum {
+		return nil
+	}
+	return t
 }
 
 func (c *CTeSimp) gerarChave() error {

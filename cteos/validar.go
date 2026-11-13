@@ -131,6 +131,16 @@ func (c *CTeOS) validarIde() Erros {
 		}
 	}
 
+	// O TCTeOS aceita menos formas que o CT-e: sem o Regime Especial NFF (3) e sem EPEC (4).
+	switch ide.TpEmis {
+	case cte.EmissaoNormal, cte.EmissaoContingenciaOffline, cte.EmissaoSVCRS, cte.EmissaoSVCSP:
+	default:
+		e = append(e, erro("ide.tpEmis", "forma de emissão %q fora do leiaute do CT-e OS (1, 2, 7 ou 8)", ide.TpEmis))
+	}
+	e = append(e, deCTe(cte.ValidarCompraGov("ide.gCompraGov", ide.GCompraGov))...)
+	e = append(e, deCTe(cte.ValidarPagamentos("ide", ide.TpPagAnt, ide.GPagAntecipado, ide.GMultaJuros))...)
+	e = append(e, deCTe(cte.ValidarPgtoVinc("pgtoVinc", c.InfCte.PgtoVinc))...)
+
 	if ide.TpEmis.Contingencia() {
 		if ide.DhCont == nil || ide.DhCont.Vazia() {
 			e = append(e, erro("ide.dhCont", "emissão em contingência exige a data e hora de entrada"))
@@ -273,6 +283,7 @@ func (c *CTeOS) validarPrestacao() Erros {
 
 func (c *CTeOS) validarImposto() Erros {
 	var e Erros
+	e = append(e, deCTe(cte.ValidarIBSCBS("imp.IBSCBS", c.InfCte.Imp.IBSCBS))...)
 	if !c.InfCte.Imp.ICMS.Preenchido() {
 		return append(e, erro("imp.ICMS", "preencha exatamente uma variação do grupo ICMS"))
 	}
@@ -424,4 +435,13 @@ func (c *CTeOS) validarModal(m *InfModal) Erros {
 		}
 	}
 	return e
+}
+
+// deCTe traz para este pacote os erros das conferências compartilhadas do pacote cte.
+func deCTe(erros cte.Erros) Erros {
+	out := make(Erros, 0, len(erros))
+	for _, e := range erros {
+		out = append(out, Erro{Campo: e.Campo, Mensagem: e.Mensagem})
+	}
+	return out
 }

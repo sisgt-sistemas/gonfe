@@ -30,6 +30,8 @@ type InfCte struct {
 	Dest   *Dest  `xml:"dest,omitempty"`
 	VPrest VPrest `xml:"vPrest"`
 	Imp    Imp    `xml:"imp"`
+	// PgtoVinc são os pagamentos vinculados (reforma tributária).
+	PgtoVinc *PgtoVinc `xml:"pgtoVinc,omitempty"`
 	// InfCTeNorm descreve a prestação; presente nos CT-e normais e
 	// substitutos.
 	InfCTeNorm *InfCTeNorm `xml:"infCTeNorm,omitempty"`
@@ -40,6 +42,10 @@ type InfCte struct {
 
 	AutXML     []AutXML    `xml:"autXML,omitempty"`
 	InfRespTec *InfRespTec `xml:"infRespTec,omitempty"`
+	// InfSolicNFF é a solicitação da Nota Fiscal Fácil.
+	InfSolicNFF *InfSolicNFF `xml:"infSolicNFF,omitempty"`
+	// InfPAA identifica o Provedor de Assinatura e Autorização.
+	InfPAA *InfPAA `xml:"infPAA,omitempty"`
 }
 
 // InfCTeSupl traz o QR Code do documento auxiliar.
@@ -117,6 +123,14 @@ type Ide struct {
 	DhCont *tipos.DataHora `xml:"dhCont,omitempty"`
 	// XJust é a justificativa da contingência.
 	XJust string `xml:"xJust,omitempty"`
+	// GCompraGov identifica a compra governamental (reforma tributária).
+	GCompraGov *CompraGov `xml:"gCompraGov,omitempty"`
+	// TpPagAnt é o tipo de pagamento antecipado: 1 ou 3.
+	TpPagAnt string `xml:"tpPagAnt,omitempty"`
+	// GPagAntecipado aponta o documento do pagamento antecipado.
+	GPagAntecipado *PagAntecipado `xml:"gPagAntecipado,omitempty"`
+	// GMultaJuros aponta o CT-e de referência da multa e dos juros.
+	GMultaJuros *MultaJuros `xml:"gMultaJuros,omitempty"`
 }
 
 // Toma3 aponta o tomador entre as partes já identificadas no conhecimento.
@@ -333,6 +347,8 @@ type InfRespTec struct {
 type VPrest struct {
 	// VTPrest é o valor total da prestação.
 	VTPrest tipos.Decimal `xml:"vTPrest" dec:"2"`
+	// VTPrestLiq é o valor da prestação sem os tributos (reforma tributária).
+	VTPrestLiq *tipos.Decimal `xml:"vTPrestLiq,omitempty" dec:"2"`
 	// VRec é o valor a receber.
 	VRec tipos.Decimal `xml:"vRec" dec:"2"`
 	// Comp detalha os componentes do frete.
@@ -351,6 +367,10 @@ type Imp struct {
 	VTotTrib   *tipos.Decimal `xml:"vTotTrib,omitempty" dec:"2"`
 	InfAdFisco string         `xml:"infAdFisco,omitempty"`
 	ICMSUFFim  *ICMSUFFim     `xml:"ICMSUFFim,omitempty"`
+	// IBSCBS é o IBS e a CBS da prestação (reforma tributária).
+	IBSCBS *IBSCBS `xml:"IBSCBS,omitempty"`
+	// VTotDFe é o valor total do documento com os tributos da reforma.
+	VTotDFe *tipos.Decimal `xml:"vTotDFe,omitempty" dec:"2"`
 }
 
 // InfCteComp identifica o conhecimento que está sendo complementado.

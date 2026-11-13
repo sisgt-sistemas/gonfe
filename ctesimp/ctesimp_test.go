@@ -13,6 +13,7 @@ import (
 	"github.com/sisgt-sistemas/gonfe/cte"
 	"github.com/sisgt-sistemas/gonfe/ctesimp"
 	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/internal/rtctest"
 	"github.com/sisgt-sistemas/gonfe/tipos"
 	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
@@ -168,6 +169,20 @@ func completoExemplo() *ctesimp.CTeSimp {
 		VFCPUFFim: tipos.D("50.00"), VICMSUFFim: tipos.D("125.00"), VICMSUFIni: tipos.D("0.00"),
 	}
 	c.InfCte.AutXML = []cte.AutXML{{CNPJ: "11222333000181"}, {CPF: "12345678909"}}
+	// Os grupos da reforma tributária: IBS e CBS por prestação (o Preparar soma o IBSCBSTot), e os do ide e do fim.
+	ide.GCompraGov = rtctest.CompraGov()
+	ide.TpPagAnt = "1"
+	ide.GPagAntecipado = &cte.PagAntecipado{ChDFePagAnt: rtctest.ChaveDFe(801)}
+	ide.GMultaJuros = &cte.MultaJuros{ChCTeRef: rtctest.ChaveDFe(802)}
+	c.InfCte.Det[0].VPrestLiq = tipos.Ptr(tipos.D("1485.00"))
+	c.InfCte.Det[1].VPrestLiq = tipos.Ptr(tipos.D("990.00"))
+	c.InfCte.Det[0].IBSCBS = rtctest.IBSCBS("1500.00")
+	c.InfCte.Det[1].IBSCBS = rtctest.IBSCBS("1000.00")
+	// O vTPrestLiq e o IBSCBSTot saem do Preparar, somados das prestações.
+	c.InfCte.Total.VTotDFe = tipos.Ptr(tipos.D("2525.00"))
+	c.InfCte.PgtoVinc = rtctest.PgtoVinc()
+	c.InfCte.InfSolicNFF = rtctest.NFF()
+	c.InfCte.InfPAA = rtctest.PAA()
 	c.InfCte.InfRespTec = &cte.InfRespTec{CNPJ: "11222333000181", XContato: "SUPORTE FISCAL", Email: "suporte@exemplo.com.br", Fone: "5133332222"}
 	return c
 }
@@ -216,6 +231,70 @@ func TestCompletoValida(t *testing.T) {
 	// A contingência entra na chave pelo tpEmis.
 	if c.Chave()[34] != '2' {
 		t.Errorf("tpEmis na chave = %c, queria 2", c.Chave()[34])
+	}
+}
+
+// O Preparar soma o IBS e a CBS das prestações no IBSCBSTot; um total que não bate é recusado.
+func TestTotalDeIBSCBS(t *testing.T) {
+	c := completoExemplo()
+	// Valores distintos por esfera e por prestação, para a soma não passar por acaso.
+	for i, det := range c.InfCte.Det {
+		g := det.IBSCBS.GIBSCBS
+		n := tipos.D([]string{"1.00", "2.00"}[i])
+		g.GIBSUF.GDif.VDif = n
+		g.GIBSUF.GDevTrib.VDevTrib = n.Somar(tipos.D("10.00"))
+		g.GIBSMun.GDif.VDif = n.Somar(tipos.D("20.00"))
+		g.GIBSMun.GDevTrib.VDevTrib = n.Somar(tipos.D("30.00"))
+		g.GIBSMun.VIBSMun = n.Somar(tipos.D("40.00"))
+		g.VIBS = g.GIBSUF.VIBSUF.Somar(g.GIBSMun.VIBSMun)
+		g.GCBS.GDif.VDif = n.Somar(tipos.D("50.00"))
+		g.GCBS.GDevTrib.VDevTrib = n.Somar(tipos.D("60.00"))
+		det.IBSCBS.GEstornoCred.VIBSEstCred = n.Somar(tipos.D("70.00"))
+		det.IBSCBS.GEstornoCred.VCBSEstCred = n.Somar(tipos.D("80.00"))
+	}
+	c = preparado(t, c)
+	if err := c.Validar(); err != nil {
+		t.Fatalf("Validar: %v", err)
+	}
+	if got := c.InfCte.Total.VTPrestLiq; got == nil || got.String() != "2475.00" {
+		t.Errorf("vTPrestLiq = %v, queria 2475.00", got)
+	}
+	tot := c.InfCte.Total.IBSCBSTot
+	if tot == nil {
+		t.Fatal("o Preparar não montou o IBSCBSTot")
+	}
+	// Bases 1500 e 1000; IBS da UF de 0,1% (1,50 + 1,00) e CBS de 0,9% (13,50 + 9,00).
+	for _, par := range [][2]string{
+		{tot.VBCIBSCBS.String(), "2500.00"}, {tot.GIBS.GIBSUF.VIBSUF.String(), "2.50"},
+		{tot.GIBS.GIBSUF.VDif.String(), "3.00"}, {tot.GIBS.GIBSUF.VDevTrib.String(), "23.00"},
+		{tot.GIBS.GIBSMun.VDif.String(), "43.00"}, {tot.GIBS.GIBSMun.VDevTrib.String(), "63.00"},
+		{tot.GIBS.GIBSMun.VIBSMun.String(), "83.00"}, {tot.GIBS.VIBS.String(), "85.50"},
+		{tot.GCBS.VDif.String(), "103.00"}, {tot.GCBS.VDevTrib.String(), "123.00"}, {tot.GCBS.VCBS.String(), "22.50"},
+		{tot.GEstornoCred.VIBSEstCred.String(), "143.00"}, {tot.GEstornoCred.VCBSEstCred.String(), "163.00"},
+	} {
+		if par[0] != par[1] {
+			t.Errorf("total = %s, queria %s", par[0], par[1])
+		}
+	}
+	c.InfCte.Total.IBSCBSTot.GCBS.VCBS = tipos.D("99.99")
+	if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "total.IBSCBSTot") {
+		t.Errorf("total de CBS errado não foi recusado: %v", err)
+	}
+	c.InfCte.Total.IBSCBSTot = nil
+	if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "falta o total") {
+		t.Errorf("falta do IBSCBSTot não foi recusada: %v", err)
+	}
+	c.InfCte.Total.VTPrestLiq = tipos.Ptr(tipos.D("1.00"))
+	if err := c.Validar(); err == nil || !strings.Contains(err.Error(), "total.vTPrestLiq") {
+		t.Errorf("vTPrestLiq errado não foi recusado: %v", err)
+	}
+	semImposto := preparado(t, entregasExemplo())
+	semImposto.InfCte.Total.IBSCBSTot = tot
+	if err := semImposto.Validar(); err == nil || !strings.Contains(err.Error(), "nenhuma prestação tem IBS") {
+		t.Errorf("total de IBS e CBS sem prestação com eles não foi recusado: %v", err)
+	}
+	if got := ctesimp.SomarIBSCBS(entregasExemplo().InfCte.Det); got != nil {
+		t.Errorf("sem IBS e CBS nas prestações, o total deveria ser nil; veio %+v", got)
 	}
 }
 
@@ -384,7 +463,7 @@ func TestValidarRecusa(t *testing.T) {
 		{"finalidade do CT-e comum", "ide.tpCTe", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.TpCTe = "0" }, false},
 		{"serviço fora da faixa", "ide.tpServ", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.TpServ = cte.ServicoVinculadoMultimodal }, false},
 		{"modal aéreo", "ide.modal", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.Modal = cte.ModalAereo }, false},
-		{"emissão 5", "ide.tpEmis", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.TpEmis = cte.EmissaoContingencia }, false},
+		{"emissão 5", "ide.tpEmis", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.TpEmis = cte.TipoEmissao("5") }, false},
 		{"natureza longa", "ide.natOp", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.NatOp = strings.Repeat("A", 61) }, false},
 		{"retira inválido", "ide.retira", func(c *ctesimp.CTeSimp) { c.InfCte.Ide.Retira = "2" }, false},
 		{"sem CRT", "emit.CRT", func(c *ctesimp.CTeSimp) { c.InfCte.Emit.CRT = "" }, false},

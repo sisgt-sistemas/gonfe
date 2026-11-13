@@ -292,9 +292,23 @@ Transmission is the same CT-e call: `sefaz.ClienteCTe.Autorizar` recognises the
 authorisation protocol, which `ctesimp.MontarCTeSimpProc` attaches to the
 document.
 
-!!! warning "Still out"
+IBS and CBS go per service (`Det.IBSCBS`), and `Preparar` adds them into the
+total (`IBSCBSTot`). The simplified DACTE does not exist yet.
 
-    The tax reform groups (`IBSCBS`) and the simplified DACTE come later.
+## Tax reform in the CT-e
+
+The CT-e, the CT-e OS and the CT-e Simplificado carry the tax reform groups of
+layout 4.00 (NT 2026.004 RTC), with the types in the `cte` package: `IBSCBS`
+(state and municipal IBS and CBS, with deferral, refund, reduction, regular
+taxation, government purchase and credit reversal), `vTotDFe`, `vTPrestLiq`,
+government purchase, advance payment, fine and interest, linked payments and,
+in the CT-e and the Simplificado, Nota Fiscal Fácil and the signing and
+authorisation provider.
+
+The library **does not calculate** the tax: the issuer supplies base, rates and
+amounts, and `Validar` checks consistency (`vIBS` is the sum of state and
+municipal IBS; the Simplificado total is the sum of the services) and the schema
+patterns.
 
 ## MDF-e
 

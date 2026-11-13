@@ -19,11 +19,9 @@
 //
 // # O que fica de fora
 //
-// Os grupos e campos da reforma tributária (IBSCBS por item e IBSCBSTot,
-// vPrestLiq, vTPrestLiq, vTotDFe, tpPagAnt, gCompraGov, pgtoVinc,
-// gPagAntecipado, gMultaJuros, infPAA, infSolicNFF) ainda não são
-// implementados, como no CT-e e no CT-e OS deste módulo. O esquema aceita os
-// modais rodoviário, aéreo e aquaviário; este pacote implementa o rodoviário.
+// O esquema aceita os modais rodoviário, aéreo e aquaviário; este pacote
+// implementa o rodoviário. Os grupos da reforma tributária estão: o IBS e a CBS
+// vão por prestação (Det.IBSCBS), e o Preparar os soma no total (IBSCBSTot).
 // O tomador no exterior (CNPJ vazio, UF "EX" no endereço) também fica para
 // depois: o Validar exige CNPJ ou CPF.
 package ctesimp
@@ -92,14 +90,29 @@ type InfCte struct {
 	// InfCarga descreve a carga do conjunto das prestações; o vCarga é obrigatório aqui.
 	InfCarga cte.InfCarga `xml:"infCarga"`
 	// Det são as prestações, de 1 a 999.
-	Det        []Det           `xml:"det"`
-	InfModal   cte.InfModal    `xml:"infModal"`
-	Cobr       *cte.Cobr       `xml:"cobr,omitempty"`
-	InfCteSub  *InfCteSub      `xml:"infCteSub,omitempty"`
-	Imp        cte.Imp         `xml:"imp"`
+	Det       []Det        `xml:"det"`
+	InfModal  cte.InfModal `xml:"infModal"`
+	Cobr      *cte.Cobr    `xml:"cobr,omitempty"`
+	InfCteSub *InfCteSub   `xml:"infCteSub,omitempty"`
+	Imp       Imp          `xml:"imp"`
+	// PgtoVinc são os pagamentos vinculados (reforma tributária).
+	PgtoVinc   *cte.PgtoVinc   `xml:"pgtoVinc,omitempty"`
 	Total      Total           `xml:"total"`
 	AutXML     []cte.AutXML    `xml:"autXML,omitempty"`
 	InfRespTec *cte.InfRespTec `xml:"infRespTec,omitempty"`
+	// InfSolicNFF é a solicitação da Nota Fiscal Fácil.
+	InfSolicNFF *cte.InfSolicNFF `xml:"infSolicNFF,omitempty"`
+	// InfPAA identifica o Provedor de Assinatura e Autorização.
+	InfPAA *cte.InfPAA `xml:"infPAA,omitempty"`
+}
+
+// Imp são os tributos do documento. Diferente do CT-e, não tem IBSCBS nem
+// vTotDFe: no Simplificado o IBS e a CBS vão por prestação (det) e no total.
+type Imp struct {
+	ICMS       cte.ICMS       `xml:"ICMS"`
+	VTotTrib   *tipos.Decimal `xml:"vTotTrib,omitempty" dec:"2"`
+	InfAdFisco string         `xml:"infAdFisco,omitempty"`
+	ICMSUFFim  *cte.ICMSUFFim `xml:"ICMSUFFim,omitempty"`
 }
 
 // Ide é o grupo de identificação do conhecimento.
@@ -156,6 +169,14 @@ type Ide struct {
 	DhCont *tipos.DataHora `xml:"dhCont,omitempty"`
 	// XJust é a justificativa da contingência.
 	XJust string `xml:"xJust,omitempty"`
+	// GCompraGov identifica a compra governamental (reforma tributária).
+	GCompraGov *cte.CompraGov `xml:"gCompraGov,omitempty"`
+	// TpPagAnt é o tipo de pagamento antecipado: 1 ou 3.
+	TpPagAnt string `xml:"tpPagAnt,omitempty"`
+	// GPagAntecipado aponta o documento do pagamento antecipado.
+	GPagAntecipado *cte.PagAntecipado `xml:"gPagAntecipado,omitempty"`
+	// GMultaJuros aponta o CT-e de referência da multa e dos juros.
+	GMultaJuros *cte.MultaJuros `xml:"gMultaJuros,omitempty"`
 }
 
 // Compl são as informações complementares. O grupo é mais curto que o do CT-e:
@@ -213,10 +234,14 @@ type Det struct {
 	XMunFim string `xml:"xMunFim"`
 	// VPrest é o valor da prestação; com componentes, o Preparar o soma deles.
 	VPrest tipos.Decimal `xml:"vPrest" dec:"2"`
+	// VPrestLiq é o valor da prestação sem os tributos (reforma tributária).
+	VPrestLiq *tipos.Decimal `xml:"vPrestLiq,omitempty" dec:"2"`
 	// VRec é o valor a receber; zerado, o Preparar o iguala ao vPrest. Preenchido, fica como está: mudou os
 	// componentes depois de um Preparar, zere o vRec para recalcular.
 	VRec tipos.Decimal    `xml:"vRec" dec:"2"`
 	Comp []cte.Componente `xml:"Comp,omitempty"`
+	// IBSCBS é o IBS e a CBS desta prestação; o Preparar os soma no total.
+	IBSCBS *cte.IBSCBS `xml:"IBSCBS,omitempty"`
 	// InfNFe são as NF-e transportadas. Preencha este ou InfDocAnt, nunca os dois.
 	InfNFe []InfNFe `xml:"infNFe,omitempty"`
 	// InfDocAnt são os CT-e anteriores, na subcontratação e no redespacho.
@@ -279,5 +304,11 @@ type InfCteSub struct {
 // Total são os valores somados das prestações.
 type Total struct {
 	VTPrest tipos.Decimal `xml:"vTPrest" dec:"2"`
-	VTRec   tipos.Decimal `xml:"vTRec" dec:"2"`
+	// VTPrestLiq é o total sem os tributos (reforma tributária).
+	VTPrestLiq *tipos.Decimal `xml:"vTPrestLiq,omitempty" dec:"2"`
+	VTRec      tipos.Decimal  `xml:"vTRec" dec:"2"`
+	// IBSCBSTot é a soma do IBS e da CBS das prestações; o Preparar a calcula.
+	IBSCBSTot *cte.IBSCBSTot `xml:"IBSCBSTot,omitempty"`
+	// VTotDFe é o valor total do documento com os tributos da reforma.
+	VTotDFe *tipos.Decimal `xml:"vTotDFe,omitempty" dec:"2"`
 }

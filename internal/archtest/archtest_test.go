@@ -115,8 +115,8 @@ func TestEveryDocumentPassesTheSchema(t *testing.T) {
 type casas struct{ min, max int }
 
 // tdec lê o nome do tipo decimal do leiaute: TDec_1302 (2 casas), TDec_0302a04 e TDec_0302_0303 (2 a 4 e 2 a 3),
-// com ou sem Opc.
-var tdec = regexp.MustCompile(`^TDec_\d{2}(\d{2})(?:(?:a|_\d{2})(\d{2}))?(?:Opc)?$`)
+// com ou sem Opc, e os da reforma tributária, TDec1302RTC (2) e TDec_0302_04RTC (2 a 4).
+var tdec = regexp.MustCompile(`^TDec_?\d{2}(\d{2})(?:(?:a|_\d{2}|_)(\d{2}))?(?:Opc)?(?:RTC)?$`)
 
 // schemaDecimals lê, dos esquemas de uma família, as casas decimais de cada elemento de tipo TDec. Um nome que aparece
 // com tipos diferentes em grupos diferentes junta os intervalos.

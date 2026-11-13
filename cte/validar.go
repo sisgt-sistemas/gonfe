@@ -138,6 +138,15 @@ func (c *CTe) validarIde() Erros {
 		e = append(e, erro("ide.toma4.toma", "o grupo toma4 só cabe ao tomador 4"))
 	}
 
+	if !ide.TpEmis.Valida() {
+		e = append(e, erro("ide.tpEmis", "forma de emissão %q fora do leiaute (1, 2, 3, 4, 7 ou 8)", ide.TpEmis))
+	}
+	e = append(e, ValidarCompraGov("ide.gCompraGov", ide.GCompraGov)...)
+	e = append(e, ValidarPagamentos("ide", ide.TpPagAnt, ide.GPagAntecipado, ide.GMultaJuros)...)
+	e = append(e, ValidarPgtoVinc("pgtoVinc", c.InfCte.PgtoVinc)...)
+	e = append(e, ValidarNFF("infSolicNFF", c.InfCte.InfSolicNFF)...)
+	e = append(e, ValidarPAA("infPAA", c.InfCte.InfPAA)...)
+
 	if ide.TpEmis.Contingencia() {
 		if ide.DhCont == nil || ide.DhCont.Vazia() {
 			e = append(e, erro("ide.dhCont", "emissão em contingência exige a data e hora de entrada"))
@@ -298,6 +307,7 @@ func (c *CTe) validarPrestacao() Erros {
 
 func (c *CTe) validarImposto() Erros {
 	var e Erros
+	e = append(e, ValidarIBSCBS("imp.IBSCBS", c.InfCte.Imp.IBSCBS)...)
 	if !c.InfCte.Imp.ICMS.Preenchido() {
 		e = append(e, erro("imp.ICMS", "preencha exatamente uma variação do grupo ICMS"))
 		return e

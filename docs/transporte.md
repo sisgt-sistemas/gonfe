@@ -298,10 +298,23 @@ o `<CTeSimp>` e o envia à recepção própria do Simplificado (`CTeRecepcaoSimp
 NT 2024.002), e a resposta volta com o protocolo, que `ctesimp.MontarCTeSimpProc`
 junta ao documento.
 
-!!! warning "Ainda fora"
+O IBS e a CBS vão por prestação (`Det.IBSCBS`), e o `Preparar` os soma no total
+(`IBSCBSTot`). O DACTE simplificado ainda não existe.
 
-    Os grupos da reforma tributária (`IBSCBS`) e o DACTE simplificado ficam para
-    depois.
+## Reforma tributária no CT-e
+
+O CT-e, o CT-e OS e o CT-e Simplificado levam os grupos da reforma tributária
+do leiaute 4.00 (NT 2026.004 RTC), com os tipos no pacote `cte`: o `IBSCBS`
+(IBS da UF e do município e CBS, com diferimento, devolução, redução,
+tributação regular, compra governamental e estorno de crédito), o `vTotDFe`, o
+`vTPrestLiq`, a compra governamental, o pagamento antecipado, a multa e os
+juros, os pagamentos vinculados e, no CT-e e no Simplificado, a Nota Fiscal
+Fácil e o Provedor de Assinatura e Autorização.
+
+A biblioteca **não calcula** o imposto: quem emite informa base, alíquotas e
+valores, e o `Validar` confere a coerência (o `vIBS` é a soma do IBS da UF e do
+município; o total do Simplificado é a soma das prestações) e os padrões do
+esquema.
 
 ## MDF-e
 

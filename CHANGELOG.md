@@ -9,6 +9,16 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
 
+- Reforma tributária no CT-e, no CT-e OS e no CT-e Simplificado (NT 2026.004
+  RTC), com os tipos no pacote `cte`: `IBSCBS` (IBS da UF e do município e CBS,
+  com diferimento, devolução, redução, tributação regular, compra governamental
+  e estorno de crédito), `vTotDFe`, `vTPrestLiq` e `vPrestLiq`, compra
+  governamental, pagamento antecipado, multa e juros, pagamentos vinculados,
+  Nota Fiscal Fácil e Provedor de Assinatura e Autorização, onde o esquema de
+  cada documento os prevê. A biblioteca não calcula o imposto: `Validar`
+  confere a coerência e os padrões, e o `Preparar` do Simplificado soma o
+  `IBSCBSTot` das prestações.
+- `cte.TipoEmissao.Valida` e `cte.EmissaoRegimeEspecialNFF` (3).
 - CNPJ alfanumérico (Nota Técnica Conjunta 2025.001) em toda a biblioteca:
   `chave` monta, valida e decompõe a chave com letras nas posições do CNPJ, com
   o dígito verificador pelo ASCII menos 48; a regra de normalização
@@ -22,7 +32,7 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
   prestações de um tomador por documento. Modelo na ordem do esquema,
   `Preparar` (numera os itens e soma componentes e totais), `Validar()`,
   assinatura, leitura e montagem do `cteSimpProc` e envio síncrono. Modal
-  rodoviário; os grupos da reforma tributária ficam para depois. Os exemplos
+  rodoviário. Os exemplos
   são validados contra o esquema oficial nos testes.
 - `cte.EmissaoContingenciaOffline` (tpEmis 2), que o leiaute 4.00 aceita.
 - Transmissão do CT-e Simplificado: `sefaz.ClienteCTe.Autorizar` reconhece o
@@ -39,6 +49,15 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Alterado
 
+- **Incompatível:** `cte.EmissaoContingencia` (5) sai, porque o leiaute 4.00
+  não tem o código, e `cte.EmissaoFSDA` vira `cte.EmissaoRegimeEspecialNFF`: no
+  leiaute atual o 3 é o Regime Especial da Nota Fiscal Fácil. O `Validar` recusa
+  a forma de emissão fora do leiaute de cada documento: 1, 2, 3, 4, 7 e 8 no
+  CT-e e no Simplificado; 1, 2, 7 e 8 no CT-e OS. O 3 deixa de contar como
+  contingência (não pede data nem justificativa).
+- **Incompatível:** `cteos.InfSolicNFF` e o campo `InfCte.InfSolicNFF` do CT-e
+  OS saem: o esquema do CT-e OS não tem o grupo, e o documento que o levava era
+  recusado.
 - Esquemas do MDF-e atualizados para o pacote "Schemas NT 2025.001 v 1.04"
   (25/04/2026): o processo de emissão aceita o 4, emissão por Provedor de
   Assinatura e Autorização (`mdfe.EmissaoPAA`), e o CNPJ do contratante deixa

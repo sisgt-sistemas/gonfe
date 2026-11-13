@@ -128,14 +128,15 @@ type InfCte struct {
 	Toma   *Toma      `xml:"toma,omitempty"`
 	VPrest cte.VPrest `xml:"vPrest"`
 	Imp    cte.Imp    `xml:"imp"`
+	// PgtoVinc são os pagamentos vinculados (reforma tributária).
+	PgtoVinc *cte.PgtoVinc `xml:"pgtoVinc,omitempty"`
 	// InfCTeNorm descreve a prestação.
 	InfCTeNorm *InfCTeNorm `xml:"infCTeNorm,omitempty"`
 	// InfCteComp identifica o conhecimento complementado.
 	InfCteComp *InfCteComp `xml:"infCteComp,omitempty"`
 
-	AutXML      []cte.AutXML    `xml:"autXML,omitempty"`
-	InfRespTec  *cte.InfRespTec `xml:"infRespTec,omitempty"`
-	InfSolicNFF *InfSolicNFF    `xml:"infSolicNFF,omitempty"`
+	AutXML     []cte.AutXML    `xml:"autXML,omitempty"`
+	InfRespTec *cte.InfRespTec `xml:"infRespTec,omitempty"`
 }
 
 // InfCTeSupl traz o QR Code do documento auxiliar.
@@ -203,6 +204,14 @@ type Ide struct {
 	DhCont *tipos.DataHora `xml:"dhCont,omitempty"`
 	// XJust é a justificativa da contingência.
 	XJust string `xml:"xJust,omitempty"`
+	// GCompraGov identifica a compra governamental (reforma tributária).
+	GCompraGov *cte.CompraGov `xml:"gCompraGov,omitempty"`
+	// TpPagAnt é o tipo de pagamento antecipado: 1 ou 3.
+	TpPagAnt string `xml:"tpPagAnt,omitempty"`
+	// GPagAntecipado aponta o documento do pagamento antecipado.
+	GPagAntecipado *cte.PagAntecipado `xml:"gPagAntecipado,omitempty"`
+	// GMultaJuros aponta o CT-e de referência da multa e dos juros.
+	GMultaJuros *cte.MultaJuros `xml:"gMultaJuros,omitempty"`
 }
 
 // Toma é o tomador do serviço.
@@ -338,9 +347,4 @@ type ComponenteGTVe struct {
 // InfCteComp identifica o conhecimento que está sendo complementado.
 type InfCteComp struct {
 	Chave string `xml:"chCTe" norm:"alnum"`
-}
-
-// InfSolicNFF é a solicitação da Nota Fiscal Fácil.
-type InfSolicNFF struct {
-	XSolic string `xml:"xSolic" norm:"-"`
 }

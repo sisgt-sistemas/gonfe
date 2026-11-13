@@ -82,6 +82,9 @@ func (c *CTeSimp) Validar() error {
 	e = append(e, c.validarImposto()...)
 	e = append(e, c.validarTotal()...)
 	e = append(e, c.validarSubstituicao()...)
+	e = append(e, deCTe(cte.ValidarPgtoVinc("pgtoVinc", c.InfCte.PgtoVinc))...)
+	e = append(e, deCTe(cte.ValidarNFF("infSolicNFF", c.InfCte.InfSolicNFF))...)
+	e = append(e, deCTe(cte.ValidarPAA("infPAA", c.InfCte.InfPAA))...)
 	if len(c.InfCte.AutXML) > MaxAutXML {
 		e = append(e, erro("autXML", "%d autorizados; o leiaute aceita até %d", len(c.InfCte.AutXML), MaxAutXML))
 	}
@@ -139,11 +142,11 @@ func (c *CTeSimp) validarIde() Erros {
 	if ide.TpImp != cte.Retrato && ide.TpImp != cte.Paisagem {
 		e = append(e, erro("ide.tpImp", "formato %q; use 1 (retrato) ou 2 (paisagem)", ide.TpImp))
 	}
-	switch ide.TpEmis {
-	case cte.EmissaoNormal, cte.EmissaoContingenciaOffline, "3", cte.EmissaoEPEC, cte.EmissaoSVCRS, cte.EmissaoSVCSP:
-	default:
+	if !ide.TpEmis.Valida() {
 		e = append(e, erro("ide.tpEmis", "forma de emissão %q fora do leiaute (1, 2, 3, 4, 7 ou 8)", ide.TpEmis))
 	}
+	e = append(e, deCTe(cte.ValidarCompraGov("ide.gCompraGov", ide.GCompraGov))...)
+	e = append(e, deCTe(cte.ValidarPagamentos("ide", ide.TpPagAnt, ide.GPagAntecipado, ide.GMultaJuros))...)
 	if ide.TpAmb != cte.Producao && ide.TpAmb != cte.Homologacao {
 		e = append(e, erro("ide.tpAmb", "ambiente %q; use 1 (produção) ou 2 (homologação)", ide.TpAmb))
 	}
@@ -399,6 +402,7 @@ func (c *CTeSimp) validarItens() Erros {
 				e = append(e, erro(campo+".vPrest", "o valor informado é %s mas a soma dos componentes dá %s", det.VPrest, soma))
 			}
 		}
+		e = append(e, deCTe(cte.ValidarIBSCBS(campo+".IBSCBS", det.IBSCBS))...)
 		e = append(e, validarDocumentos(campo, det)...)
 	}
 	return e
@@ -556,6 +560,23 @@ func (c *CTeSimp) validarTotal() Erros {
 	if t.VTRec.Subtrair(rec).Abs().Comparar(ToleranciaCentavos) > 0 {
 		e = append(e, erro("total.vTRec", "o total a receber informado é %s mas a soma das prestações dá %s", t.VTRec, rec))
 	}
+	switch liq := somarPrestLiq(c.InfCte.Det); {
+	case (liq == nil) != (t.VTPrestLiq == nil):
+		e = append(e, erro("total.vTPrestLiq", "o total sem tributos e os vPrestLiq das prestações vêm juntos ou não vêm"))
+	case liq != nil && liq.Subtrair(*t.VTPrestLiq).Abs().Comparar(ToleranciaCentavos) > 0:
+		e = append(e, erro("total.vTPrestLiq", "o total sem tributos é %s mas a soma das prestações dá %s", *t.VTPrestLiq, *liq))
+	}
+	// O IBSCBSTot é a soma do IBS e da CBS das prestações, grupo a grupo.
+	esperado := SomarIBSCBS(c.InfCte.Det)
+	switch {
+	case esperado == nil && t.IBSCBSTot != nil:
+		e = append(e, erro("total.IBSCBSTot", "nenhuma prestação tem IBS e CBS, mas o total os traz"))
+	case esperado != nil && t.IBSCBSTot == nil:
+		e = append(e, erro("total.IBSCBSTot", "as prestações têm IBS e CBS, mas falta o total"))
+	case esperado != nil && !mesmoTotalIBSCBS(*esperado, *t.IBSCBSTot):
+		e = append(e, erro("total.IBSCBSTot", "o total de IBS e CBS não é a soma das prestações (vBC %s, vIBS %s, vCBS %s)",
+			esperado.VBCIBSCBS, esperado.GIBS.VIBS, esperado.GCBS.VCBS))
+	}
 	return e
 }
 
@@ -578,4 +599,38 @@ func (c *CTeSimp) validarSubstituicao() Erros {
 		e = append(e, erro("infCteSub.indAlteraToma", `indicador %q; o leiaute só aceita "1"`, sub.IndAlteraToma))
 	}
 	return e
+}
+
+// mesmoTotalIBSCBS compara os totais de IBS e CBS campo a campo, na tolerância de um centavo.
+func mesmoTotalIBSCBS(a, b cte.IBSCBSTot) bool {
+	pares := [][2]tipos.Decimal{
+		{a.VBCIBSCBS, b.VBCIBSCBS},
+		{a.GIBS.GIBSUF.VDif, b.GIBS.GIBSUF.VDif}, {a.GIBS.GIBSUF.VDevTrib, b.GIBS.GIBSUF.VDevTrib},
+		{a.GIBS.GIBSUF.VIBSUF, b.GIBS.GIBSUF.VIBSUF},
+		{a.GIBS.GIBSMun.VDif, b.GIBS.GIBSMun.VDif}, {a.GIBS.GIBSMun.VDevTrib, b.GIBS.GIBSMun.VDevTrib},
+		{a.GIBS.GIBSMun.VIBSMun, b.GIBS.GIBSMun.VIBSMun}, {a.GIBS.VIBS, b.GIBS.VIBS},
+		{a.GCBS.VDif, b.GCBS.VDif}, {a.GCBS.VDevTrib, b.GCBS.VDevTrib}, {a.GCBS.VCBS, b.GCBS.VCBS},
+	}
+	if (a.GEstornoCred == nil) != (b.GEstornoCred == nil) {
+		return false
+	}
+	if a.GEstornoCred != nil {
+		pares = append(pares, [2]tipos.Decimal{a.GEstornoCred.VIBSEstCred, b.GEstornoCred.VIBSEstCred},
+			[2]tipos.Decimal{a.GEstornoCred.VCBSEstCred, b.GEstornoCred.VCBSEstCred})
+	}
+	for _, p := range pares {
+		if p[0].Subtrair(p[1]).Abs().Comparar(ToleranciaCentavos) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// deCTe traz para este pacote os erros das conferências compartilhadas do pacote cte.
+func deCTe(erros cte.Erros) Erros {
+	out := make(Erros, 0, len(erros))
+	for _, e := range erros {
+		out = append(out, Erro{Campo: e.Campo, Mensagem: e.Mensagem})
+	}
+	return out
 }

@@ -126,13 +126,12 @@ const (
 	EmissaoNormal TipoEmissao = "1"
 	// EmissaoContingenciaOffline é a contingência offline, que o leiaute 4.00 aceita (TCTe e TCTeSimp).
 	EmissaoContingenciaOffline TipoEmissao = "2"
-	// EmissaoFSDA é a contingência em Formulário de Segurança.
-	EmissaoFSDA TipoEmissao = "3"
+	// EmissaoRegimeEspecialNFF é o Regime Especial da Nota Fiscal Fácil, emissão
+	// pela plataforma da SEFAZ (NT 2024.002); não é contingência.
+	EmissaoRegimeEspecialNFF TipoEmissao = "3"
 	// EmissaoEPEC é a contingência por Evento Prévio de Emissão em
 	// Contingência.
 	EmissaoEPEC TipoEmissao = "4"
-	// EmissaoContingencia é a contingência com autorização posterior.
-	EmissaoContingencia TipoEmissao = "5"
 	// EmissaoSVCRS é a contingência na Sefaz Virtual do Rio Grande do Sul.
 	EmissaoSVCRS TipoEmissao = "7"
 	// EmissaoSVCSP é a contingência na Sefaz Virtual de São Paulo.
@@ -147,8 +146,20 @@ func (t TipoEmissao) Numero() int {
 	return int(t[0] - '0')
 }
 
-// Contingencia informa se a forma de emissão é uma contingência.
-func (t TipoEmissao) Contingencia() bool { return t != "" && t != EmissaoNormal }
+// Contingencia informa se a forma de emissão é uma contingência: offline, EPEC
+// ou as Sefaz Virtuais de contingência. A normal e o Regime Especial NFF não são.
+func (t TipoEmissao) Contingencia() bool {
+	switch t {
+	case EmissaoContingenciaOffline, EmissaoEPEC, EmissaoSVCRS, EmissaoSVCSP:
+		return true
+	}
+	return false
+}
+
+// Valida informa se a forma de emissão está no leiaute 4.00 (1, 2, 3, 4, 7 ou 8).
+func (t TipoEmissao) Valida() bool {
+	return t == EmissaoNormal || t == EmissaoRegimeEspecialNFF || t.Contingencia()
+}
 
 // Tomador identifica quem contrata o serviço de transporte.
 type Tomador string
