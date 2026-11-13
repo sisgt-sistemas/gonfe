@@ -3,7 +3,7 @@ package cte
 import (
 	"encoding/xml"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // InfCTeNorm descreve a prestação de serviço nos CT-e normais e substitutos.

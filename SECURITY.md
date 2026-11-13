@@ -5,7 +5,7 @@
 Se você encontrar uma vulnerabilidade nesta biblioteca, **não abra uma issue
 pública**. Use o canal privado do GitHub:
 
-[Report a vulnerability](https://github.com/mschunke/gonfe/security/advisories/new)
+[Report a vulnerability](https://github.com/sisgt-sistemas/gonfe/security/advisories/new)
 
 Descreva o problema, o impacto e, se possível, um caso mínimo que o reproduza.
 Você receberá uma resposta em até sete dias.

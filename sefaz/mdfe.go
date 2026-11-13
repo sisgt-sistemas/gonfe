@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // ServicoMDFe identifica um serviço web do MDF-e.

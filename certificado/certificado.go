@@ -8,7 +8,7 @@
 //
 // Certificados A3 (token ou cartão inteligente) e HSMs não são carregados aqui,
 // mas podem ser usados na assinatura através da interface
-// [github.com/mschunke/gonfe/xmldsig.Assinante].
+// [github.com/sisgt-sistemas/gonfe/xmldsig.Assinante].
 package certificado
 
 import (

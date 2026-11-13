@@ -28,8 +28,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // Versao é a versão do leiaute do serviço implementada por este pacote.

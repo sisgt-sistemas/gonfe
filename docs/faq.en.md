@@ -108,7 +108,7 @@ cliente, err := sefaz.NovoCliente(sefaz.Config{
 ```
 
 And please
-[open an issue](https://github.com/mschunke/gonfe/issues/new) so the table gets
+[open an issue](https://github.com/sisgt-sistemas/gonfe/issues/new) so the table gets
 corrected.
 
 ## How do I test without a real certificate?
@@ -116,7 +116,7 @@ corrected.
 The internal `certtest` package generates synthetic certificates with the
 structure of an ICP-Brasil A1, and it is what the suite itself uses. It is not
 exported, but the
-[source](https://github.com/mschunke/gonfe/blob/main/internal/certtest/certtest.go)
+[source](https://github.com/sisgt-sistemas/gonfe/blob/main/internal/certtest/certtest.go)
 serves as a model — the public piece you need is `certificado.De`, which builds
 a `*Certificado` from any key/certificate pair.
 
@@ -135,18 +135,18 @@ than the rest.
 
 The responsible path is the usual one: test against homologation with your real
 tax scenario, check your state's endpoints, and keep a contingency plan. If you
-hit a problem, [open an issue](https://github.com/mschunke/gonfe/issues) — that
+hit a problem, [open an issue](https://github.com/sisgt-sistemas/gonfe/issues) — that
 is how field experience accumulates.
 
 ## Will the API change?
 
 Before 1.0, it may change between minor versions, always recorded in the
-[CHANGELOG](https://github.com/mschunke/gonfe/blob/main/CHANGELOG.md). After
+[CHANGELOG](https://github.com/sisgt-sistemas/gonfe/blob/main/CHANGELOG.md). After
 1.0, the usual Go rules apply.
 
 ## I found a layout error, or a rejection the validation missed
 
-[Open an issue](https://github.com/mschunke/gonfe/issues/new) with the rejection
+[Open an issue](https://github.com/sisgt-sistemas/gonfe/issues/new) with the rejection
 code, the reason SEFAZ returned and, if possible, the XML fragment — without
 real customer data and without the certificate. Real rejections are the best
 source of validation rules.

@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
 )
 
 func TestCarregarPKCS12(t *testing.T) {

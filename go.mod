@@ -1,4 +1,4 @@
-module github.com/mschunke/gonfe
+module github.com/sisgt-sistemas/gonfe
 
 go 1.23
 

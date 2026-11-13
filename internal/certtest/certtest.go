@@ -16,7 +16,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/certificado"
 	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 

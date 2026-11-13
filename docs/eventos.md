@@ -4,7 +4,7 @@ Um evento é um documento próprio, com estrutura e assinatura independentes da
 nota a que se refere. Depois de registrado, ele é guardado junto com o retorno
 em um `procEventoNFe` — o análogo do `nfeProc` para eventos.
 
-O pacote [`evento`](https://pkg.go.dev/github.com/mschunke/gonfe/evento) cobre:
+O pacote [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) cobre:
 
 | Evento | Código | Quem registra |
 | --- | --- | --- |
@@ -256,7 +256,7 @@ for _, p := range consulta.ProcEventoNFe {
 
 ## Exemplo executável
 
-[`exemplos/eventos`](https://github.com/mschunke/gonfe/blob/main/exemplos/eventos/main.go)
+[`exemplos/eventos`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/eventos/main.go)
 registra cancelamento, carta de correção, manifestação e inutilização a partir
 da linha de comando:
 

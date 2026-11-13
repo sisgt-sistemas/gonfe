@@ -4,8 +4,8 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // RetConsStatServ é a resposta da consulta de status do serviço.

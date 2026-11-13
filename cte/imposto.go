@@ -1,6 +1,6 @@
 package cte
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // ICMS agrupa as variações de tributação do ICMS sobre a prestação. Preencha
 // exatamente um dos campos; o escolhido determina o CST aplicável.
@@ -26,16 +26,16 @@ type ICMS struct {
 type ICMS00 struct {
 	CST   string        `xml:"CST"`
 	VBC   tipos.Decimal `xml:"vBC" dec:"2"`
-	PICMS tipos.Decimal `xml:"pICMS" dec:"4"`
+	PICMS tipos.Decimal `xml:"pICMS" dec:"2"`
 	VICMS tipos.Decimal `xml:"vICMS" dec:"2"`
 }
 
 // ICMS20 é a tributação com redução de base de cálculo.
 type ICMS20 struct {
 	CST    string        `xml:"CST"`
-	PRedBC tipos.Decimal `xml:"pRedBC" dec:"4"`
+	PRedBC tipos.Decimal `xml:"pRedBC" dec:"2"`
 	VBC    tipos.Decimal `xml:"vBC" dec:"2"`
-	PICMS  tipos.Decimal `xml:"pICMS" dec:"4"`
+	PICMS  tipos.Decimal `xml:"pICMS" dec:"2"`
 	VICMS  tipos.Decimal `xml:"vICMS" dec:"2"`
 }
 
@@ -49,16 +49,16 @@ type ICMS60 struct {
 	CST        string         `xml:"CST"`
 	VBCSTRet   tipos.Decimal  `xml:"vBCSTRet" dec:"2"`
 	VICMSSTRet tipos.Decimal  `xml:"vICMSSTRet" dec:"2"`
-	PICMSSTRet tipos.Decimal  `xml:"pICMSSTRet" dec:"4"`
+	PICMSSTRet tipos.Decimal  `xml:"pICMSSTRet" dec:"2"`
 	VCred      *tipos.Decimal `xml:"vCred,omitempty" dec:"2"`
 }
 
 // ICMS90 é a tributação em outras situações.
 type ICMS90 struct {
 	CST    string         `xml:"CST"`
-	PRedBC *tipos.Decimal `xml:"pRedBC,omitempty" dec:"4"`
+	PRedBC *tipos.Decimal `xml:"pRedBC,omitempty" dec:"2"`
 	VBC    tipos.Decimal  `xml:"vBC" dec:"2"`
-	PICMS  tipos.Decimal  `xml:"pICMS" dec:"4"`
+	PICMS  tipos.Decimal  `xml:"pICMS" dec:"2"`
 	VICMS  tipos.Decimal  `xml:"vICMS" dec:"2"`
 	VCred  *tipos.Decimal `xml:"vCred,omitempty" dec:"2"`
 }
@@ -66,9 +66,9 @@ type ICMS90 struct {
 // ICMSOutraUF é o ICMS devido a outra unidade da federação.
 type ICMSOutraUF struct {
 	CSTOutraUF    string         `xml:"CST"`
-	PRedBCOutraUF *tipos.Decimal `xml:"pRedBCOutraUF,omitempty" dec:"4"`
+	PRedBCOutraUF *tipos.Decimal `xml:"pRedBCOutraUF,omitempty" dec:"2"`
 	VBCOutraUF    tipos.Decimal  `xml:"vBCOutraUF" dec:"2"`
-	PICMSOutraUF  tipos.Decimal  `xml:"pICMSOutraUF" dec:"4"`
+	PICMSOutraUF  tipos.Decimal  `xml:"pICMSOutraUF" dec:"2"`
 	VICMSOutraUF  tipos.Decimal  `xml:"vICMSOutraUF" dec:"2"`
 }
 
@@ -84,9 +84,9 @@ type ICMSSN struct {
 // operações interestaduais com não contribuinte.
 type ICMSUFFim struct {
 	VBCUFFim   tipos.Decimal `xml:"vBCUFFim" dec:"2"`
-	PFCPUFFim  tipos.Decimal `xml:"pFCPUFFim" dec:"4"`
-	PICMSUFFim tipos.Decimal `xml:"pICMSUFFim" dec:"4"`
-	PICMSInter tipos.Decimal `xml:"pICMSInter" dec:"4"`
+	PFCPUFFim  tipos.Decimal `xml:"pFCPUFFim" dec:"2"`
+	PICMSUFFim tipos.Decimal `xml:"pICMSUFFim" dec:"2"`
+	PICMSInter tipos.Decimal `xml:"pICMSInter" dec:"2"`
 	VFCPUFFim  tipos.Decimal `xml:"vFCPUFFim" dec:"2"`
 	VICMSUFFim tipos.Decimal `xml:"vICMSUFFim" dec:"2"`
 	VICMSUFIni tipos.Decimal `xml:"vICMSUFIni" dec:"2"`

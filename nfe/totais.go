@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // ValoresICMS reúne os valores de ICMS de um item, extraídos de qualquer uma
 // das variações do grupo. Campos que não existem na variação usada ficam zero.

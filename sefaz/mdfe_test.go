@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // enveloparMDFe embrulha a resposta no envelope que os serviços de MDF-e

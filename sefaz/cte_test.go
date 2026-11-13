@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // enveloparCTe embrulha a resposta no envelope que os serviços de CT-e

@@ -4,8 +4,8 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // Códigos de status devolvidos pelos serviços de evento e de inutilização.

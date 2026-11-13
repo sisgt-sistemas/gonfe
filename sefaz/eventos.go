@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mschunke/gonfe/evento"
-	"github.com/mschunke/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/evento"
+	"github.com/sisgt-sistemas/gonfe/nfe"
 )
 
 // Tipos de resposta dos serviços de evento e de inutilização, reexportados do

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/internal/norm"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // NFe é o documento fiscal completo, correspondente ao elemento raiz <NFe>.

@@ -5,6 +5,31 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
+
+### Adicionado
+
+- Pacote `xsd`: valida CT-e, CT-e Simplificado e MDF-e contra os esquemas
+  oficiais (CT-e 4.00 da NT 2026.004 RTC v1.01; MDF-e 3.00b), embutidos, pelo
+  `xmllint`. É ferramenta de teste e não usa CGO; sem `xmllint`, devolve
+  `xsd.ErrSemXmllint`. Os exemplos de CT-e e de MDF-e passam a ser validados
+  contra o esquema nos testes.
+
+### Alterado
+
+- O caminho do módulo passa a ser `github.com/sisgt-sistemas/gonfe`.
+- **Incompatível:** `cte.Emit.EnderEmit` passa a ser `cte.EnderecoEmitente`
+  (`TEndeEmi`: sem `cPais` e `xPais`, com `fone`), como o esquema pede; vale
+  também para o CT-e OS.
+
+### Corrigido
+
+- O `CRT` do emitente do CT-e e do CT-e OS é obrigatório e conferido em
+  `Validar()` (TCRT: 1 a 4); antes saía omitido e o esquema recusava.
+- As alíquotas do ICMS do CT-e (`pICMS`, `pRedBC`, `pICMSSTRet`,
+  `pICMSOutraUF`, `pRedBCOutraUF`, `pICMSUFFim`, `pICMSInter`, `pFCPUFFim`) saem
+  com duas casas (`TDec_0302`); com quatro, o esquema recusava.
+
 ## [0.5.0] — 2026-08-17
 
 Fecha os ciclos de vida. Todo documento que a biblioteca emite agora pode
@@ -270,9 +295,9 @@ Primeira versão. Cobre o ciclo completo de emissão de NF-e e NFC-e no leiaute
 - Eventos, distribuição de DF-e, CT-e, MDF-e e DANFE ainda não estão
   implementados; veja o roteiro no README.
 
-[Não lançado]: https://github.com/mschunke/gonfe/compare/v0.5.0...HEAD
-[0.5.0]: https://github.com/mschunke/gonfe/compare/v0.4.0...v0.5.0
-[0.4.0]: https://github.com/mschunke/gonfe/compare/v0.3.0...v0.4.0
-[0.3.0]: https://github.com/mschunke/gonfe/compare/v0.2.0...v0.3.0
-[0.2.0]: https://github.com/mschunke/gonfe/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/mschunke/gonfe/releases/tag/v0.1.0
+[Não lançado]: https://github.com/sisgt-sistemas/gonfe/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/sisgt-sistemas/gonfe/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/sisgt-sistemas/gonfe/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/sisgt-sistemas/gonfe/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/sisgt-sistemas/gonfe/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/sisgt-sistemas/gonfe/releases/tag/v0.1.0

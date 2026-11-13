@@ -21,7 +21,7 @@ formatted to two decimal places the error disappears, but the moment it takes
 part in a comparison, a subtraction or another multiplication, the cent shows
 up — and SEFAZ rejects the invoice because a sum does not add up.
 
-With [`tipos.Decimal`](https://pkg.go.dev/github.com/mschunke/gonfe/tipos#Decimal)
+With [`tipos.Decimal`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/tipos#Decimal)
 the same loop gives exactly `7.00`.
 
 ## How it works

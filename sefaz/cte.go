@@ -10,12 +10,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/cteos"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/cteos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // ServicoCTe identifica um serviço web do CT-e.

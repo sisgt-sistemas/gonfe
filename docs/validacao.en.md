@@ -89,7 +89,7 @@ calculation errors that SEFAZ will point out anyway.
 
 ## Validating standalone documents
 
-The [`validacao`](https://pkg.go.dev/github.com/mschunke/gonfe/validacao)
+The [`validacao`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/validacao)
 package is independent of `nfe` and serves to validate input anywhere in your
 system — in customer registration, for instance:
 

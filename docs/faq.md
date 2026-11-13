@@ -107,14 +107,14 @@ cliente, err := sefaz.NovoCliente(sefaz.Config{
 ```
 
 E, por favor,
-[abra uma issue](https://github.com/mschunke/gonfe/issues/new) para que a tabela
+[abra uma issue](https://github.com/sisgt-sistemas/gonfe/issues/new) para que a tabela
 seja corrigida.
 
 ## Como testo sem certificado real?
 
 O pacote interno `certtest` gera certificados sintéticos com a estrutura de um
 A1 da ICP-Brasil, e é o que a própria suíte usa. Ele não é exportado, mas o
-[código](https://github.com/mschunke/gonfe/blob/main/internal/certtest/certtest.go)
+[código](https://github.com/sisgt-sistemas/gonfe/blob/main/internal/certtest/certtest.go)
 serve de modelo — a peça pública que você precisa é `certificado.De`, que monta
 um `*Certificado` a partir de qualquer par chave/certificado.
 
@@ -133,18 +133,18 @@ rodagem que os demais.
 
 O caminho responsável é o de sempre: homologue com o seu cenário tributário
 real, confira os endereços da sua UF e mantenha um plano de contingência. Se
-encontrar um problema, [abra uma issue](https://github.com/mschunke/gonfe/issues)
+encontrar um problema, [abra uma issue](https://github.com/sisgt-sistemas/gonfe/issues)
 — é assim que a rodagem se acumula.
 
 ## A API vai mudar?
 
 Antes da 1.0, pode mudar entre versões menores, sempre com registro no
-[CHANGELOG](https://github.com/mschunke/gonfe/blob/main/CHANGELOG.md). Depois da
+[CHANGELOG](https://github.com/sisgt-sistemas/gonfe/blob/main/CHANGELOG.md). Depois da
 1.0, valem as regras usuais do Go.
 
 ## Encontrei um erro no leiaute ou uma rejeição que a validação não pegou
 
-[Abra uma issue](https://github.com/mschunke/gonfe/issues/new) com o código de
+[Abra uma issue](https://github.com/sisgt-sistemas/gonfe/issues/new) com o código de
 rejeição, o motivo devolvido pela SEFAZ e, se possível, o trecho do XML — sem
 dados reais de clientes nem o certificado. Rejeições reais são a melhor fonte de
 regras de validação.

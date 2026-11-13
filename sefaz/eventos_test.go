@@ -9,11 +9,11 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/mschunke/gonfe/evento"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/evento"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 const (

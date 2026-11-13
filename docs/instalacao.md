@@ -14,7 +14,7 @@ biblioteca não usa CGO.
 ## Adicionando ao projeto
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 Isso traz também a única dependência externa,
@@ -28,7 +28,7 @@ serviço da sua SEFAZ. Essa chamada exercita o carregamento do certificado, a
 autenticação mútua TLS e o endereço do serviço, tudo de uma vez:
 
 ```bash
-go run github.com/mschunke/gonfe/exemplos/status-servico@latest \
+go run github.com/sisgt-sistemas/gonfe/exemplos/status-servico@latest \
   -cert ./certificado.pfx -uf RS
 ```
 

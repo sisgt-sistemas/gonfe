@@ -198,7 +198,7 @@ between versions of the Technical Note.
 
 ## Complete example
 
-[`exemplos/emitir-nfce`](https://github.com/mschunke/gonfe/blob/main/exemplos/emitir-nfce/main.go)
+[`exemplos/emitir-nfce`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/emitir-nfce/main.go)
 builds a snack bar receipt under Simples Nacional, with two items and payment by
 PIX.
 

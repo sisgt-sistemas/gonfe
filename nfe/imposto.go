@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // Imposto é o grupo M: tributos incidentes sobre o item.
 type Imposto struct {

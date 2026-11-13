@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/mschunke/gonfe/danfe"
-	"github.com/mschunke/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/danfe"
+	"github.com/sisgt-sistemas/gonfe/nfe"
 )
 
 // As coordenadas do PDF partem da base da página, em pontos: um desenho que

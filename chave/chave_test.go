@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/chave"
 )
 
 // chaveExemplo é montada campo a campo e tem o dígito verificador conferido à

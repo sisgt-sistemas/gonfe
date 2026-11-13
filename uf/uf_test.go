@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func TestTodasAs27UFsTemCodigoENome(t *testing.T) {

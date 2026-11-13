@@ -18,7 +18,7 @@ certificate. It plays two distinct roles, worth keeping separate in your head:
 | Automation | Straightforward | Needs a PKCS#11 driver and physical presence |
 | Supported by GoNFE | Yes, natively | Through the `xmldsig.Assinante` interface |
 
-The [`certificado`](https://pkg.go.dev/github.com/mschunke/gonfe/certificado)
+The [`certificado`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/certificado)
 package covers A1 completely, in pure Go and without CGO. A3 certificates can be
 used by implementing `xmldsig.Assinante` — see
 [Digital signature](assinatura.md#a3-hsm-e-assinatura-remota).
@@ -108,7 +108,7 @@ into the image.
 The internal `certtest` package generates synthetic certificates with the
 structure of an ICP-Brasil A1 — including the CNPJ OIDs in `subjectAltName` —
 and it is what the test suite itself uses. It is not exported, but the
-[source](https://github.com/mschunke/gonfe/blob/main/internal/certtest/certtest.go)
+[source](https://github.com/sisgt-sistemas/gonfe/blob/main/internal/certtest/certtest.go)
 serves as a reference for building the equivalent in your own project:
 
 ```go

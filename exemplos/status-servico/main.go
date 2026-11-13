@@ -16,10 +16,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func main() {

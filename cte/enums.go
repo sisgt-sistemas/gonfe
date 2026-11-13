@@ -13,7 +13,7 @@
 // dos demais modais — aéreo, aquaviário, ferroviário, dutoviário e multimodal.
 //
 // O CT-e OS, modelo 67, tem raiz e estrutura próprias e vive no pacote
-// [github.com/mschunke/gonfe/cteos], que reaproveita daqui tudo o que os dois
+// [github.com/sisgt-sistemas/gonfe/cteos], que reaproveita daqui tudo o que os dois
 // têm em comum.
 package cte
 
@@ -30,7 +30,7 @@ const (
 	// ModeloCTe é o Conhecimento de Transporte Eletrônico.
 	ModeloCTe Modelo = "57"
 	// ModeloCTeOS é o CT-e Outros Serviços, implementado no pacote
-	// [github.com/mschunke/gonfe/cteos].
+	// [github.com/sisgt-sistemas/gonfe/cteos].
 	ModeloCTeOS Modelo = "67"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 func TestDataHoraFormataComFuso(t *testing.T) {

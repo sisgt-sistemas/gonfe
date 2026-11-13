@@ -25,7 +25,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/mschunke/gonfe/internal/xmldom"
+	"github.com/sisgt-sistemas/gonfe/internal/xmldom"
 )
 
 // Identificadores dos algoritmos que compõem o perfil de assinatura da SEFAZ.
@@ -59,7 +59,7 @@ var (
 )
 
 // Assinante é a fonte da assinatura. É implementado por
-// [github.com/mschunke/gonfe/certificado.Certificado] e pode ser implementado
+// [github.com/sisgt-sistemas/gonfe/certificado.Certificado] e pode ser implementado
 // por adaptadores de A3, HSM ou serviços remotos de assinatura.
 type Assinante interface {
 	// Sign produz a assinatura PKCS#1 v1.5 do resumo informado.

@@ -1,6 +1,6 @@
 # Serviços da SEFAZ
 
-O pacote [`sefaz`](https://pkg.go.dev/github.com/mschunke/gonfe/sefaz) conversa
+O pacote [`sefaz`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/sefaz) conversa
 com os ambientes autorizadores por SOAP 1.2 sobre TLS com autenticação mútua.
 Nenhuma biblioteca de SOAP é usada — o envelope é montado e lido diretamente.
 

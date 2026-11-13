@@ -13,9 +13,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // VersaoQRCode é a versão do QR Code implementada, conforme a Nota Técnica
@@ -69,7 +69,7 @@ type Opcoes struct {
 // o grupo infNFeSupl.
 //
 // A nota precisa estar preparada — com a chave de acesso montada por
-// [github.com/mschunke/gonfe/nfe.NFe.Preparar] — e ainda não assinada, porque o
+// [github.com/sisgt-sistemas/gonfe/nfe.NFe.Preparar] — e ainda não assinada, porque o
 // infNFeSupl entra no documento antes da assinatura.
 func PreencherSuplemento(n *nfe.NFe, opc Opcoes) error {
 	if n.Modelo() != nfe.ModeloNFCe {

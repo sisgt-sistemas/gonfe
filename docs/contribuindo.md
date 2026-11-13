@@ -2,7 +2,7 @@
 
 Obrigado pelo interesse. Esta página resume o que é útil contribuir e como; o
 documento completo está em
-[CONTRIBUTING.md](https://github.com/mschunke/gonfe/blob/main/CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/sisgt-sistemas/gonfe/blob/main/CONTRIBUTING.md).
 
 ## O que ajuda mais
 
@@ -19,7 +19,7 @@ Nacional e substituição tributária. Diferimento, partilha interestadual,
 exportação e regimes específicos de UF têm menos rodagem.
 
 **Os itens pendentes.** O plano técnico de cada um está no
-[HANDOFF](https://github.com/mschunke/gonfe/blob/main/HANDOFF.md), com onde
+[HANDOFF](https://github.com/sisgt-sistemas/gonfe/blob/main/HANDOFF.md), com onde
 mexer, as armadilhas já pagas e como saber que terminou. Antes de começar algo
 grande, abra uma issue para combinar a abordagem — a infraestrutura comum já
 existe e vale reaproveitar.
@@ -27,7 +27,7 @@ existe e vale reaproveitar.
 ## Rodando os testes
 
 ```bash
-git clone https://github.com/mschunke/gonfe
+git clone https://github.com/sisgt-sistemas/gonfe
 cd gonfe
 go test ./...
 ```
@@ -76,4 +76,4 @@ mkdocs serve
 
 Se você encontrar uma vulnerabilidade — algo que permita forjar uma assinatura,
 vazar a chave privada ou o CSC —, não abra issue pública. Veja
-[SECURITY.md](https://github.com/mschunke/gonfe/blob/main/SECURITY.md).
+[SECURITY.md](https://github.com/sisgt-sistemas/gonfe/blob/main/SECURITY.md).

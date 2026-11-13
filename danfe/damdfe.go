@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // alturaDocMDFe é o espaço vertical de cada linha da tabela de documentos.

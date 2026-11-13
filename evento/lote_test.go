@@ -5,12 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/evento"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/evento"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 func TestMontarLote(t *testing.T) {

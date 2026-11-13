@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // Transp é o grupo X: informações do transporte da mercadoria.
 type Transp struct {

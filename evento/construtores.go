@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/internal/norm"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // TextoCondicaoDeUso é a cláusula legal que o campo xCondUso da carta de

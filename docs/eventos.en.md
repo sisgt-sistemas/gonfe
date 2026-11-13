@@ -5,7 +5,7 @@ independent from the invoice it refers to. Once registered, it is stored
 alongside its response in a `procEventoNFe` — the analogue of `nfeProc` for
 events.
 
-The [`evento`](https://pkg.go.dev/github.com/mschunke/gonfe/evento) package
+The [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) package
 covers:
 
 | Event | Code | Who registers it |
@@ -262,7 +262,7 @@ arrives.
 
 ## Runnable example
 
-[`exemplos/eventos`](https://github.com/mschunke/gonfe/blob/main/exemplos/eventos/main.go)
+[`exemplos/eventos`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/eventos/main.go)
 registers cancellations, letters of correction, acknowledgements and voidings
 from the command line:
 

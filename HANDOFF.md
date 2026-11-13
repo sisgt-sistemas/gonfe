@@ -171,6 +171,14 @@ libxml2 via CGO — o que colide frontalmente com a convenção 4. Três saídas
 Decida isto explicitamente antes de começar: é a escolha que mais mexe na
 identidade do projeto.
 
+**Decidido no fork `sisgt-sistemas/gonfe` (2026-11-13):** a validação contra
+o XSD é ferramenta de teste, no pacote `xsd`, que embute os esquemas oficiais
+e chama o `xmllint` como processo externo: o núcleo continua sem CGO, e a
+emissão continua validando em Go pelo `Validar()` de cada documento. O primeiro
+uso já achou três desvios do CT-e, corrigidos: o endereço do emitente não leva
+país (`TEndeEmi`, agora `cte.EnderecoEmitente`), o `CRT` é obrigatório, e as
+alíquotas do ICMS têm duas casas (`TDec_0302`).
+
 ### 5. Distribuição de DF-e do CT-e e do MDF-e
 
 `CTeDistribuicaoDFe` e `MDFeDistribuicaoDFe`. O pacote `dfe` e o

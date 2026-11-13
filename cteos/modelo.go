@@ -10,14 +10,14 @@
 // # O que é compartilhado com o CT-e
 //
 // Tudo o que os dois têm em comum vem do pacote
-// [github.com/mschunke/gonfe/cte] e não é redefinido aqui: os grupos de ICMS, o
+// [github.com/sisgt-sistemas/gonfe/cte] e não é redefinido aqui: os grupos de ICMS, o
 // endereço, o valor da prestação, as informações complementares, a cobrança, o
 // responsável técnico e o protocolo de autorização. A chave de acesso, a
 // assinatura e o cliente SOAP também são os mesmos — a recepção síncrona do
 // 4.00 atende aos dois modelos.
 //
 // Os eventos também: o elemento raiz é `eventoCTe` nos dois, e o que muda é só
-// a chave referenciada. Use [github.com/mschunke/gonfe/cte.NovoCancelamento] e
+// a chave referenciada. Use [github.com/sisgt-sistemas/gonfe/cte.NovoCancelamento] e
 // as demais funções de evento do pacote cte.
 //
 // # Antes de usar em produção
@@ -32,8 +32,8 @@ package cteos
 import (
 	"encoding/xml"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // Versao é a versão do leiaute implementada por este pacote.

@@ -1,6 +1,6 @@
 # SEFAZ web services
 
-The [`sefaz`](https://pkg.go.dev/github.com/mschunke/gonfe/sefaz) package talks
+The [`sefaz`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/sefaz) package talks
 to the authorising environments over SOAP 1.2 on TLS with mutual authentication.
 No SOAP library is used — the envelope is built and read directly.
 

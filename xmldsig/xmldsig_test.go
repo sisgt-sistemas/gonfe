@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/internal/xmldom"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/internal/xmldom"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 const idExemplo = "NFe43260312345678000195550010000012341876543211"

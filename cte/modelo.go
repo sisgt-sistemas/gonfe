@@ -3,7 +3,7 @@ package cte
 import (
 	"encoding/xml"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // CTe é o documento completo, correspondente ao elemento raiz <CTe>.
@@ -219,14 +219,33 @@ type ObsCampo struct {
 
 // Emit é o emitente do conhecimento — a transportadora.
 type Emit struct {
-	CNPJ      string   `xml:"CNPJ,omitempty" norm:"num"`
-	CPF       string   `xml:"CPF,omitempty" norm:"num"`
-	IE        string   `xml:"IE" norm:"upper"`
-	IEST      string   `xml:"IEST,omitempty" norm:"upper"`
-	XNome     string   `xml:"xNome"`
-	XFant     string   `xml:"xFant,omitempty"`
-	EnderEmit Endereco `xml:"enderEmit"`
-	CRT       string   `xml:"CRT,omitempty"`
+	CNPJ      string           `xml:"CNPJ,omitempty" norm:"num"`
+	CPF       string           `xml:"CPF,omitempty" norm:"num"`
+	IE        string           `xml:"IE" norm:"upper"`
+	IEST      string           `xml:"IEST,omitempty" norm:"upper"`
+	XNome     string           `xml:"xNome"`
+	XFant     string           `xml:"xFant,omitempty"`
+	EnderEmit EnderecoEmitente `xml:"enderEmit"`
+	// CRT é o regime tributário do emitente (TCRT): obrigatório no leiaute 4.00.
+	CRT string `xml:"CRT"`
+}
+
+// EnderecoEmitente é o endereço do emitente (TEndeEmi): sem país, que é sempre o Brasil, e com o telefone.
+type EnderecoEmitente struct {
+	XLgr    string `xml:"xLgr"`
+	Nro     string `xml:"nro"`
+	XCpl    string `xml:"xCpl,omitempty"`
+	XBairro string `xml:"xBairro"`
+	CMun    int    `xml:"cMun"`
+	XMun    string `xml:"xMun"`
+	CEP     string `xml:"CEP,omitempty" norm:"num"`
+	UF      string `xml:"UF" norm:"upper"`
+	Fone    string `xml:"fone,omitempty" norm:"num"`
+}
+
+// Endereco é o endereço do emitente na forma comum, para validar como os outros.
+func (e EnderecoEmitente) Endereco() Endereco {
+	return Endereco{XLgr: e.XLgr, Nro: e.Nro, XCpl: e.XCpl, XBairro: e.XBairro, CMun: e.CMun, XMun: e.XMun, CEP: e.CEP, UF: e.UF}
 }
 
 // As quatro partes do transporte têm os mesmos campos, mas o esquema dá um

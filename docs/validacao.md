@@ -88,7 +88,7 @@ de cálculo que a SEFAZ vai apontar de qualquer forma.
 
 ## Validando documentos avulsos
 
-O pacote [`validacao`](https://pkg.go.dev/github.com/mschunke/gonfe/validacao)
+O pacote [`validacao`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/validacao)
 é independente do `nfe` e serve para validar entradas em qualquer lugar do seu
 sistema — no cadastro de clientes, por exemplo:
 

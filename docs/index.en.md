@@ -5,7 +5,7 @@ standards published by the Receita Federal and the state tax authorities
 (SEFAZ).
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 !!! note "About this translation"
@@ -88,7 +88,7 @@ go get github.com/mschunke/gonfe
 
 Every document the library issues can also be transmitted, corrected, cancelled
 and printed. What is still missing is recorded in the
-[HANDOFF](https://github.com/mschunke/gonfe/blob/main/HANDOFF.md), with a plan
+[HANDOFF](https://github.com/sisgt-sistemas/gonfe/blob/main/HANDOFF.md), with a plan
 for each item.
 
 ## Why another library
@@ -133,7 +133,7 @@ key with its check digit. `Validar` checks structure, check digits and sums
 before you spend a round trip to SEFAZ.
 
 [:octicons-arrow-right-24: Start with your first invoice](primeira-nota.md){ .md-button .md-button--primary }
-[:octicons-arrow-right-24: API reference](https://pkg.go.dev/github.com/mschunke/gonfe){ .md-button }
+[:octicons-arrow-right-24: API reference](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe){ .md-button }
 
 ## Before going to production
 

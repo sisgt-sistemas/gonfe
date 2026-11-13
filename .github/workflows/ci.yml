@@ -40,6 +40,12 @@ jobs:
           go-version: ${{ matrix.go }}
           check-latest: true
 
+      # O pacote xsd valida os documentos contra os esquemas oficiais pelo xmllint (sem CGO). Nos outros sistemas,
+      # esses testes são pulados.
+      - name: Instalar o xmllint
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
       - name: Baixar dependências
         run: go mod download
 

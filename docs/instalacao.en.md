@@ -14,7 +14,7 @@ the library does not use CGO.
 ## Adding it to your project
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 That also pulls in the single external dependency,
@@ -28,7 +28,7 @@ status. That single call exercises certificate loading, mutual TLS
 authentication and the service endpoint all at once:
 
 ```bash
-go run github.com/mschunke/gonfe/exemplos/status-servico@latest \
+go run github.com/sisgt-sistemas/gonfe/exemplos/status-servico@latest \
   -cert ./certificado.pfx -uf RS
 ```
 

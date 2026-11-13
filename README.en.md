@@ -1,16 +1,20 @@
 # GoNFE
 
-[![CI](https://github.com/mschunke/gonfe/actions/workflows/ci.yml/badge.svg)](https://github.com/mschunke/gonfe/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/mschunke/gonfe.svg)](https://pkg.go.dev/github.com/mschunke/gonfe)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mschunke/gonfe)](https://goreportcard.com/report/github.com/mschunke/gonfe)
+[![CI](https://github.com/sisgt-sistemas/gonfe/actions/workflows/ci.yml/badge.svg)](https://github.com/sisgt-sistemas/gonfe/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sisgt-sistemas/gonfe.svg)](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sisgt-sistemas/gonfe)](https://goreportcard.com/report/github.com/sisgt-sistemas/gonfe)
 [![MIT licence](https://img.shields.io/badge/licence-MIT-blue.svg)](LICENSE)
+
+> Fork of [mschunke/gonfe](https://github.com/mschunke/gonfe) (MIT license), maintained by SISGT Sistemas for its
+> TMS. Differences: the module path is `github.com/sisgt-sistemas/gonfe`, and the [`xsd`](xsd) package validates the
+> documents against the official schemas in tests.
 
 A Go library for issuing Brazilian electronic fiscal documents, following the
 standards published by the Receita Federal and the state tax authorities
 (SEFAZ).
 
-**Documentation:** <https://mschunke.github.io/gonfe/en/> ·
-**API reference:** <https://pkg.go.dev/github.com/mschunke/gonfe> ·
+**Documentation:** <https://sisgt-sistemas.github.io/gonfe/en/> ·
+**API reference:** <https://pkg.go.dev/github.com/sisgt-sistemas/gonfe> ·
 **Em português:** [README.md](README.md)
 
 > **A note on language.** The documentation is mirrored in English, but the
@@ -53,7 +57,7 @@ and printed.
 ## Installation
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 Requires Go 1.23 or newer.
@@ -68,11 +72,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func main() {
@@ -170,21 +174,21 @@ canc, _ := evento.NovoCancelamento(evento.DadosCancelamento{
 
 | Package | Responsibility |
 | --- | --- |
-| [`nfe`](https://pkg.go.dev/github.com/mschunke/gonfe/nfe) | Layout 4.00 data model, totals, validation, batch and `nfeProc` assembly |
-| [`nfce`](https://pkg.go.dev/github.com/mschunke/gonfe/nfce) | Version 2 QR Code and NFC-e lookup URLs |
-| [`evento`](https://pkg.go.dev/github.com/mschunke/gonfe/evento) | Cancellation, letter of correction, recipient acknowledgement and voiding |
-| [`cte`](https://pkg.go.dev/github.com/mschunke/gonfe/cte) | Bill of lading model 57, layout 4.00 |
-| [`cteos`](https://pkg.go.dev/github.com/mschunke/gonfe/cteos) | CT-e Outros Serviços model 67: passengers, valuables and excess baggage |
-| [`mdfe`](https://pkg.go.dev/github.com/mschunke/gonfe/mdfe) | Freight manifest model 58, with trip close-out |
-| [`danfe`](https://pkg.go.dev/github.com/mschunke/gonfe/danfe) | DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDF |
-| [`dfe`](https://pkg.go.dev/github.com/mschunke/gonfe/dfe) | DF-e distribution: documents of interest to a CNPJ |
-| [`sefaz`](https://pkg.go.dev/github.com/mschunke/gonfe/sefaz) | Endpoints by state, SOAP 1.2 client with mutual TLS, and operations |
-| [`xmldsig`](https://pkg.go.dev/github.com/mschunke/gonfe/xmldsig) | Signing and verification in the SEFAZ profile |
-| [`certificado`](https://pkg.go.dev/github.com/mschunke/gonfe/certificado) | A1 certificates in PKCS#12, with ICP-Brasil OID extraction |
-| [`chave`](https://pkg.go.dev/github.com/mschunke/gonfe/chave) | The 44-digit access key |
-| [`tipos`](https://pkg.go.dev/github.com/mschunke/gonfe/tipos) | Fixed-point decimal, date and datetime from the layout |
-| [`validacao`](https://pkg.go.dev/github.com/mschunke/gonfe/validacao) | CPF, CNPJ (including alphanumeric) and state registration format |
-| [`uf`](https://pkg.go.dev/github.com/mschunke/gonfe/uf) | IBGE codes, names and time zones |
+| [`nfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/nfe) | Layout 4.00 data model, totals, validation, batch and `nfeProc` assembly |
+| [`nfce`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/nfce) | Version 2 QR Code and NFC-e lookup URLs |
+| [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) | Cancellation, letter of correction, recipient acknowledgement and voiding |
+| [`cte`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cte) | Bill of lading model 57, layout 4.00 |
+| [`cteos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cteos) | CT-e Outros Serviços model 67: passengers, valuables and excess baggage |
+| [`mdfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/mdfe) | Freight manifest model 58, with trip close-out |
+| [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, NFC-e receipt, DACTE, DACTE OS and DAMDFE as PDF |
+| [`dfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/dfe) | DF-e distribution: documents of interest to a CNPJ |
+| [`sefaz`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/sefaz) | Endpoints by state, SOAP 1.2 client with mutual TLS, and operations |
+| [`xmldsig`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/xmldsig) | Signing and verification in the SEFAZ profile |
+| [`certificado`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/certificado) | A1 certificates in PKCS#12, with ICP-Brasil OID extraction |
+| [`chave`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/chave) | The 44-digit access key |
+| [`tipos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/tipos) | Fixed-point decimal, date and datetime from the layout |
+| [`validacao`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/validacao) | CPF, CNPJ (including alphanumeric) and state registration format |
+| [`uf`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/uf) | IBGE codes, names and time zones |
 
 ## Before using in production
 

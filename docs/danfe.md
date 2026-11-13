@@ -1,6 +1,6 @@
 # Documentos auxiliares em PDF
 
-O pacote [`danfe`](https://pkg.go.dev/github.com/mschunke/gonfe/danfe) gera os
+O pacote [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) gera os
 cinco documentos auxiliares em PDF.
 
 | Documento auxiliar | Documento fiscal | Função | Formato |

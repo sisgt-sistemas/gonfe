@@ -6,27 +6,27 @@
 // documentação. O código está nos subpacotes, cada um com uma
 // responsabilidade:
 //
-//   - [github.com/mschunke/gonfe/nfe] — modelo de dados da NF-e e da NFC-e no
+//   - [github.com/sisgt-sistemas/gonfe/nfe] — modelo de dados da NF-e e da NFC-e no
 //     leiaute 4.00, cálculo de totais, validação e montagem de lote.
-//   - [github.com/mschunke/gonfe/nfce] — QR Code e URLs de consulta da NFC-e.
-//   - [github.com/mschunke/gonfe/cte] — Conhecimento de Transporte modelo 57.
-//   - [github.com/mschunke/gonfe/cteos] — CT-e Outros Serviços, modelo 67.
-//   - [github.com/mschunke/gonfe/mdfe] — Manifesto de Documentos Fiscais 58.
-//   - [github.com/mschunke/gonfe/danfe] — DANFE, cupom da NFC-e, DACTE e
+//   - [github.com/sisgt-sistemas/gonfe/nfce] — QR Code e URLs de consulta da NFC-e.
+//   - [github.com/sisgt-sistemas/gonfe/cte] — Conhecimento de Transporte modelo 57.
+//   - [github.com/sisgt-sistemas/gonfe/cteos] — CT-e Outros Serviços, modelo 67.
+//   - [github.com/sisgt-sistemas/gonfe/mdfe] — Manifesto de Documentos Fiscais 58.
+//   - [github.com/sisgt-sistemas/gonfe/danfe] — DANFE, cupom da NFC-e, DACTE e
 //     DAMDFE em PDF.
-//   - [github.com/mschunke/gonfe/dfe] — distribuição de DF-e.
-//   - [github.com/mschunke/gonfe/evento] — cancelamento, carta de correção,
+//   - [github.com/sisgt-sistemas/gonfe/dfe] — distribuição de DF-e.
+//   - [github.com/sisgt-sistemas/gonfe/evento] — cancelamento, carta de correção,
 //     manifestação do destinatário e inutilização de numeração.
-//   - [github.com/mschunke/gonfe/sefaz] — endereços dos serviços por unidade da
+//   - [github.com/sisgt-sistemas/gonfe/sefaz] — endereços dos serviços por unidade da
 //     federação e cliente SOAP com autenticação mútua TLS.
-//   - [github.com/mschunke/gonfe/xmldsig] — assinatura e verificação no perfil
+//   - [github.com/sisgt-sistemas/gonfe/xmldsig] — assinatura e verificação no perfil
 //     de XML Signature da SEFAZ.
-//   - [github.com/mschunke/gonfe/certificado] — certificados A1 em PKCS#12.
-//   - [github.com/mschunke/gonfe/chave] — chave de acesso de 44 dígitos.
-//   - [github.com/mschunke/gonfe/tipos] — decimal de precisão fixa, data e
+//   - [github.com/sisgt-sistemas/gonfe/certificado] — certificados A1 em PKCS#12.
+//   - [github.com/sisgt-sistemas/gonfe/chave] — chave de acesso de 44 dígitos.
+//   - [github.com/sisgt-sistemas/gonfe/tipos] — decimal de precisão fixa, data e
 //     data/hora nos formatos do leiaute.
-//   - [github.com/mschunke/gonfe/validacao] — CPF, CNPJ e inscrição estadual.
-//   - [github.com/mschunke/gonfe/uf] — códigos do IBGE, nomes e fusos horários.
+//   - [github.com/sisgt-sistemas/gonfe/validacao] — CPF, CNPJ e inscrição estadual.
+//   - [github.com/sisgt-sistemas/gonfe/uf] — códigos do IBGE, nomes e fusos horários.
 //
 // # Emissão em cinco passos
 //
@@ -48,7 +48,7 @@
 //	resultado, _ := cliente.EsperarProcessamento(ctx, envio.Recibo(), 3*time.Second, 20)
 //	proc, _ := nfe.MontarNFeProc(assinada, resultado.ProtocoloDa(n.Chave()))
 //
-// O guia completo está em https://mschunke.github.io/gonfe/ e os exemplos
+// O guia completo está em https://sisgt-sistemas.github.io/gonfe/ e os exemplos
 // executáveis, no diretório exemplos do repositório.
 //
 // # Aviso legal

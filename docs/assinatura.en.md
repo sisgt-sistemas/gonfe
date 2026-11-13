@@ -1,6 +1,6 @@
 # Digital signature
 
-The [`xmldsig`](https://pkg.go.dev/github.com/mschunke/gonfe/xmldsig) package
+The [`xmldsig`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/xmldsig) package
 implements the XML Signature profile adopted by the Receita Federal. The profile
 is narrow and fixed — and that is precisely what makes it interoperable.
 

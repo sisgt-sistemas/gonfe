@@ -1,9 +1,9 @@
 site_name: GoNFE
 site_description: Biblioteca Go para emissão de documentos fiscais eletrônicos brasileiros
 site_author: mschunke
-site_url: https://mschunke.github.io/gonfe/
-repo_url: https://github.com/mschunke/gonfe
-repo_name: mschunke/gonfe
+site_url: https://sisgt-sistemas.github.io/gonfe/
+repo_url: https://github.com/sisgt-sistemas/gonfe
+repo_name: sisgt-sistemas/gonfe
 edit_uri: edit/main/docs/
 copyright: Distribuído sob a licença MIT
 
@@ -143,8 +143,8 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/mschunke/gonfe
+      link: https://github.com/sisgt-sistemas/gonfe
       name: Código no GitHub
     - icon: fontawesome/solid/book
-      link: https://pkg.go.dev/github.com/mschunke/gonfe
+      link: https://pkg.go.dev/github.com/sisgt-sistemas/gonfe
       name: Referência da API no pkg.go.dev

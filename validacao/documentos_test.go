@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 func TestCPFValidos(t *testing.T) {

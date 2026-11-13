@@ -1,7 +1,7 @@
 # Packages
 
 The complete API reference is on
-[pkg.go.dev](https://pkg.go.dev/github.com/mschunke/gonfe). This page describes
+[pkg.go.dev](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe). This page describes
 how responsibilities are divided and how the packages relate to one another.
 
 ## The map
@@ -226,7 +226,7 @@ Not importable from outside the module, but worth knowing they exist:
 
 The library has not reached 1.0. Until it does, API changes may happen between
 minor versions, always recorded in the
-[CHANGELOG](https://github.com/mschunke/gonfe/blob/main/CHANGELOG.md). Pin the
+[CHANGELOG](https://github.com/sisgt-sistemas/gonfe/blob/main/CHANGELOG.md). Pin the
 version in your `go.mod` — which Go already does by default — and read the
 changelog before upgrading.
 

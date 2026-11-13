@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/internal/norm"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 // VersaoInutilizacao é a versão do leiaute do pedido de inutilização.

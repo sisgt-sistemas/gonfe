@@ -17,7 +17,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // Tamanho é a quantidade de dígitos de uma chave de acesso completa.

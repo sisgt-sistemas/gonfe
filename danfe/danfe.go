@@ -25,11 +25,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // Opcoes ajusta a geração do documento auxiliar.

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // alturaItem é o espaço vertical de cada linha da tabela de produtos.

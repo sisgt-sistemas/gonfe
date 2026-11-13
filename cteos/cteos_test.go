@@ -8,12 +8,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/cteos"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/cteos"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 const cnpjTransportadora = "12345678000195"
@@ -41,10 +41,10 @@ func fretamentoExemplo() *cteos.CTeOS {
 		IE:    "0961234567",
 		XNome: "VIACAO EXEMPLO LTDA",
 		XFant: "EXEMPLO TURISMO",
-		EnderEmit: cte.Endereco{
+		CRT:   "3",
+		EnderEmit: cte.EnderecoEmitente{
 			XLgr: "AVENIDA DAS INDUSTRIAS", Nro: "2000", XBairro: "DISTRITO INDUSTRIAL",
 			CMun: 4314902, XMun: "PORTO ALEGRE", CEP: "91150000", UF: "RS",
-			CPais: 1058, XPais: "BRASIL",
 		},
 	}
 	c.InfCte.Toma = &cteos.Toma{

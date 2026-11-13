@@ -19,7 +19,7 @@ package mdfe
 import (
 	"encoding/xml"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // Versao é a versão do leiaute implementada por este pacote.

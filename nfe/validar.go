@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // Erro é uma inconsistência encontrada por [NFe.Validar].

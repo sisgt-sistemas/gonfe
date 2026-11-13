@@ -1,6 +1,6 @@
 # Auxiliary documents as PDF
 
-The [`danfe`](https://pkg.go.dev/github.com/mschunke/gonfe/danfe) package
+The [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) package
 generates the five auxiliary documents as PDFs.
 
 | Auxiliary document | Fiscal document | Function | Format |

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // LarguraBobinaPadrao é a largura usual das impressoras térmicas de cupom.

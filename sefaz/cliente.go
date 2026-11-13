@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // TimeoutPadrao é o tempo máximo de uma requisição quando nenhum outro é
@@ -159,7 +159,7 @@ func (c *Cliente) StatusServico(ctx context.Context) (*RetConsStatServ, error) {
 }
 
 // Autorizar envia um lote de notas assinadas para autorização. Monte o lote com
-// [github.com/mschunke/gonfe/nfe.MontarLote].
+// [github.com/sisgt-sistemas/gonfe/nfe.MontarLote].
 //
 // A resposta traz um recibo, no envio assíncrono, ou o protocolo da nota, no
 // síncrono. Um código de status de rejeição do lote vira erro; a rejeição de

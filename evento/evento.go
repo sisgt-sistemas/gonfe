@@ -17,9 +17,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 // Versao é a versão do leiaute de eventos implementada por este pacote.

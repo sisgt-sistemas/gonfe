@@ -37,7 +37,7 @@ var potencias10 = [CasasMax + 1]int64{
 //
 // O valor efetivo é naoEscalado / 10^casas. O valor zero de Decimal é o número
 // zero com nenhuma casa decimal, cuja representação textual é "0"; use
-// [Decimal.ComCasas] ou a normalização automática de [github.com/mschunke/gonfe/nfe]
+// [Decimal.ComCasas] ou a normalização automática de [github.com/sisgt-sistemas/gonfe/nfe]
 // para ajustá-lo à precisão exigida pelo campo.
 //
 // Decimal é imutável: todas as operações devolvem um novo valor.

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/danfe"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/danfe"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 const (
@@ -44,10 +44,9 @@ func conhecimentoExemplo(documentos int) *cte.CTe {
 		IE:    "0961234567",
 		XNome: "TRANSPORTES EXEMPLO LTDA",
 		XFant: "EXEMPLO CARGAS",
-		EnderEmit: cte.Endereco{
+		EnderEmit: cte.EnderecoEmitente{
 			XLgr: "AVENIDA DAS INDUSTRIAS", Nro: "2000", XBairro: "DISTRITO INDUSTRIAL",
 			CMun: 4314902, XMun: "PORTO ALEGRE", CEP: "91150000", UF: "RS",
-			CPais: 1058, XPais: "BRASIL",
 		},
 	}
 	c.InfCte.Rem = &cte.Rem{

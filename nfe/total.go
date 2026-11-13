@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // Total é o grupo W: totais da nota fiscal.
 type Total struct {

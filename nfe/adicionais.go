@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // InfAdic é o grupo Z: informações adicionais da nota.
 type InfAdic struct {

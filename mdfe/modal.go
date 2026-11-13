@@ -1,6 +1,6 @@
 package mdfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // InfModal envolve o grupo específico do meio de transporte.
 type InfModal struct {

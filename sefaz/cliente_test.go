@@ -11,9 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // servidorFalso responde a uma chamada SOAP com o corpo informado e guarda a

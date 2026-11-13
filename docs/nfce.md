@@ -196,7 +196,7 @@ entre versões da NT.
 
 ## Exemplo completo
 
-[`exemplos/emitir-nfce`](https://github.com/mschunke/gonfe/blob/main/exemplos/emitir-nfce/main.go)
+[`exemplos/emitir-nfce`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/emitir-nfce/main.go)
 monta um cupom de lanchonete no Simples Nacional, com dois itens e pagamento em
 PIX.
 

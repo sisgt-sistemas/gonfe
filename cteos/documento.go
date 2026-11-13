@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/internal/norm"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 // Novo devolve um CT-e OS com os campos de estrutura preenchidos com os padrões

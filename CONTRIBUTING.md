@@ -26,7 +26,7 @@ Você precisa de Go 1.23 ou mais recente. Nada além disso: a biblioteca não us
 CGO nem ferramentas externas.
 
 ```bash
-git clone https://github.com/mschunke/gonfe
+git clone https://github.com/sisgt-sistemas/gonfe
 cd gonfe
 go test ./...
 ```

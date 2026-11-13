@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // Erro é uma inconsistência encontrada por [CTe.Validar].
@@ -177,7 +177,12 @@ func (c *CTe) validarEmitente() Erros {
 	if emit.IE == "" {
 		e = append(e, erro("emit.IE", "inscrição estadual é obrigatória"))
 	}
-	e = append(e, validarEndereco("emit.enderEmit", &emit.EnderEmit)...)
+	endereco := emit.EnderEmit.Endereco()
+	e = append(e, validarEndereco("emit.enderEmit", &endereco)...)
+	if !regimeValido(emit.CRT) {
+		e = append(e, erro("emit.CRT", "regime tributário %q fora do leiaute (TCRT: 1, 2, 3 ou 4)", emit.CRT))
+	}
+
 	return e
 }
 
@@ -408,4 +413,9 @@ func validarModal(modal Modal, m *InfModal) Erros {
 			`o RNTRC é obrigatório; use "ISENTO" quando couber`))
 	}
 	return e
+}
+
+// regimeValido confere o CRT contra a lista do leiaute (TCRT).
+func regimeValido(crt string) bool {
+	return crt == "1" || crt == "2" || crt == "3" || crt == "4"
 }

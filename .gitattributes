@@ -11,3 +11,6 @@
 *.pfx binary
 *.p12 binary
 *.png binary
+
+# Os esquemas oficiais da SEFAZ ficam byte a byte como publicados (CRLF), para o sha256 conferir com o pacote.
+xsd/esquemas/** -text

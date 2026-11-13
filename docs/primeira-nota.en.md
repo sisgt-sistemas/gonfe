@@ -221,7 +221,7 @@ preserving byte for byte the data that was signed.
 ## The complete program
 
 The runnable example, with error handling and environment variables, is in
-[`exemplos/emitir-nfe`](https://github.com/mschunke/gonfe/blob/main/exemplos/emitir-nfe/main.go).
+[`exemplos/emitir-nfe`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/emitir-nfe/main.go).
 
 ```bash
 export GONFE_CERT=./certificado.pfx

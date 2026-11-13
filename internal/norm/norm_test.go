@@ -3,8 +3,8 @@ package norm_test
 import (
 	"testing"
 
-	"github.com/mschunke/gonfe/internal/norm"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 type endereco struct {

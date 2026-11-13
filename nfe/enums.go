@@ -4,12 +4,12 @@
 // As estruturas espelham o esquema XSD publicado pela SEFAZ, campo a campo e na
 // mesma ordem, para que a conferência contra o Manual de Orientação do
 // Contribuinte seja direta. Campos opcionais são ponteiros; campos monetários
-// usam [github.com/mschunke/gonfe/tipos.Decimal] com a escala do leiaute
+// usam [github.com/sisgt-sistemas/gonfe/tipos.Decimal] com a escala do leiaute
 // declarada na tag dec.
 //
 // O caminho normal de uso é montar a [NFe], chamar [NFe.Preparar] para
 // normalizar valores, calcular totais e gerar a chave de acesso, serializar com
-// [NFe.XML] e assinar com [github.com/mschunke/gonfe/xmldsig].
+// [NFe.XML] e assinar com [github.com/sisgt-sistemas/gonfe/xmldsig].
 package nfe
 
 // Versao é a versão do leiaute implementada por este pacote.

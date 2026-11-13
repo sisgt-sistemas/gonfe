@@ -18,7 +18,7 @@ da ICP-Brasil. Ele cumpre dois papéis distintos, que vale separar na cabeça:
 | Automação | Direta | Depende de driver PKCS#11 e presença física |
 | Suportado pelo GoNFE | Sim, nativamente | Pela interface `xmldsig.Assinante` |
 
-O pacote [`certificado`](https://pkg.go.dev/github.com/mschunke/gonfe/certificado)
+O pacote [`certificado`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/certificado)
 cobre A1 inteiramente, em Go puro e sem CGO. Certificados A3 podem ser usados
 implementando `xmldsig.Assinante` — veja [Assinatura digital](assinatura.md#a3-hsm-e-assinatura-remota).
 
@@ -105,7 +105,7 @@ o armazenamento de raízes do sistema operacional. Em imagens `scratch`, copie o
 O pacote interno `certtest` gera certificados sintéticos com a estrutura de um
 A1 da ICP-Brasil — inclusive os OIDs do CNPJ no `subjectAltName` — e é o que a
 própria suíte de testes usa. Ele não é exportado, mas o
-[código](https://github.com/mschunke/gonfe/blob/main/internal/certtest/certtest.go)
+[código](https://github.com/sisgt-sistemas/gonfe/blob/main/internal/certtest/certtest.go)
 serve de referência para montar o equivalente no seu projeto:
 
 ```go

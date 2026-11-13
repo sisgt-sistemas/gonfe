@@ -1,6 +1,6 @@
 # Assinatura digital
 
-O pacote [`xmldsig`](https://pkg.go.dev/github.com/mschunke/gonfe/xmldsig)
+O pacote [`xmldsig`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/xmldsig)
 implementa o perfil de XML Signature adotado pela Receita Federal. O perfil é
 estreito e fixo — e é justamente isso que o torna interoperável.
 

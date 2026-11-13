@@ -17,14 +17,14 @@ import (
 	"os"
 	"strings"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/cteos"
-	"github.com/mschunke/gonfe/danfe"
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/nfce"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/cteos"
+	"github.com/sisgt-sistemas/gonfe/danfe"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/nfce"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func main() {
@@ -205,11 +205,10 @@ func montarFretamento() *cteos.CTeOS {
 
 	c.InfCte.Emit = cte.Emit{
 		CNPJ: "12345678000195", IE: "0961234567",
-		XNome: "VIACAO EXEMPLO LTDA", XFant: "EXEMPLO TURISMO",
-		EnderEmit: cte.Endereco{
+		XNome: "VIACAO EXEMPLO LTDA", XFant: "EXEMPLO TURISMO", CRT: "3",
+		EnderEmit: cte.EnderecoEmitente{
 			XLgr: "AVENIDA DAS INDUSTRIAS", Nro: "2000", XBairro: "DISTRITO INDUSTRIAL",
 			CMun: 4314902, XMun: "PORTO ALEGRE", CEP: "91150000", UF: "RS",
-			CPais: 1058, XPais: "BRASIL",
 		},
 	}
 	c.InfCte.Toma = &cteos.Toma{
@@ -301,11 +300,10 @@ func montarConhecimento(notas int) *cte.CTe {
 
 	c.InfCte.Emit = cte.Emit{
 		CNPJ: "12345678000195", IE: "0961234567",
-		XNome: "TRANSPORTES EXEMPLO LTDA", XFant: "EXEMPLO CARGAS",
-		EnderEmit: cte.Endereco{
+		XNome: "TRANSPORTES EXEMPLO LTDA", XFant: "EXEMPLO CARGAS", CRT: "3",
+		EnderEmit: cte.EnderecoEmitente{
 			XLgr: "AVENIDA DAS INDUSTRIAS", Nro: "2000", XBairro: "DISTRITO INDUSTRIAL",
 			CMun: 4314902, XMun: "PORTO ALEGRE", CEP: "91150000", UF: "RS",
-			CPais: 1058, XPais: "BRASIL",
 		},
 	}
 	c.InfCte.Rem = &cte.Rem{

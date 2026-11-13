@@ -4,9 +4,9 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/mschunke/gonfe/evento"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/evento"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // SituacaoNFe é a situação de uma nota no resumo.

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 // Códigos de status devolvidos pela SEFAZ que a biblioteca interpreta.

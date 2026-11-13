@@ -5,7 +5,7 @@ import (
 	"encoding/xml"
 	"testing"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 func TestParseDecimalPreservaEscala(t *testing.T) {

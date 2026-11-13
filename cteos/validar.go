@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // Erro é uma inconsistência encontrada por [CTeOS.Validar].
@@ -170,7 +170,11 @@ func (c *CTeOS) validarEmitente() Erros {
 	if emit.IE == "" {
 		e = append(e, erro("emit.IE", "inscrição estadual é obrigatória"))
 	}
-	e = append(e, validarEndereco("emit.enderEmit", &emit.EnderEmit)...)
+	endereco := emit.EnderEmit.Endereco()
+	e = append(e, validarEndereco("emit.enderEmit", &endereco)...)
+	if emit.CRT != "1" && emit.CRT != "2" && emit.CRT != "3" && emit.CRT != "4" {
+		e = append(e, erro("emit.CRT", "regime tributário %q fora do leiaute (TCRT: 1, 2, 3 ou 4)", emit.CRT))
+	}
 	return e
 }
 

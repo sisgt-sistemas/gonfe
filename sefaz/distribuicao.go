@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/mschunke/gonfe/dfe"
-	"github.com/mschunke/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/dfe"
+	"github.com/sisgt-sistemas/gonfe/nfe"
 )
 
 // IntervaloEntreConsultasDFe é a espera recomendada entre duas chamadas

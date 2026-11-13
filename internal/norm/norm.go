@@ -21,7 +21,7 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 var (

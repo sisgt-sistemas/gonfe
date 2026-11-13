@@ -4,10 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/nfce"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/nfce"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // cupomExemplo monta uma NFC-e de balcão, no Simples Nacional, sem

@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 const (
@@ -44,10 +44,10 @@ func conhecimentoExemplo() *cte.CTe {
 		IE:    "0961234567",
 		XNome: "TRANSPORTES EXEMPLO LTDA",
 		XFant: "EXEMPLO CARGAS",
-		EnderEmit: cte.Endereco{
+		CRT:   "3",
+		EnderEmit: cte.EnderecoEmitente{
 			XLgr: "AVENIDA DAS INDUSTRIAS", Nro: "2000", XBairro: "DISTRITO INDUSTRIAL",
 			CMun: 4314902, XMun: "PORTO ALEGRE", CEP: "91150000", UF: "RS",
-			CPais: 1058, XPais: "BRASIL",
 		},
 	}
 	c.InfCte.Rem = &cte.Rem{
@@ -190,7 +190,7 @@ func TestXMLTemNamespaceDoCTe(t *testing.T) {
 		"<modal>01</modal>",
 		"<toma3><toma>0</toma></toma3>",
 		"<vTPrest>1000.00</vTPrest>",
-		"<pICMS>12.0000</pICMS>",
+		"<pICMS>12.00</pICMS>",
 		"<vICMS>120.00</vICMS>",
 		`<infModal versaoModal="4.00">`,
 		"<RNTRC>12345678</RNTRC>",
@@ -608,5 +608,16 @@ func TestSemEmitenteNaoGeraChave(t *testing.T) {
 	c.InfCte.Ide.DhEmi = tipos.DataHora{}
 	if err := c.Preparar(); err == nil {
 		t.Error("sem data de emissão a chave não pode ser montada")
+	}
+}
+
+// O regime tributário do emitente é obrigatório no leiaute 4.00 (TCRT: 1 a 4).
+func TestValidarExigeORegimeDoEmitente(t *testing.T) {
+	for _, crt := range []string{"", "9"} {
+		c := conhecimentoExemplo()
+		c.InfCte.Emit.CRT = crt
+		if _, ok := camposComErro(t, c.Validar())["emit.CRT"]; !ok {
+			t.Errorf("CRT %q passou", crt)
+		}
 	}
 }

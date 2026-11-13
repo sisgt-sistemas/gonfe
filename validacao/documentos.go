@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 // ErrDocumentoInvalido é a base dos erros devolvidos por este pacote.

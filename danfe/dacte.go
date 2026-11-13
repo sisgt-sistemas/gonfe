@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/chave"
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // alturaDocOrig é o espaço vertical de cada linha da tabela de documentos

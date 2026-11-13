@@ -8,11 +8,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/dfe"
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/dfe"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func envelopeDeDistribuicao(t *testing.T, cStat int, motivo, ultNSU, maxNSU string, docs ...[2]string) string {

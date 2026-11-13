@@ -1,16 +1,20 @@
 # GoNFE
 
-[![CI](https://github.com/mschunke/gonfe/actions/workflows/ci.yml/badge.svg)](https://github.com/mschunke/gonfe/actions/workflows/ci.yml)
-[![Go Reference](https://pkg.go.dev/badge/github.com/mschunke/gonfe.svg)](https://pkg.go.dev/github.com/mschunke/gonfe)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mschunke/gonfe)](https://goreportcard.com/report/github.com/mschunke/gonfe)
+[![CI](https://github.com/sisgt-sistemas/gonfe/actions/workflows/ci.yml/badge.svg)](https://github.com/sisgt-sistemas/gonfe/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/sisgt-sistemas/gonfe.svg)](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe)
+[![Go Report Card](https://goreportcard.com/badge/github.com/sisgt-sistemas/gonfe)](https://goreportcard.com/report/github.com/sisgt-sistemas/gonfe)
 [![Licença MIT](https://img.shields.io/badge/licença-MIT-blue.svg)](LICENSE)
+
+> Fork de [mschunke/gonfe](https://github.com/mschunke/gonfe) (licença MIT), mantido pela SISGT Sistemas para o
+> TMS dela. Diferenças: o caminho do módulo é `github.com/sisgt-sistemas/gonfe` e há o pacote [`xsd`](xsd), que
+> valida os documentos contra os esquemas oficiais nos testes.
 
 Biblioteca em Go para emissão de documentos fiscais eletrônicos brasileiros,
 seguindo os padrões da Receita Federal e das Secretarias de Fazenda estaduais.
 
-**Documentação:** <https://mschunke.github.io/gonfe/> ·
+**Documentação:** <https://sisgt-sistemas.github.io/gonfe/> ·
 **In English:** [README.en.md](README.en.md) ·
-**Referência da API:** <https://pkg.go.dev/github.com/mschunke/gonfe>
+**Referência da API:** <https://pkg.go.dev/github.com/sisgt-sistemas/gonfe>
 
 ## O que já funciona
 
@@ -49,7 +53,7 @@ PDF e o ciclo de vida posterior — correção, cancelamento e inutilização.
 ## Instalação
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 Requer Go 1.23 ou mais recente.
@@ -64,11 +68,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/mschunke/gonfe/certificado"
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/sefaz"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/certificado"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/sefaz"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
 )
 
 func main() {
@@ -166,21 +170,21 @@ canc, _ := evento.NovoCancelamento(evento.DadosCancelamento{
 
 | Pacote | Responsabilidade |
 | --- | --- |
-| [`nfe`](https://pkg.go.dev/github.com/mschunke/gonfe/nfe) | Modelo de dados 4.00, cálculo de totais, validação, montagem de lote e de `nfeProc` |
-| [`nfce`](https://pkg.go.dev/github.com/mschunke/gonfe/nfce) | QR Code versão 2 e URLs de consulta da NFC-e |
-| [`evento`](https://pkg.go.dev/github.com/mschunke/gonfe/evento) | Cancelamento, carta de correção, manifestação do destinatário e inutilização |
-| [`cte`](https://pkg.go.dev/github.com/mschunke/gonfe/cte) | Conhecimento de Transporte modelo 57, leiaute 4.00 |
-| [`cteos`](https://pkg.go.dev/github.com/mschunke/gonfe/cteos) | CT-e Outros Serviços modelo 67: pessoas, valores e excesso de bagagem |
-| [`mdfe`](https://pkg.go.dev/github.com/mschunke/gonfe/mdfe) | Manifesto de Documentos Fiscais modelo 58, com encerramento de viagem |
-| [`danfe`](https://pkg.go.dev/github.com/mschunke/gonfe/danfe) | DANFE, cupom da NFC-e, DACTE e DAMDFE em PDF |
-| [`dfe`](https://pkg.go.dev/github.com/mschunke/gonfe/dfe) | Distribuição de DF-e: documentos de interesse do CNPJ |
-| [`sefaz`](https://pkg.go.dev/github.com/mschunke/gonfe/sefaz) | Endereços por UF, cliente SOAP 1.2 com TLS mútuo e operações |
-| [`xmldsig`](https://pkg.go.dev/github.com/mschunke/gonfe/xmldsig) | Assinatura e verificação no perfil da SEFAZ |
-| [`certificado`](https://pkg.go.dev/github.com/mschunke/gonfe/certificado) | Certificados A1 em PKCS#12, com extração dos OIDs da ICP-Brasil |
-| [`chave`](https://pkg.go.dev/github.com/mschunke/gonfe/chave) | Chave de acesso de 44 dígitos |
-| [`tipos`](https://pkg.go.dev/github.com/mschunke/gonfe/tipos) | Decimal de precisão fixa, data e data/hora do leiaute |
-| [`validacao`](https://pkg.go.dev/github.com/mschunke/gonfe/validacao) | CPF, CNPJ (inclusive alfanumérico) e formato de inscrição estadual |
-| [`uf`](https://pkg.go.dev/github.com/mschunke/gonfe/uf) | Códigos do IBGE, nomes e fusos horários |
+| [`nfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/nfe) | Modelo de dados 4.00, cálculo de totais, validação, montagem de lote e de `nfeProc` |
+| [`nfce`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/nfce) | QR Code versão 2 e URLs de consulta da NFC-e |
+| [`evento`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/evento) | Cancelamento, carta de correção, manifestação do destinatário e inutilização |
+| [`cte`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cte) | Conhecimento de Transporte modelo 57, leiaute 4.00 |
+| [`cteos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/cteos) | CT-e Outros Serviços modelo 67: pessoas, valores e excesso de bagagem |
+| [`mdfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/mdfe) | Manifesto de Documentos Fiscais modelo 58, com encerramento de viagem |
+| [`danfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/danfe) | DANFE, cupom da NFC-e, DACTE e DAMDFE em PDF |
+| [`dfe`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/dfe) | Distribuição de DF-e: documentos de interesse do CNPJ |
+| [`sefaz`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/sefaz) | Endereços por UF, cliente SOAP 1.2 com TLS mútuo e operações |
+| [`xmldsig`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/xmldsig) | Assinatura e verificação no perfil da SEFAZ |
+| [`certificado`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/certificado) | Certificados A1 em PKCS#12, com extração dos OIDs da ICP-Brasil |
+| [`chave`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/chave) | Chave de acesso de 44 dígitos |
+| [`tipos`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/tipos) | Decimal de precisão fixa, data e data/hora do leiaute |
+| [`validacao`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/validacao) | CPF, CNPJ (inclusive alfanumérico) e formato de inscrição estadual |
+| [`uf`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/uf) | Códigos do IBGE, nomes e fusos horários |
 
 ## Antes de usar em produção
 

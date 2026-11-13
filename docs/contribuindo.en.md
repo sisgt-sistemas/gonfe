@@ -2,7 +2,7 @@
 
 Thank you for your interest. This page summarises what is useful to contribute
 and how; the full document is in
-[CONTRIBUTING.md](https://github.com/mschunke/gonfe/blob/main/CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/sisgt-sistemas/gonfe/blob/main/CONTRIBUTING.md).
 
 ## What helps most
 
@@ -20,7 +20,7 @@ Nacional and tax substitution. Deferral, interstate splitting, exports and
 state-specific regimes have seen less use.
 
 **The pending items.** The technical plan for each is in the
-[HANDOFF](https://github.com/mschunke/gonfe/blob/main/HANDOFF.md), with where to
+[HANDOFF](https://github.com/sisgt-sistemas/gonfe/blob/main/HANDOFF.md), with where to
 change things, the traps already paid for, and how to know you are done. Before
 starting anything large, open an issue to agree on the approach — the shared
 infrastructure already exists and is worth reusing.
@@ -28,7 +28,7 @@ infrastructure already exists and is worth reusing.
 ## Running the tests
 
 ```bash
-git clone https://github.com/mschunke/gonfe
+git clone https://github.com/sisgt-sistemas/gonfe
 cd gonfe
 go test ./...
 ```
@@ -85,4 +85,4 @@ than a missing one.
 
 If you find a vulnerability — something that lets someone forge a signature, or
 leak the private key or the CSC — do not open a public issue. See
-[SECURITY.md](https://github.com/mschunke/gonfe/blob/main/SECURITY.md).
+[SECURITY.md](https://github.com/sisgt-sistemas/gonfe/blob/main/SECURITY.md).

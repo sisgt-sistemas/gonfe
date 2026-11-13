@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/nfe"
-	"github.com/mschunke/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
 )
 
 // validarPreparada roda o preparo e devolve o resultado da validação. Um erro

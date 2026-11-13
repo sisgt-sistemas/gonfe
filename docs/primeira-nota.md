@@ -221,7 +221,7 @@ preservando byte a byte os dados que foram assinados.
 
 O exemplo executável, com tratamento de erro e leitura de variáveis de
 ambiente, está em
-[`exemplos/emitir-nfe`](https://github.com/mschunke/gonfe/blob/main/exemplos/emitir-nfe/main.go).
+[`exemplos/emitir-nfe`](https://github.com/sisgt-sistemas/gonfe/blob/main/exemplos/emitir-nfe/main.go).
 
 ```bash
 export GONFE_CERT=./certificado.pfx

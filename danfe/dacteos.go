@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mschunke/gonfe/cte"
-	"github.com/mschunke/gonfe/cteos"
-	"github.com/mschunke/gonfe/internal/pdf"
-	"github.com/mschunke/gonfe/validacao"
+	"github.com/sisgt-sistemas/gonfe/cte"
+	"github.com/sisgt-sistemas/gonfe/cteos"
+	"github.com/sisgt-sistemas/gonfe/internal/pdf"
+	"github.com/sisgt-sistemas/gonfe/validacao"
 )
 
 // GerarDACTEOS produz o documento auxiliar a partir do XML de distribuição do

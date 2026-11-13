@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // Ide é o grupo B do leiaute: identificação da nota fiscal.
 type Ide struct {

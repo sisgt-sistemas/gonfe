@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/dfe"
-	"github.com/mschunke/gonfe/evento"
-	"github.com/mschunke/gonfe/nfe"
+	"github.com/sisgt-sistemas/gonfe/dfe"
+	"github.com/sisgt-sistemas/gonfe/evento"
+	"github.com/sisgt-sistemas/gonfe/nfe"
 )
 
 const chaveExemplo = "43260312345678000195550010000012341876543211"

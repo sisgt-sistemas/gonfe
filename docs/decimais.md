@@ -21,7 +21,7 @@ formatado com duas casas o erro some, mas quando ele participa de uma
 comparação, de uma diferença ou de mais uma multiplicação, o centavo aparece —
 e a SEFAZ rejeita a nota por soma que não fecha.
 
-Com [`tipos.Decimal`](https://pkg.go.dev/github.com/mschunke/gonfe/tipos#Decimal)
+Com [`tipos.Decimal`](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe/tipos#Decimal)
 o mesmo laço dá exatamente `7.00`.
 
 ## Como funciona

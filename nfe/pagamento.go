@@ -1,6 +1,6 @@
 package nfe
 
-import "github.com/mschunke/gonfe/tipos"
+import "github.com/sisgt-sistemas/gonfe/tipos"
 
 // Cobr é o grupo Y: fatura e duplicatas da nota.
 type Cobr struct {

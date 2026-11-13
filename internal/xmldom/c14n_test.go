@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/internal/xmldom"
+	"github.com/sisgt-sistemas/gonfe/internal/xmldom"
 )
 
 func canonicalizar(t *testing.T, entrada string, opc xmldom.OpcoesC14N) string {

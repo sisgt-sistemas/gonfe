@@ -4,7 +4,7 @@ Biblioteca em Go para emissão de documentos fiscais eletrônicos brasileiros,
 seguindo os padrões da Receita Federal e das Secretarias de Fazenda estaduais.
 
 ```bash
-go get github.com/mschunke/gonfe
+go get github.com/sisgt-sistemas/gonfe
 ```
 
 ## O que já funciona
@@ -78,7 +78,7 @@ go get github.com/mschunke/gonfe
 
 Todo documento que a biblioteca emite pode também ser transmitido, corrigido,
 cancelado e impresso. O que falta está registrado no
-[HANDOFF](https://github.com/mschunke/gonfe/blob/main/HANDOFF.md), com o plano de
+[HANDOFF](https://github.com/sisgt-sistemas/gonfe/blob/main/HANDOFF.md), com o plano de
 cada item.
 
 ## Por que mais uma biblioteca
@@ -123,7 +123,7 @@ acesso com o dígito verificador. `Validar` confere estrutura, dígitos
 verificadores e somatórios antes de gastar uma ida à SEFAZ.
 
 [:octicons-arrow-right-24: Comece pela primeira nota](primeira-nota.md){ .md-button .md-button--primary }
-[:octicons-arrow-right-24: Referência da API](https://pkg.go.dev/github.com/mschunke/gonfe){ .md-button }
+[:octicons-arrow-right-24: Referência da API](https://pkg.go.dev/github.com/sisgt-sistemas/gonfe){ .md-button }
 
 ## Antes de produção
 

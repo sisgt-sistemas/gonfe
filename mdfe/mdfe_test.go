@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mschunke/gonfe/internal/certtest"
-	"github.com/mschunke/gonfe/mdfe"
-	"github.com/mschunke/gonfe/tipos"
-	"github.com/mschunke/gonfe/uf"
-	"github.com/mschunke/gonfe/xmldsig"
+	"github.com/sisgt-sistemas/gonfe/internal/certtest"
+	"github.com/sisgt-sistemas/gonfe/mdfe"
+	"github.com/sisgt-sistemas/gonfe/tipos"
+	"github.com/sisgt-sistemas/gonfe/uf"
+	"github.com/sisgt-sistemas/gonfe/xmldsig"
 )
 
 const (
