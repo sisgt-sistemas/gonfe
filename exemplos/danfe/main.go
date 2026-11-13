@@ -243,7 +243,7 @@ func montarFretamento() *cteos.CTeOS {
 			Prop: &cteos.Proprietario{
 				CNPJ: "99999999000191", TAF: "9876543210",
 				XNome: "LOCADORA DE ONIBUS EXEMPLO LTDA", IE: "0987654321",
-				UF: "RS", TpProp: cteos.ProprietarioOutrosOperadores,
+				UF: "RS", TpProp: cteos.ProprietarioOutros,
 			},
 		},
 		InfFretamento: &cteos.InfFretamento{

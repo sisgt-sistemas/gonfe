@@ -21,6 +21,12 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 - **Incompatível:** `cte.Emit.EnderEmit` passa a ser `cte.EnderecoEmitente`
   (`TEndeEmi`: sem `cPais` e `xPais`, com `fone`), como o esquema pede; vale
   também para o CT-e OS.
+- **Incompatível:** o tipo do proprietário do CT-e OS (`tpProp`) segue o leiaute:
+  `ProprietarioTACAgregado` (0), `ProprietarioTACIndependente` (1) e
+  `ProprietarioOutros` (2). Antes os códigos tinham o significado trocado e
+  havia um 3, que o esquema recusa.
+- **Incompatível:** o veículo do CT-e OS perde o `CInt`, que não existe no
+  esquema do modal rodoviário de outros serviços.
 
 ### Corrigido
 
@@ -29,6 +35,14 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 - As alíquotas do ICMS do CT-e (`pICMS`, `pRedBC`, `pICMSSTRet`,
   `pICMSOutraUF`, `pRedBCOutraUF`, `pICMSUFFim`, `pICMSInter`, `pFCPUFFim`) saem
   com duas casas (`TDec_0302`); com quatro, o esquema recusava.
+- CT-e OS: a raiz leva a `versao`, o `indIEToma` vem antes do `cMunIni` e o
+  veículo segue a ordem do esquema (placa, RENAVAM, prop, UF). O exemplo passa
+  a ser validado contra o esquema nos testes.
+- `Validar()` confere o nome do componente (até 15) no CT-e e no CT-e OS e a
+  descrição do serviço do CT-e OS (até 30).
+- Ler um `cteProc`, `mdfeProc` ou evento com o protocolo aberto e não fechado
+  (arquivo cortado) devolve erro, e não mais o documento como "ainda não
+  autorizado".
 
 ## [0.5.0] — 2026-08-17
 

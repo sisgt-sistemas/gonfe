@@ -58,7 +58,7 @@ func fretamentoExemplo() *cteos.CTeOS {
 	}
 
 	c.InfCte.VPrest.Comp = []cte.Componente{
-		{XNome: "SERVICO DE FRETAMENTO", VComp: tipos.D("2400.00")},
+		{XNome: "FRETAMENTO", VComp: tipos.D("2400.00")},
 		{XNome: "PEDAGIO", VComp: tipos.D("100.00")},
 	}
 
@@ -69,17 +69,17 @@ func fretamentoExemplo() *cteos.CTeOS {
 	}
 
 	c.InfCte.InfCTeNorm.InfServico = cteos.InfServico{
-		XDescServ: "FRETAMENTO EVENTUAL DE ONIBUS PARA EXCURSAO",
+		XDescServ: "FRETAMENTO EVENTUAL DE ONIBUS",
 		InfQ:      &cteos.InfQ{QCarga: tipos.D("42")},
 	}
 	c.InfCte.InfCTeNorm.InfModal.RodoOS = &cteos.RodoOS{
-		TAF: "1234567890",
+		TAF: "123456789012",
 		Veic: &cteos.Veiculo{
 			Placa: "ABC1D23", RENAVAM: "12345678901", UF: "RS",
 			Prop: &cteos.Proprietario{
-				CNPJ: "99999999000191", TAF: "9876543210",
+				CNPJ: "99999999000191", TAF: "987654321098",
 				XNome: "LOCADORA DE ONIBUS EXEMPLO LTDA", IE: "0987654321",
-				UF: "RS", TpProp: cteos.ProprietarioOutrosOperadores,
+				UF: "RS", TpProp: cteos.ProprietarioOutros,
 			},
 		},
 		InfFretamento: &cteos.InfFretamento{
@@ -150,7 +150,7 @@ func TestXMLTemARaizPropria(t *testing.T) {
 		t.Fatalf("XML: %v", err)
 	}
 
-	if !bytes.Contains(documento, []byte(`<CTeOS xmlns="`+cteos.Espaco+`">`)) {
+	if !bytes.Contains(documento, []byte(`<CTeOS xmlns="`+cteos.Espaco+`" versao="`+cteos.Versao+`">`)) {
 		t.Errorf("a raiz não é <CTeOS> no namespace do CT-e:\n%s", primeiros(documento, 200))
 	}
 	// O bloco assinado mantém o nome infCte, igual ao do modelo 57.
@@ -375,6 +375,18 @@ func TestValidarPegaOsErros(t *testing.T) {
 		{"sem descrição do serviço", func(c *cteos.CTeOS) {
 			c.InfCte.InfCTeNorm.InfServico.XDescServ = ""
 		}, "infCTeNorm.infServico.xDescServ"},
+		{"tipo de proprietário fora do leiaute", func(c *cteos.CTeOS) {
+			c.InfCte.InfCTeNorm.InfModal.RodoOS.Veic.Prop.TpProp = "3"
+		}, "infCTeNorm.infModal.rodoOS.veic.prop.tpProp"},
+		{"descrição do serviço além de 30", func(c *cteos.CTeOS) {
+			c.InfCte.InfCTeNorm.InfServico.XDescServ = strings.Repeat("A", 31)
+		}, "infCTeNorm.infServico.xDescServ"},
+		{"nome do componente além de 15", func(c *cteos.CTeOS) {
+			c.InfCte.VPrest.Comp[0].XNome = strings.Repeat("A", 16)
+		}, "vPrest.Comp[0].xNome"},
+		{"sem regime tributário", func(c *cteos.CTeOS) {
+			c.InfCte.Emit.CRT = ""
+		}, "emit.CRT"},
 		{"sem TAF nem registro estadual", func(c *cteos.CTeOS) {
 			c.InfCte.InfCTeNorm.InfModal.RodoOS.TAF = ""
 		}, "infCTeNorm.infModal.rodoOS"},
@@ -495,7 +507,7 @@ func TestTransporteDeValores(t *testing.T) {
 	c.InfCte.VPrest = base.InfCte.VPrest
 	c.InfCte.Imp = base.InfCte.Imp
 	c.InfCte.InfCTeNorm.InfServico = cteos.InfServico{
-		XDescServ: "TRANSPORTE DE VALORES ENTRE AGENCIAS",
+		XDescServ: "TRANSPORTE DE VALORES",
 		InfQ:      &cteos.InfQ{QCarga: tipos.D("3")},
 	}
 	c.InfCte.InfCTeNorm.InfModal.RodoOS = &cteos.RodoOS{

@@ -22,6 +22,7 @@ import (
 // aplicativo do contribuinte e o tipo de serviço informado.
 func Novo(servico TipoServico) *CTeOS {
 	return &CTeOS{
+		Versao: Versao,
 		InfCte: InfCte{
 			Versao: Versao,
 			Ide: Ide{

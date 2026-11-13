@@ -258,6 +258,8 @@ func (c *CTeOS) validarPrestacao() Erros {
 		for i, comp := range v.Comp {
 			if comp.XNome == "" {
 				e = append(e, erro(fmt.Sprintf("vPrest.Comp[%d].xNome", i), "nome do componente é obrigatório"))
+			} else if tamanho := len([]rune(comp.XNome)); tamanho > 15 {
+				e = append(e, erro(fmt.Sprintf("vPrest.Comp[%d].xNome", i), "nome do componente tem %d caracteres; o leiaute aceita até 15", tamanho))
 			}
 			soma = soma.Somar(comp.VComp)
 		}
@@ -308,6 +310,8 @@ func (c *CTeOS) validarNorm() Erros {
 
 	if n.InfServico.XDescServ == "" {
 		e = append(e, erro("infCTeNorm.infServico.xDescServ", "a descrição do serviço é obrigatória"))
+	} else if tamanho := len([]rune(n.InfServico.XDescServ)); tamanho > 30 {
+		e = append(e, erro("infCTeNorm.infServico.xDescServ", "a descrição do serviço tem %d caracteres; o leiaute aceita até 30", tamanho))
 	}
 	if q := n.InfServico.InfQ; q != nil && (q.QCarga.EhZero() || q.QCarga.Negativo()) {
 		e = append(e, erro("infCTeNorm.infServico.infQ.qCarga",
@@ -373,6 +377,10 @@ func (c *CTeOS) validarModal(m *InfModal) Erros {
 			}
 		}
 		if p := v.Prop; p != nil {
+			if p.TpProp != ProprietarioTACAgregado && p.TpProp != ProprietarioTACIndependente && p.TpProp != ProprietarioOutros {
+				e = append(e, erro("infCTeNorm.infModal.rodoOS.veic.prop.tpProp",
+					"tipo do proprietário %q fora do leiaute (0 TAC agregado, 1 TAC independente, 2 outros)", p.TpProp))
+			}
 			switch {
 			case p.CNPJ != "" && p.CPF != "":
 				e = append(e, erro("infCTeNorm.infModal.rodoOS.veic.prop",

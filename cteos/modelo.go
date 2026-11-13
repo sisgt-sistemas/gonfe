@@ -82,14 +82,14 @@ const (
 	FretamentoContinuo TipoFretamento = "2"
 )
 
-// TipoProprietario classifica o proprietário do veículo perante a ANTT.
+// TipoProprietario classifica o proprietário ou possuidor do veículo perante a ANTT (tpProp, cteModalRodoviarioOS):
+// 0 TAC agregado, 1 TAC independente, 2 outros.
 type TipoProprietario string
 
 const (
-	ProprietarioTAC              TipoProprietario = "0"
-	ProprietarioCooperativa      TipoProprietario = "1"
-	ProprietarioTACAgregado      TipoProprietario = "2"
-	ProprietarioOutrosOperadores TipoProprietario = "3"
+	ProprietarioTACAgregado     TipoProprietario = "0"
+	ProprietarioTACIndependente TipoProprietario = "1"
+	ProprietarioOutros          TipoProprietario = "2"
 )
 
 // ResponsavelSeguro identifica quem contratou o seguro.
@@ -105,6 +105,8 @@ const (
 // CTeOS é o documento completo, correspondente ao elemento raiz <CTeOS>.
 type CTeOS struct {
 	XMLName xml.Name `xml:"http://www.portalfiscal.inf.br/cte CTeOS"`
+	// Versao é a versão do leiaute, que o esquema do CT-e OS pede também na raiz.
+	Versao string `xml:"versao,attr"`
 
 	// InfCte são as informações do conhecimento, o bloco assinado. O elemento
 	// mantém o nome infCte, igual ao do modelo 57.
@@ -183,6 +185,8 @@ type Ide struct {
 	Modal cte.Modal `xml:"modal"`
 	// TpServ classifica a prestação: pessoas, valores ou excesso de bagagem.
 	TpServ TipoServico `xml:"tpServ"`
+	// IndIEToma indica a situação do tomador quanto à inscrição estadual.
+	IndIEToma cte.IndicadorIE `xml:"indIEToma"`
 	// CMunIni é o código do IBGE do município de início da prestação.
 	CMunIni int `xml:"cMunIni"`
 	// XMunIni é o nome do município de início.
@@ -195,8 +199,6 @@ type Ide struct {
 	XMunFim string `xml:"xMunFim"`
 	// UFFim é a UF de término.
 	UFFim string `xml:"UFFim" norm:"upper"`
-	// IndIEToma indica a situação do tomador quanto à inscrição estadual.
-	IndIEToma cte.IndicadorIE `xml:"indIEToma"`
 	// DhCont é a data e hora de entrada em contingência.
 	DhCont *tipos.DataHora `xml:"dhCont,omitempty"`
 	// XJust é a justificativa da contingência.
@@ -292,16 +294,14 @@ type RodoOS struct {
 
 // Veiculo é o veículo da prestação.
 type Veiculo struct {
-	// CInt é o código interno do veículo no sistema do emitente.
-	CInt string `xml:"cInt,omitempty"`
+	// Placa do veículo, sem hífen. A ordem dos campos é a do esquema: placa, RENAVAM, prop e UF.
+	Placa string `xml:"placa" norm:"upper"`
 	// RENAVAM do veículo.
 	RENAVAM string `xml:"RENAVAM,omitempty" norm:"num"`
-	// Placa do veículo, sem hífen.
-	Placa string `xml:"placa" norm:"upper"`
-	// UF de licenciamento do veículo.
-	UF string `xml:"UF,omitempty" norm:"upper"`
 	// Prop identifica o proprietário quando ele não é o emitente.
 	Prop *Proprietario `xml:"prop,omitempty"`
+	// UF de licenciamento do veículo.
+	UF string `xml:"UF,omitempty" norm:"upper"`
 }
 
 // Proprietario identifica o dono do veículo, quando não é o emitente.

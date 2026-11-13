@@ -29,11 +29,13 @@ type Esquema string
 // Os esquemas de documento e de modal. O infModal do CT-e e do MDF-e é xs:any com processContents="skip": o modal
 // se valida à parte, pelo esquema dele ([ValidarCTe] e [ValidarMDFe] fazem os dois).
 const (
-	CTe                 Esquema = "cte/cte_v4.00.xsd"
-	CTeSimp             Esquema = "cte/cteSimp_v4.00.xsd" // CT-e Simplificado (modelo 57, raiz CTeSimp)
-	CTeModalRodoviario  Esquema = "cte/cteModalRodoviario_v4.00.xsd"
-	MDFe                Esquema = "mdfe/mdfe_v3.00.xsd"
-	MDFeModalRodoviario Esquema = "mdfe/mdfeModalRodoviario_v3.00.xsd"
+	CTe                  Esquema = "cte/cte_v4.00.xsd"
+	CTeSimp              Esquema = "cte/cteSimp_v4.00.xsd" // CT-e Simplificado (modelo 57, raiz CTeSimp)
+	CTeOS                Esquema = "cte/cteOS_v4.00.xsd"   // CT-e OS (modelo 67)
+	CTeModalRodoviarioOS Esquema = "cte/cteModalRodoviarioOS_v4.00.xsd"
+	CTeModalRodoviario   Esquema = "cte/cteModalRodoviario_v4.00.xsd"
+	MDFe                 Esquema = "mdfe/mdfe_v3.00.xsd"
+	MDFeModalRodoviario  Esquema = "mdfe/mdfeModalRodoviario_v3.00.xsd"
 )
 
 // Os namespaces dos documentos.
@@ -110,6 +112,19 @@ func ValidarCTeSimp(documento []byte) error {
 		return err
 	}
 	return Validar(modal, CTeModalRodoviario)
+}
+
+// ValidarCTeOS confere um CT-e OS (assinado) contra o esquema dele e o modal rodoviário de outros serviços contra o
+// esquema do modal.
+func ValidarCTeOS(documento []byte) error {
+	if err := Validar(documento, CTeOS); err != nil {
+		return err
+	}
+	modal, err := Modal(documento, namespaceCTe)
+	if err != nil {
+		return err
+	}
+	return Validar(modal, CTeModalRodoviarioOS)
 }
 
 // ValidarMDFe confere um MDF-e (assinado) contra o esquema do documento e o modal rodoviário contra o esquema dele.

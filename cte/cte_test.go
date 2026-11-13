@@ -643,3 +643,12 @@ func TestLerCTeProcDistingueAusenteDeCortado(t *testing.T) {
 		t.Fatalf("um protocolo cortado passou como ausente: %v %v", prot, err)
 	}
 }
+
+// O nome do componente do valor da prestação cabe em 15 caracteres (TComp.xNome).
+func TestValidarNomeDoComponente(t *testing.T) {
+	c := conhecimentoExemplo()
+	c.InfCte.VPrest.Comp[0].XNome = strings.Repeat("A", 16)
+	if _, ok := camposComErro(t, c.Validar())["vPrest.Comp[0].xNome"]; !ok {
+		t.Fatal("um nome de componente de 16 caracteres passou")
+	}
+}

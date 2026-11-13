@@ -283,6 +283,8 @@ func (c *CTe) validarPrestacao() Erros {
 		for i, comp := range v.Comp {
 			if comp.XNome == "" {
 				e = append(e, erro(fmt.Sprintf("vPrest.Comp[%d].xNome", i), "nome do componente é obrigatório"))
+			} else if tamanho := len([]rune(comp.XNome)); tamanho > 15 {
+				e = append(e, erro(fmt.Sprintf("vPrest.Comp[%d].xNome", i), "nome do componente tem %d caracteres; o leiaute aceita até 15", tamanho))
 			}
 			soma = soma.Somar(comp.VComp)
 		}
