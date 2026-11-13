@@ -32,6 +32,7 @@ flowchart TD
 
     sefaz --> nfe
     sefaz --> cteos
+    sefaz --> ctesimp
     sefaz --> mdfe
     sefaz --> dfe
     sefaz --> cert
@@ -186,8 +187,8 @@ cliente.ConsumirDFe(ctx, ultimoNSU, aoReceber)
 
 O CT-e e o MDF-e têm endereços e nomes de serviço próprios, então têm clientes
 próprios: `sefaz.NovoClienteCTe` e `sefaz.NovoClienteMDFe`. O do CT-e atende aos
-dois modelos — 57 e 67 —, reconhecendo qual é pelo elemento raiz do documento
-assinado.
+dois modelos — 57 e 67 — e ao CT-e Simplificado (raiz `CTeSimp`, com recepção
+própria), reconhecendo qual é pelo elemento raiz do documento assinado.
 
 ## Blocos de base
 

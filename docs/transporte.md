@@ -293,12 +293,15 @@ Cada item leva as NF-e (`infNFe`, com as unidades de carga ou de transporte) ou,
 na subcontratação e no redespacho, os CT-e anteriores (`infDocAnt`). Os eventos
 são os do pacote `cte`.
 
-!!! warning "Ainda sem transmissão"
+A transmissão é a mesma chamada do CT-e: `sefaz.ClienteCTe.Autorizar` reconhece
+o `<CTeSimp>` e o envia à recepção própria do Simplificado (`CTeRecepcaoSimpV4`,
+NT 2024.002), e a resposta volta com o protocolo, que `ctesimp.MontarCTeSimpProc`
+junta ao documento.
 
-    O CT-e Simplificado tem serviço de recepção próprio, que o cliente da SEFAZ
-    ainda não implementa: `sefaz.ClienteCTe.Autorizar` recusa o documento com
-    `sefaz.ErrCTeSimpSemRecepcao`. Os grupos da reforma tributária (`IBSCBS`) e
-    o DACTE simplificado também ficam para depois.
+!!! warning "Ainda fora"
+
+    Os grupos da reforma tributária (`IBSCBS`) e o DACTE simplificado ficam para
+    depois.
 
 ## MDF-e
 
@@ -444,7 +447,7 @@ Os detalhes de cada leiaute estão em [Documentos auxiliares](danfe.md).
 | MDF-e modelo 58, leiaute 3.00 | Modelo completo, modal rodoviário completo |
 | MDF-e — eventos | Encerramento, cancelamento e inclusão de condutor |
 | DACTE, DACTE OS e DAMDFE em PDF | Completos — veja [Documentos auxiliares](danfe.md) |
-| Cliente SEFAZ do CT-e e do CT-e OS | Status, autorização e consulta |
+| Cliente SEFAZ do CT-e, do CT-e OS e do CT-e Simplificado | Status, autorização e consulta; o Simplificado pela recepção própria, ainda sem rodagem em campo |
 | Cliente SEFAZ do MDF-e | Status, autorização, consulta, eventos e não encerrados |
 
 !!! warning "Endereços dos serviços"
@@ -461,3 +464,6 @@ Os detalhes de cada leiaute estão em [Documentos auxiliares](danfe.md).
         },
     })
     ```
+
+    O CT-e Simplificado tem chave própria, `sefaz.ServicoCTeRecepcaoSimp`:
+    sobrepor a recepção do CT-e não muda o endereço dele.

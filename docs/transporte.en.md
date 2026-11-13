@@ -286,12 +286,15 @@ Each item carries the NF-e (`infNFe`, with the cargo or transport units) or, for
 subcontracting and redispatch, the previous CT-e (`infDocAnt`). Events are those
 of the `cte` package.
 
-!!! warning "No transmission yet"
+Transmission is the same CT-e call: `sefaz.ClienteCTe.Autorizar` recognises the
+`<CTeSimp>` and sends it to the Simplificado's own reception
+(`CTeRecepcaoSimpV4`, NT 2024.002), and the answer comes back with the
+authorisation protocol, which `ctesimp.MontarCTeSimpProc` attaches to the
+document.
 
-    The CT-e Simplificado has its own reception service, which the SEFAZ client
-    does not implement yet: `sefaz.ClienteCTe.Autorizar` refuses the document
-    with `sefaz.ErrCTeSimpSemRecepcao`. The tax reform groups (`IBSCBS`) and the
-    simplified DACTE also come later.
+!!! warning "Still out"
+
+    The tax reform groups (`IBSCBS`) and the simplified DACTE come later.
 
 ## MDF-e
 
@@ -437,7 +440,7 @@ The details of each layout are in [Auxiliary documents](danfe.md).
 | MDF-e model 58, layout 3.00 | Model complete, road modal complete |
 | MDF-e — events | Closing out, cancellation and driver addition |
 | DACTE, DACTE OS and DAMDFE as PDF | Complete — see [Auxiliary documents](danfe.md) |
-| CT-e and CT-e OS SEFAZ client | Status, authorisation and lookup |
+| CT-e, CT-e OS and CT-e Simplificado SEFAZ client | Status, authorisation and lookup; the Simplificado through its own reception, not yet tried in the field |
 | MDF-e SEFAZ client | Status, authorisation, lookup, events and open manifests |
 
 !!! warning "Service endpoints"
@@ -454,3 +457,6 @@ The details of each layout are in [Auxiliary documents](danfe.md).
         },
     })
     ```
+
+    The CT-e Simplificado has a key of its own, `sefaz.ServicoCTeRecepcaoSimp`:
+    overriding the CT-e reception does not change its endpoint.

@@ -14,6 +14,7 @@ import (
 	"github.com/sisgt-sistemas/gonfe/chave"
 	"github.com/sisgt-sistemas/gonfe/cte"
 	"github.com/sisgt-sistemas/gonfe/cteos"
+	"github.com/sisgt-sistemas/gonfe/ctesimp"
 	"github.com/sisgt-sistemas/gonfe/tipos"
 	"github.com/sisgt-sistemas/gonfe/uf"
 )
@@ -34,12 +35,16 @@ const (
 	ServicoCTeConsulta ServicoCTe = "CTeConsultaV4"
 	// ServicoCTeEvento registra eventos do CT-e.
 	ServicoCTeEvento ServicoCTe = "CTeRecepcaoEventoV4"
+	// ServicoCTeRecepcaoSimp autoriza um CT-e Simplificado (NT 2024.002): recepção
+	// síncrona própria, com a mensagem comprimida como a do CT-e e o retorno
+	// retCTeSimp.
+	ServicoCTeRecepcaoSimp ServicoCTe = "CTeRecepcaoSimpV4"
 )
 
 // ServicosCTe lista os serviços implementados.
 func ServicosCTe() []ServicoCTe {
 	return []ServicoCTe{
-		ServicoCTeStatus, ServicoCTeRecepcao, ServicoCTeConsulta, ServicoCTeEvento,
+		ServicoCTeStatus, ServicoCTeRecepcao, ServicoCTeConsulta, ServicoCTeEvento, ServicoCTeRecepcaoSimp,
 	}
 }
 
@@ -75,25 +80,31 @@ var autorizadorCTeDaUF = map[uf.UF]AutorizadorCTe{
 // caminhosCTeASMX é o formato de quem expõe os serviços como páginas .asmx sob
 // um diretório por serviço.
 var caminhosCTeASMX = map[ServicoCTe]string{
-	ServicoCTeStatus:   "CTeStatusServicoV4/CTeStatusServicoV4.asmx",
-	ServicoCTeRecepcao: "CTeRecepcaoSincV4/CTeRecepcaoSincV4.asmx",
-	ServicoCTeConsulta: "CTeConsultaV4/CTeConsultaV4.asmx",
-	ServicoCTeEvento:   "CTeRecepcaoEventoV4/CTeRecepcaoEventoV4.asmx",
+	ServicoCTeStatus:       "CTeStatusServicoV4/CTeStatusServicoV4.asmx",
+	ServicoCTeRecepcao:     "CTeRecepcaoSincV4/CTeRecepcaoSincV4.asmx",
+	ServicoCTeConsulta:     "CTeConsultaV4/CTeConsultaV4.asmx",
+	ServicoCTeEvento:       "CTeRecepcaoEventoV4/CTeRecepcaoEventoV4.asmx",
+	ServicoCTeRecepcaoSimp: "CTeRecepcaoSimpV4/CTeRecepcaoSimpV4.asmx",
 }
 
 // caminhosCTeServices é o formato de quem expõe os serviços sem extensão.
 var caminhosCTeServices = map[ServicoCTe]string{
-	ServicoCTeStatus:   "CTeStatusServicoV4",
-	ServicoCTeRecepcao: "CTeRecepcaoSincV4",
-	ServicoCTeConsulta: "CTeConsultaV4",
-	ServicoCTeEvento:   "CTeRecepcaoEventoV4",
+	ServicoCTeStatus:       "CTeStatusServicoV4",
+	ServicoCTeRecepcao:     "CTeRecepcaoSincV4",
+	ServicoCTeConsulta:     "CTeConsultaV4",
+	ServicoCTeEvento:       "CTeRecepcaoEventoV4",
+	ServicoCTeRecepcaoSimp: "CTeRecepcaoSimpV4",
 }
 
 type conjuntoCTe struct {
 	producao    string
 	homologacao string
 	caminhos    map[ServicoCTe]string
+	// fora são os serviços publicados fora do prefixo comum, com o endereço inteiro.
+	fora map[ServicoCTe]enderecosCTe
 }
+
+type enderecosCTe struct{ producao, homologacao string }
 
 // endpointsCTe reproduz os endereços publicados no Portal do CT-e. Como na
 // NF-e, confira-os antes de entrar em produção e sobreponha em
@@ -113,20 +124,22 @@ var endpointsCTe = map[AutorizadorCTe]conjuntoCTe{
 		producao:    "https://nfe.fazenda.sp.gov.br/CTeWS/WS/",
 		homologacao: "https://homologacao.nfe.fazenda.sp.gov.br/CTeWS/WS/",
 		caminhos: map[ServicoCTe]string{
-			ServicoCTeStatus:   "CTeStatusServicoV4.asmx",
-			ServicoCTeRecepcao: "CTeRecepcaoSincV4.asmx",
-			ServicoCTeConsulta: "CTeConsultaV4.asmx",
-			ServicoCTeEvento:   "CTeRecepcaoEventoV4.asmx",
+			ServicoCTeStatus:       "CTeStatusServicoV4.asmx",
+			ServicoCTeRecepcao:     "CTeRecepcaoSincV4.asmx",
+			ServicoCTeConsulta:     "CTeConsultaV4.asmx",
+			ServicoCTeEvento:       "CTeRecepcaoEventoV4.asmx",
+			ServicoCTeRecepcaoSimp: "CTeRecepcaoSimpV4.asmx",
 		},
 	},
 	AutorizadorCTeSVCSP: {
 		producao:    "https://nfe.fazenda.sp.gov.br/CTeWS/WS/",
 		homologacao: "https://homologacao.nfe.fazenda.sp.gov.br/CTeWS/WS/",
 		caminhos: map[ServicoCTe]string{
-			ServicoCTeStatus:   "CTeStatusServicoV4.asmx",
-			ServicoCTeRecepcao: "CTeRecepcaoSincV4.asmx",
-			ServicoCTeConsulta: "CTeConsultaV4.asmx",
-			ServicoCTeEvento:   "CTeRecepcaoEventoV4.asmx",
+			ServicoCTeStatus:       "CTeStatusServicoV4.asmx",
+			ServicoCTeRecepcao:     "CTeRecepcaoSincV4.asmx",
+			ServicoCTeConsulta:     "CTeConsultaV4.asmx",
+			ServicoCTeEvento:       "CTeRecepcaoEventoV4.asmx",
+			ServicoCTeRecepcaoSimp: "CTeRecepcaoSimpV4.asmx",
 		},
 	},
 	AutorizadorCTeMG: {
@@ -143,6 +156,13 @@ var endpointsCTe = map[AutorizadorCTe]conjuntoCTe{
 		producao:    "https://cte.sefaz.mt.gov.br/ctews2/services/",
 		homologacao: "https://homologacao.sefaz.mt.gov.br/ctews2/services/",
 		caminhos:    caminhosCTeServices,
+		// O MT publica o CT-e Simplificado em outra aplicação (cte-ws, não ctews2).
+		fora: map[ServicoCTe]enderecosCTe{
+			ServicoCTeRecepcaoSimp: {
+				producao:    "https://cte.sefaz.mt.gov.br/cte-ws/services/CTeRecepcaoSimpV4",
+				homologacao: "https://homologacao.sefaz.mt.gov.br/cte-ws/services/CTeRecepcaoSimpV4",
+			},
+		},
 	},
 	AutorizadorCTePR: {
 		producao:    "https://cte.fazenda.pr.gov.br/cte4/",
@@ -168,6 +188,12 @@ func URLCTe(autorizador AutorizadorCTe, ambiente cte.Ambiente, servico ServicoCT
 	c, ok := endpointsCTe[autorizador]
 	if !ok {
 		return "", fmt.Errorf("sefaz: autorizador de CT-e %q desconhecido", autorizador)
+	}
+	if e, ok := c.fora[servico]; ok {
+		if ambiente == cte.Homologacao {
+			return e.homologacao, nil
+		}
+		return e.producao, nil
 	}
 	caminho, ok := c.caminhos[servico]
 	if !ok {
@@ -343,10 +369,6 @@ func (c *ClienteCTe) StatusServico(ctx context.Context) (*RetConsStatServCTe, er
 	return &resposta, nil
 }
 
-// ErrCTeSimpSemRecepcao diz que o CT-e Simplificado tem serviço de recepção próprio (o retorno é o retCTeSimp), que
-// este cliente ainda não implementa: o documento não vai para a recepção do CT-e.
-var ErrCTeSimpSemRecepcao = errors.New("sefaz: a recepção do CT-e Simplificado ainda não é implementada")
-
 // Autorizar transmite um conhecimento assinado para autorização.
 //
 // A recepção do leiaute 4.00 é síncrona e recebe um documento por vez,
@@ -354,8 +376,9 @@ var ErrCTeSimpSemRecepcao = errors.New("sefaz: a recepção do CT-e Simplificado
 // [cteos.MontarEnvioSincrono] fazem essa preparação. A resposta já traz o
 // protocolo.
 //
-// O mesmo serviço atende aos dois modelos: o 57 e o CT-e OS, modelo 67. O
-// modelo é reconhecido pelo elemento raiz do documento assinado.
+// O mesmo serviço atende aos dois modelos: o 57 e o CT-e OS, modelo 67. O CT-e
+// Simplificado vai para a recepção dele (CTeRecepcaoSimpV4), e a resposta volta
+// no mesmo formato. O documento é reconhecido pelo elemento raiz.
 func (c *ClienteCTe) Autorizar(ctx context.Context, cteAssinado []byte) (*RetCTe, error) {
 	// A ordem importa: "<CTe" também é prefixo de "<CTeOS" e de "<CTeSimp", então
 	// os dois precisam ser testados primeiro.
@@ -363,7 +386,7 @@ func (c *ClienteCTe) Autorizar(ctx context.Context, cteAssinado []byte) (*RetCTe
 	var err error
 	switch {
 	case bytes.Contains(cteAssinado, []byte("<CTeSimp")):
-		return nil, ErrCTeSimpSemRecepcao
+		return c.autorizarSimplificado(ctx, cteAssinado)
 	case bytes.Contains(cteAssinado, []byte("<CTeOS")):
 		mensagem, err = cteos.MontarEnvioSincrono(cteAssinado)
 	case bytes.Contains(cteAssinado, []byte("<CTe")):
@@ -384,6 +407,40 @@ func (c *ClienteCTe) Autorizar(ctx context.Context, cteAssinado []byte) (*RetCTe
 		return &resposta, err
 	}
 	return &resposta, nil
+}
+
+// autorizarSimplificado transmite um CT-e Simplificado pela recepção dele. O
+// retorno (retCTeSimp) tem os campos do retCTe e o mesmo protCTe.
+func (c *ClienteCTe) autorizarSimplificado(ctx context.Context, assinado []byte) (*RetCTe, error) {
+	mensagem, err := ctesimp.MontarEnvioSincrono(assinado)
+	if err != nil {
+		return nil, err
+	}
+	var simp RetCTeSimp
+	if err := c.chamar(ctx, ServicoCTeRecepcaoSimp, mensagem, &simp); err != nil {
+		return nil, err
+	}
+	resposta := &RetCTe{
+		Versao: simp.Versao, TpAmb: simp.TpAmb, VerAplic: simp.VerAplic, CStat: simp.CStat,
+		XMotivo: simp.XMotivo, CUF: simp.CUF, ProtCTe: simp.ProtCTe,
+	}
+	if err := erroDeStatusCTe(ServicoCTeRecepcaoSimp, resposta.CStat, resposta.XMotivo,
+		cte.StatusAutorizado); err != nil {
+		return resposta, err
+	}
+	return resposta, nil
+}
+
+// RetCTeSimp é a resposta da recepção do CT-e Simplificado (NT 2024.002, retCTeSimp).
+type RetCTeSimp struct {
+	XMLName  xml.Name     `xml:"retCTeSimp"`
+	Versao   string       `xml:"versao,attr"`
+	TpAmb    cte.Ambiente `xml:"tpAmb"`
+	CUF      int          `xml:"cUF"`
+	VerAplic string       `xml:"verAplic"`
+	CStat    int          `xml:"cStat"`
+	XMotivo  string       `xml:"xMotivo"`
+	ProtCTe  *cte.ProtCTe `xml:"protCTe,omitempty"`
 }
 
 // ConsultarCTe busca a situação de um conhecimento pela chave de acesso.
@@ -503,10 +560,11 @@ func montarEnvelopeCTe(servico ServicoCTe, mensagem []byte) []byte {
 
 func acaoCTe(s ServicoCTe) string {
 	operacoes := map[ServicoCTe]string{
-		ServicoCTeStatus:   "cteStatusServicoCT",
-		ServicoCTeRecepcao: "cteRecepcao",
-		ServicoCTeConsulta: "cteConsultaCT",
-		ServicoCTeEvento:   "cteRecepcaoEvento",
+		ServicoCTeStatus:       "cteStatusServicoCT",
+		ServicoCTeRecepcao:     "cteRecepcao",
+		ServicoCTeConsulta:     "cteConsultaCT",
+		ServicoCTeEvento:       "cteRecepcaoEvento",
+		ServicoCTeRecepcaoSimp: "cteRecepcaoSimp",
 	}
 	operacao, ok := operacoes[s]
 	if !ok {
@@ -525,6 +583,8 @@ func elementoRespostaCTe(s ServicoCTe) string {
 		return "retConsSitCTe"
 	case ServicoCTeEvento:
 		return "retEventoCTe"
+	case ServicoCTeRecepcaoSimp:
+		return "retCTeSimp"
 	default:
 		return ""
 	}

@@ -25,9 +25,12 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
   rodoviário; os grupos da reforma tributária ficam para depois. Os exemplos
   são validados contra o esquema oficial nos testes.
 - `cte.EmissaoContingenciaOffline` (tpEmis 2), que o leiaute 4.00 aceita.
-- `sefaz.ErrCTeSimpSemRecepcao`: o `ClienteCTe.Autorizar` recusa o CT-e
-  Simplificado, que tem recepção própria ainda não implementada, em vez de
-  montá-lo como CT-e.
+- Transmissão do CT-e Simplificado: `sefaz.ClienteCTe.Autorizar` reconhece o
+  `<CTeSimp>` e o envia à recepção própria (`CTeRecepcaoSimpV4`, método
+  `cteRecepcaoSimp`, NT 2024.002), com os endereços de produção e homologação
+  de todos os autorizadores conferidos no Portal do CT-e; a resposta
+  (`sefaz.RetCTeSimp`) volta como `RetCTe`, com o protocolo. Antes, o
+  documento era montado como CT-e e recusado sem explicação.
 - Pacote `xsd`: valida CT-e, CT-e Simplificado e MDF-e contra os esquemas
   oficiais (CT-e 4.00 da NT 2026.004 RTC v1.01; MDF-e 3.00b), embutidos, pelo
   `xmllint`. É ferramenta de teste e não usa CGO; sem `xmllint`, devolve

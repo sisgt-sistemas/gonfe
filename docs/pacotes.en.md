@@ -32,6 +32,7 @@ flowchart TD
 
     sefaz --> nfe
     sefaz --> cteos
+    sefaz --> ctesimp
     sefaz --> mdfe
     sefaz --> dfe
     sefaz --> cert
@@ -187,8 +188,9 @@ cliente.ConsumirDFe(ctx, ultimoNSU, aoReceber)
 
 The CT-e and the MDF-e have their own endpoints and service names, so they have
 their own clients: `sefaz.NovoClienteCTe` and `sefaz.NovoClienteMDFe`. The CT-e
-one serves both models — 57 and 67 — recognising which from the root element of
-the signed document.
+one serves both models — 57 and 67 — and the CT-e Simplificado (root `CTeSimp`,
+with its own reception), recognising which from the root element of the signed
+document.
 
 ## Building blocks
 

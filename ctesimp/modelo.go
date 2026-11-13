@@ -14,8 +14,8 @@
 // a assinatura e o formato da mensagem de envio (gzip e base64) também são os
 // mesmos, e os eventos (cancelamento, carta de correção) são os do pacote cte:
 // a raiz é `eventoCTe`, e o que muda é só a chave referenciada. O serviço de
-// recepção, não: o CT-e Simplificado tem o seu, com retorno próprio
-// (retCTeSimp), que o pacote sefaz ainda não implementa.
+// recepção, não: o CT-e Simplificado tem o seu (CTeRecepcaoSimpV4), com retorno
+// próprio (retCTeSimp); sefaz.ClienteCTe.Autorizar o escolhe pela raiz.
 //
 // # O que fica de fora
 //
