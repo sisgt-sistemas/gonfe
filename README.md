@@ -12,7 +12,7 @@
 Biblioteca em Go para emissão de documentos fiscais eletrônicos brasileiros,
 seguindo os padrões da Receita Federal e das Secretarias de Fazenda estaduais.
 
-**Documentação:** <https://sisgt-sistemas.github.io/gonfe/> ·
+**Documentação:** [docs/](docs/index.md) ·
 **In English:** [README.en.md](README.en.md) ·
 **Referência da API:** <https://pkg.go.dev/github.com/sisgt-sistemas/gonfe>
 

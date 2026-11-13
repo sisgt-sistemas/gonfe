@@ -13,7 +13,7 @@ A Go library for issuing Brazilian electronic fiscal documents, following the
 standards published by the Receita Federal and the state tax authorities
 (SEFAZ).
 
-**Documentation:** <https://sisgt-sistemas.github.io/gonfe/en/> ·
+**Documentation:** [docs/](docs/index.en.md) ·
 **API reference:** <https://pkg.go.dev/github.com/sisgt-sistemas/gonfe> ·
 **Em português:** [README.md](README.md)
 

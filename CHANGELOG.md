@@ -5,6 +5,11 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Alterado
+
+- A documentação não é mais publicada no GitHub Pages: os guias ficam em
+  `docs/` no repositório, e `mkdocs serve` continua servindo-os localmente.
+
 ### Corrigido
 
 - `make release` podia recusar uma seção "Não lançado" cheia como vazia: com
