@@ -266,7 +266,7 @@ type FerroEnv struct {
 
 // Duto é o modal dutoviário.
 type Duto struct {
-	VTar *tipos.Decimal `xml:"vTar,omitempty" dec:"4"`
+	VTar *tipos.Decimal `xml:"vTar,omitempty" dec:"6"`
 	DIni tipos.Data     `xml:"dIni"`
 	DFim tipos.Data     `xml:"dFim"`
 }
