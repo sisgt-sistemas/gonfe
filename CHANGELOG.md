@@ -5,6 +5,13 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Alterado
+
+- O CI fica mais leve: roda só no push em `develop` (o PR de release e o `main`
+  recebem o mesmo commit), com 4 jobs em vez de 10. Saem o macOS, que ficava na
+  fila sem runner, e os jobs que repetiam o `make ci`; corrida, cobertura e
+  `govulncheck` dividem um job.
+
 ## [1.0.1] — 2026-11-13
 
 ### Alterado

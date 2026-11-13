@@ -127,8 +127,8 @@ mkdocs serve
 1. Abra uma issue antes de mudanças grandes, para combinarmos a abordagem.
 2. Trabalhe em um branch `feat/…` ou `fix/…` a partir de `develop`. O `main`
    só guarda versões lançadas.
-3. Deixe o `make ci` verde. A CI roda também `-race`, `staticcheck`,
-   `govulncheck` e a matriz de sistemas e versões de Go.
+3. Deixe o `make ci` verde. A CI roda também `-race`, `govulncheck` e os
+   testes no Go 1.23 e no Windows.
 4. Escreva o commit em [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
    `<tipo>(<escopo>): <assunto>`, com o assunto em inglês, no imperativo, até
    72 caracteres, e o porquê no corpo. Se o commit corrige uma rejeição da

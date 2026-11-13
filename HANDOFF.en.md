@@ -22,9 +22,10 @@ Last updated: 18 August 2026, against v0.5.0.
 Plus DF-e distribution (NF-e only), voiding of number ranges, and taxpayer
 registration lookup.
 
-The suite passes on Linux, macOS and Windows, on Go 1.23, 1.24 and stable. CI
-runs `gofmt`, `go vet`, `staticcheck`, `govulncheck`, the race detector and
-coverage.
+CI runs on every push to `develop`: `make ci` in the container (`gofmt`,
+`go vet`, golangci-lint with `staticcheck`, tests), the tests on Linux with Go
+1.23 (the `go.mod` minimum) and on Windows with stable Go, the race detector,
+coverage and `govulncheck`.
 
 ## Conventions the code follows
 

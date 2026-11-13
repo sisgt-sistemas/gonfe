@@ -22,9 +22,10 @@ falta, em ordem de prioridade.
 Mais distribuição de DF-e (só da NF-e), inutilização de numeração e consulta de
 cadastro.
 
-A suíte passa em Linux, macOS e Windows, nas versões 1.23, 1.24 e estável do Go.
-O CI roda `gofmt`, `go vet`, `staticcheck`, `govulncheck`, detector de corrida e
-cobertura.
+O CI roda a cada push em `develop`: o `make ci` no container (`gofmt`, `go vet`,
+golangci-lint com o `staticcheck`, testes), os testes no Linux com Go 1.23 (o
+mínimo do `go.mod`) e no Windows com o Go estável, o detector de corrida, a
+cobertura e o `govulncheck`.
 
 ## Convenções que o código segue
 
