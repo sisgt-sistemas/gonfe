@@ -5,6 +5,8 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.0.1] — 2026-11-13
+
 ### Alterado
 
 - A documentação não é mais publicada no GitHub Pages: os guias ficam em
