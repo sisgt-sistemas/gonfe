@@ -5,6 +5,8 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.0.2] — 2026-11-13
+
 ### Alterado
 
 - O CI fica mais leve: roda só no push em `develop` (o PR de release e o `main`
