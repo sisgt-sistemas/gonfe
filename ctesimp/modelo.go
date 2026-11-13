@@ -172,7 +172,7 @@ type Compl struct {
 // Emit é o emitente — a transportadora. Difere do emitente do CT-e pela
 // inscrição estadual opcional e pela inscrição na SUFRAMA.
 type Emit struct {
-	CNPJ      string               `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string               `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string               `xml:"CPF,omitempty" norm:"num"`
 	IE        string               `xml:"IE,omitempty" norm:"upper"`
 	IEST      string               `xml:"IEST,omitempty" norm:"upper"`
@@ -191,7 +191,7 @@ type Toma struct {
 	Toma cte.Tomador `xml:"toma"`
 	// IndIEToma indica a situação do tomador quanto à inscrição estadual.
 	IndIEToma cte.IndicadorIE `xml:"indIEToma"`
-	CNPJ      string          `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string          `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string          `xml:"CPF,omitempty" norm:"num"`
 	IE        string          `xml:"IE,omitempty" norm:"upper"`
 	XNome     string          `xml:"xNome"`
@@ -225,7 +225,7 @@ type Det struct {
 
 // InfNFe é uma NF-e transportada na prestação.
 type InfNFe struct {
-	ChNFe string      `xml:"chNFe" norm:"num"`
+	ChNFe string      `xml:"chNFe" norm:"alnum"`
 	PIN   string      `xml:"PIN,omitempty" norm:"num"`
 	DPrev *tipos.Data `xml:"dPrev,omitempty"`
 	// InfUnidCarga e InfUnidTransp são alternativos: informe um dos dois, ou nenhum.
@@ -258,7 +258,7 @@ type Lacre struct {
 
 // InfDocAnt é um CT-e anterior, na subcontratação ou no redespacho.
 type InfDocAnt struct {
-	ChCTe   string        `xml:"chCTe" norm:"num"`
+	ChCTe   string        `xml:"chCTe" norm:"alnum"`
 	TpPrest TipoPrestacao `xml:"tpPrest"`
 	// InfNFeTranspParcial lista as NF-e transportadas, quando a prestação é parcial.
 	InfNFeTranspParcial []NFeParcial `xml:"infNFeTranspParcial,omitempty"`
@@ -266,12 +266,12 @@ type InfDocAnt struct {
 
 // NFeParcial é uma NF-e do documento anterior transportada nesta prestação.
 type NFeParcial struct {
-	ChNFe string `xml:"chNFe" norm:"num"`
+	ChNFe string `xml:"chNFe" norm:"alnum"`
 }
 
 // InfCteSub aponta o CT-e Simplificado substituído.
 type InfCteSub struct {
-	ChCte string `xml:"chCte" norm:"num"`
+	ChCte string `xml:"chCte" norm:"alnum"`
 	// IndAlteraToma é "1" quando a substituição troca o tomador.
 	IndAlteraToma string `xml:"indAlteraToma,omitempty"`
 }

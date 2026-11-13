@@ -135,3 +135,18 @@ func TestApenasDigitos(t *testing.T) {
 		}
 	}
 }
+
+func TestApenasAlfanumericos(t *testing.T) {
+	casos := map[string]string{
+		"12.ABC.345/01DE-35": "12ABC34501DE35",
+		"12.abc.345/01de-35": "12ABC34501DE35",
+		"12.345.678/0001-99": "12345678000199",
+		"ção":                "O", // acento e cedilha não são A–Z
+		"":                   "",
+	}
+	for entrada, esperado := range casos {
+		if got := norm.ApenasAlfanumericos(entrada); got != esperado {
+			t.Errorf("ApenasAlfanumericos(%q) = %q, queria %q", entrada, got, esperado)
+		}
+	}
+}

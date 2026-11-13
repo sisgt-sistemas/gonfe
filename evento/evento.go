@@ -134,11 +134,11 @@ type InfEvento struct {
 	// TpAmb distingue produção de homologação.
 	TpAmb nfe.Ambiente `xml:"tpAmb"`
 	// CNPJ de quem registra o evento.
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	// CPF de quem registra o evento, quando pessoa física.
 	CPF string `xml:"CPF,omitempty" norm:"num"`
 	// ChNFe é a chave de acesso da nota a que o evento se refere.
-	ChNFe string `xml:"chNFe" norm:"num"`
+	ChNFe string `xml:"chNFe" norm:"alnum"`
 	// DhEvento é a data e hora do registro, no fuso do autor.
 	DhEvento tipos.DataHora `xml:"dhEvento"`
 	// TpEvento é o código do evento.
@@ -172,7 +172,7 @@ type DetEvento struct {
 	// realizada.
 	XJust string `xml:"xJust,omitempty"`
 	// ChNFeRef é a chave da nota substituta, no cancelamento por substituição.
-	ChNFeRef string `xml:"chNFeRef,omitempty" norm:"num"`
+	ChNFeRef string `xml:"chNFeRef,omitempty" norm:"alnum"`
 
 	// Carta de correção.
 	XCorrecao string `xml:"xCorrecao,omitempty"`

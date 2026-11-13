@@ -173,3 +173,17 @@ func TestFormatadores(t *testing.T) {
 		}
 	}
 }
+
+// Um CNPJ alfanumérico com três letras tem só 11 dígitos, como o CPF: não pode cair na validação de CPF.
+func TestCPFouCNPJComCNPJDeOnzeDigitos(t *testing.T) {
+	const cnpj = "12ABC345010060" // dígitos calculados pela regra da NT 2025.001
+	if err := validacao.ValidarCPFouCNPJ(cnpj); err != nil {
+		t.Errorf("validacao.ValidarCPFouCNPJ(%s): %v", cnpj, err)
+	}
+	if err := validacao.ValidarCPF("529.982.247-2A"); err == nil {
+		t.Error("ValidarCPF aceitou letra")
+	}
+	if err := validacao.ValidarCPFouCNPJ("529.982.247-25"); err != nil {
+		t.Errorf("CPF válido recusado: %v", err)
+	}
+}

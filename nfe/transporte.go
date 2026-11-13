@@ -24,7 +24,7 @@ type Transp struct {
 
 // Transporta identifica a transportadora.
 type Transporta struct {
-	CNPJ   string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ   string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF    string `xml:"CPF,omitempty" norm:"num"`
 	XNome  string `xml:"xNome,omitempty"`
 	IE     string `xml:"IE,omitempty" norm:"upper"`

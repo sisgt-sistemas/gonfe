@@ -31,41 +31,98 @@ var padroesCode128 = [107]string{
 }
 
 const (
-	// inicioCode128C liga o modo C, que codifica dois dígitos por símbolo.
+	// inicioCode128A e inicioCode128C começam o código no conjunto A (letras e
+	// dígitos, um por símbolo) ou no C (dois dígitos por símbolo).
+	inicioCode128A = 103
 	inicioCode128C = 105
+	// trocaParaC e trocaParaA mudam o conjunto no meio do código.
+	trocaParaC = 99
+	trocaParaA = 101
 	// paradaCode128 encerra o código de barras.
 	paradaCode128 = 106
 )
 
-// CodigoDeBarras desenha a chave de acesso em Code 128 modo C, o padrão que o
-// DANFE exige.
+// ValoresCode128 codifica o texto (dígitos e letras maiúsculas) nos valores do
+// Code 128, com o início, o dígito de controle e a parada.
 //
-// O modo C codifica pares de dígitos, então a entrada precisa ter uma
-// quantidade par de dígitos — o que a chave de acesso, com 44, satisfaz.
-func (pg *Pagina) CodigoDeBarras(posX, posY, largura, altura float64, digitos string) error {
-	if len(digitos) == 0 {
-		return fmt.Errorf("pdf: código de barras vazio")
+// Segue o padrão híbrido da NT 2025.001 §6, que a chave de acesso com CNPJ
+// alfanumérico exige: começa no conjunto C, que codifica pares de dígitos; uma
+// letra, ou um dígito ímpar que sobra antes dela, passa ao conjunto A; volta ao
+// C diante de quatro ou mais dígitos seguidos (com quantidade ímpar, o primeiro
+// fica no A) ou de um par de dígitos no fim. Uma chave só de dígitos sai
+// inteira no conjunto C, como antes.
+func ValoresCode128(texto string) ([]int, error) {
+	if texto == "" {
+		return nil, fmt.Errorf("pdf: código de barras vazio")
 	}
-	if len(digitos)%2 != 0 {
-		return fmt.Errorf("pdf: o Code 128 modo C exige quantidade par de dígitos; recebi %d", len(digitos))
+	for i := 0; i < len(texto); i++ {
+		if !ehDigito(texto[i]) && (texto[i] < 'A' || texto[i] > 'Z') {
+			return nil, fmt.Errorf("pdf: %q fora do Code 128 da chave (dígitos e letras maiúsculas)", texto[i:i+1])
+		}
+	}
+	digitosDesde := func(i int) int {
+		n := 0
+		for i+n < len(texto) && ehDigito(texto[i+n]) {
+			n++
+		}
+		return n
 	}
 
-	valores := []int{inicioCode128C}
-	for i := 0; i < len(digitos); i += 2 {
-		par, err := strconv.Atoi(digitos[i : i+2])
-		if err != nil {
-			return fmt.Errorf("pdf: %q não é numérico: %w", digitos[i:i+2], err)
+	// A chave começa por dígitos e sai no conjunto C; um texto que começa por letra
+	// ou por um dígito só começa no A, sem gastar um símbolo de troca.
+	conjuntoC := digitosDesde(0) >= 2
+	valores := []int{inicioCode128A}
+	if conjuntoC {
+		valores[0] = inicioCode128C
+	}
+	for i := 0; i < len(texto); {
+		seguidos := digitosDesde(i)
+		if conjuntoC {
+			for ; seguidos >= 2; seguidos -= 2 {
+				par, _ := strconv.Atoi(texto[i : i+2])
+				valores = append(valores, par)
+				i += 2
+			}
+			if i < len(texto) {
+				valores = append(valores, trocaParaA)
+				conjuntoC = false
+			}
+			continue
 		}
-		valores = append(valores, par)
+		parNoFim := seguidos >= 2 && seguidos%2 == 0 && i+seguidos == len(texto)
+		if seguidos >= 4 || parNoFim {
+			if seguidos%2 == 1 {
+				valores = append(valores, int(texto[i])-32)
+				i++
+			}
+			valores = append(valores, trocaParaC)
+			conjuntoC = true
+			continue
+		}
+		// No conjunto A, o valor de um caractere é o código ASCII menos 32.
+		valores = append(valores, int(texto[i])-32)
+		i++
 	}
 
 	// O dígito de controle é a soma ponderada dos valores, com peso igual à
 	// posição a partir do símbolo de início, módulo 103.
-	soma := inicioCode128C
+	soma := valores[0]
 	for i, v := range valores[1:] {
 		soma += v * (i + 1)
 	}
-	valores = append(valores, soma%103, paradaCode128)
+	return append(valores, soma%103, paradaCode128), nil
+}
+
+func ehDigito(c byte) bool { return c >= '0' && c <= '9' }
+
+// CodigoDeBarras desenha a chave de acesso em Code 128, no padrão híbrido C e A
+// de [ValoresCode128]: só dígitos sai no modo C, como o DANFE sempre exigiu; com
+// as letras do CNPJ alfanumérico, alterna para o modo A.
+func (pg *Pagina) CodigoDeBarras(posX, posY, largura, altura float64, texto string) error {
+	valores, err := ValoresCode128(texto)
+	if err != nil {
+		return err
+	}
 
 	// A largura de um módulo sai da largura total dividida pelo número de
 	// módulos do código inteiro.

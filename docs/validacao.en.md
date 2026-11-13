@@ -113,12 +113,20 @@ RFB 2.229/2024, in which the first twelve positions may contain letters. The
 check-digit calculation uses each character's ASCII code minus 48, which makes
 the numeric CNPJ a particular case of the same algorithm.
 
-!!! note "Layout 4.00 is still numeric"
+The rest of the library follows Joint Technical Note 2025.001: CNPJ and access
+key fields keep their letters (normalisation upper-cases them and only strips
+punctuation), the access key accepts the pattern `[0-9]{6}[A-Z0-9]{12}[0-9]{26}`
+with the check digit computed by the same ASCII minus 48 rule, and the barcode
+on the auxiliary documents switches from Code 128 C to A for the letters.
 
-    An alphanumeric CNPJ that is valid for `validacao.ValidarCNPJ` may still be
-    rejected by SEFAZ: the `CNPJ` field in layout 4.00 still restricts input to
-    14 numeric digits. Adapting the NF-e to the alphanumeric format will come
-    through a Technical Note.
+!!! note "The MDF-e Id is still numeric"
+
+    The CT-e schemas (4.00 RTC) accept the alphanumeric CNPJ in every field,
+    including the `Id`. In the embedded MDF-e 3.00b schema, the CNPJ and the keys
+    of the carried documents accept letters, but the manifest `Id` is still
+    `MDFe[0-9]{44}`: an MDF-e from an issuer with an alphanumeric CNPJ is refused
+    until SEFAZ updates the schema. For the NF-e, the change came with NT
+    2026.004.
 
 ### State registration
 

@@ -28,6 +28,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
 	"github.com/sisgt-sistemas/gonfe/nfe"
 	"github.com/sisgt-sistemas/gonfe/tipos"
 )
@@ -85,7 +87,7 @@ func (c Consulta) elemento() (string, error) {
 	case c.NSU != "":
 		return "<consNSU><NSU>" + FormatarNSU(c.NSU) + "</NSU></consNSU>", nil
 	case c.Chave != "":
-		return "<consChNFe><chNFe>" + apenasDigitos(c.Chave) + "</chNFe></consChNFe>", nil
+		return "<consChNFe><chNFe>" + chave.Limpar(c.Chave) + "</chNFe></consChNFe>", nil
 	default:
 		// O NSU vazio equivale a zero: o começo da fila.
 		return "<distNSU><ultNSU>" + FormatarNSU(c.UltimoNSU) + "</ultNSU></distNSU>", nil
@@ -118,7 +120,7 @@ func MontarConsulta(ambiente nfe.Ambiente, codigoUFAutor int, cnpj, cpf string, 
 	case cnpj != "" && cpf != "":
 		return nil, errors.New("dfe: informe CNPJ ou CPF, nunca os dois")
 	case cnpj != "":
-		documento = "<CNPJ>" + apenasDigitos(cnpj) + "</CNPJ>"
+		documento = "<CNPJ>" + norm.ApenasAlfanumericos(cnpj) + "</CNPJ>"
 	case cpf != "":
 		documento = "<CPF>" + apenasDigitos(cpf) + "</CPF>"
 	default:

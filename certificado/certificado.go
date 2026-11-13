@@ -130,8 +130,9 @@ func (c *Certificado) RazaoSocial() string {
 	return nome
 }
 
-// CNPJ devolve o CNPJ do titular, com 14 dígitos e sem pontuação, ou string
-// vazia se o certificado for de pessoa física.
+// CNPJ devolve o CNPJ do titular, com 14 posições e sem pontuação, ou string
+// vazia se o certificado for de pessoa física. O CNPJ alfanumérico (letras
+// maiúsculas nas doze primeiras posições) é preservado.
 //
 // A busca começa pela extensão subjectAltName, onde a ICP-Brasil registra o
 // CNPJ sob o OID 2.16.76.1.3.3, e recorre ao sufixo do nome comum quando a
@@ -140,10 +141,23 @@ func (c *Certificado) CNPJ() string {
 	if v := c.otherName(oidCNPJ); len(v) >= 14 {
 		return v[:14]
 	}
-	if s := c.sufixoDoCN(); len(s) == 14 {
+	if s := c.sufixoDoCN(); padraoCNPJ(s) {
 		return s
 	}
 	return ""
+}
+
+// padraoCNPJ confere o TCnpj dos leiautes: [A-Z0-9]{12}[0-9]{2}.
+func padraoCNPJ(s string) bool {
+	if len(s) != 14 || !ehNumerico(s[12:]) {
+		return false
+	}
+	for i := 0; i < 12; i++ {
+		if (s[i] < '0' || s[i] > '9') && (s[i] < 'A' || s[i] > 'Z') {
+			return false
+		}
+	}
+	return true
 }
 
 // CPF devolve o CPF do titular pessoa física, com 11 dígitos e sem pontuação,
@@ -154,7 +168,7 @@ func (c *Certificado) CPF() string {
 	if v := c.otherName(oidPessoaFisica); len(v) >= 19 {
 		return v[8:19]
 	}
-	if s := c.sufixoDoCN(); len(s) == 11 {
+	if s := c.sufixoDoCN(); len(s) == 11 && ehNumerico(s) {
 		return s
 	}
 	return ""
@@ -175,15 +189,13 @@ func (c *Certificado) sufixoDoCN() string {
 	if i < 0 {
 		return ""
 	}
-	sufixo := strings.TrimSpace(nome[i+1:])
-	if !ehNumerico(sufixo) {
-		return ""
-	}
-	return sufixo
+	// O sufixo é o CPF ou o CNPJ, que pode ser alfanumérico; quem chama confere o formato.
+	return strings.ToUpper(strings.TrimSpace(nome[i+1:]))
 }
 
-// otherName devolve apenas os dígitos do valor registrado no subjectAltName sob
-// o OID informado.
+// otherName devolve, em maiúsculas, só as letras e os dígitos do valor
+// registrado no subjectAltName sob o OID informado. As letras ficam pelo CNPJ
+// alfanumérico; os campos de CPF são só dígitos.
 func (c *Certificado) otherName(oid asn1.ObjectIdentifier) string {
 	for _, ext := range c.Folha.Extensions {
 		if !ext.Id.Equal(oidSubjectAltName) {
@@ -207,7 +219,7 @@ func (c *Certificado) otherName(oid asn1.ObjectIdentifier) string {
 			if !outro.OID.Equal(oid) {
 				continue
 			}
-			return apenasDigitos(string(conteudoPrimitivo(outro.Valor.Bytes)))
+			return alfanumericos(string(conteudoPrimitivo(outro.Valor.Bytes)))
 		}
 	}
 	return ""
@@ -341,11 +353,11 @@ func ehNumerico(s string) bool {
 	return true
 }
 
-func apenasDigitos(s string) string {
+func alfanumericos(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
-	for _, r := range s {
-		if r >= '0' && r <= '9' {
+	for _, r := range strings.ToUpper(s) {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') {
 			b.WriteRune(r)
 		}
 	}

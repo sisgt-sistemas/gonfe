@@ -9,6 +9,15 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
 
+- CNPJ alfanumérico (Nota Técnica Conjunta 2025.001) em toda a biblioteca:
+  `chave` monta, valida e decompõe a chave com letras nas posições do CNPJ, com
+  o dígito verificador pelo ASCII menos 48; a regra de normalização
+  `norm:"alnum"` guarda as letras em todo campo de CNPJ e de chave (NF-e, CT-e,
+  CT-e OS, CT-e Simplificado, MDF-e e eventos); o certificado, a distribuição
+  de DF-e e a consulta de MDF-e não encerrados aceitam o CNPJ com letras; o
+  código de barras do DANFE, do DACTE e do DAMDFE alterna do Code 128 C para o
+  A nas letras (`pdf.ValoresCode128`). Uma chave só de dígitos sai igual.
+- `chave.CNPJValido`, para o padrão do CNPJ nos leiautes.
 - Pacote `ctesimp`: CT-e Simplificado (modelo 57, raiz `CTeSimp`), com várias
   prestações de um tomador por documento. Modelo na ordem do esquema,
   `Preparar` (numera os itens e soma componentes e totais), `Validar()`,
@@ -27,6 +36,15 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Alterado
 
+- **Incompatível:** `chave.Limpar` preserva as letras (em maiúsculas) e tira
+  só a pontuação, o prefixo do atributo Id (`NFe`, `CTe`, `MDFe`) e um rótulo
+  de letras antes da chave (`Chave: …`); antes devolvia só os dígitos. Outro
+  texto misturado à chave agora a invalida. `chave.Validar` aceita a chave com
+  CNPJ alfanumérico.
+- **Incompatível:** o `Preparar` dos documentos deixa de apagar as letras dos
+  campos de CNPJ e de chave; ele as põe em maiúsculas.
+- `sefaz.ClienteMDFe.NaoEncerrados` aceita o CNPJ alfanumérico, que o esquema
+  da consulta já aceitava.
 - O caminho do módulo passa a ser `github.com/sisgt-sistemas/gonfe`.
 - **Incompatível:** `cte.Emit.EnderEmit` passa a ser `cte.EnderecoEmitente`
   (`TEndeEmi`: sem `cPais` e `xPais`, com `fone`), como o esquema pede; vale
@@ -40,6 +58,9 @@ Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Corrigido
 
+- `validacao.ValidarCPFouCNPJ` decidia pelo número de dígitos: um CNPJ
+  alfanumérico com três letras (11 dígitos) caía na validação de CPF. Agora
+  entrada com letra vai para o CNPJ, e `ValidarCPF` recusa letra.
 - O `CRT` do emitente do CT-e e do CT-e OS é obrigatório e conferido em
   `Validar()` (TCRT: 1 a 4); antes saía omitido e o esquema recusava.
 - As alíquotas do ICMS do CT-e (`pICMS`, `pRedBC`, `pICMSSTRet`,

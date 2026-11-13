@@ -5,7 +5,7 @@ import "github.com/sisgt-sistemas/gonfe/tipos"
 // Emit é o grupo C: identificação do emitente do documento.
 type Emit struct {
 	// CNPJ do emitente. Informe CNPJ ou CPF, nunca os dois.
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	// CPF do emitente pessoa física, usado por produtores rurais.
 	CPF string `xml:"CPF,omitempty" norm:"num"`
 	// XNome é a razão social ou o nome do emitente.
@@ -55,7 +55,7 @@ type Endereco struct {
 // Dest é o grupo E: identificação do destinatário.
 type Dest struct {
 	// CNPJ do destinatário pessoa jurídica.
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	// CPF do destinatário pessoa física.
 	CPF string `xml:"CPF,omitempty" norm:"num"`
 	// IdEstrangeiro identifica destinatário no exterior; pode ser vazio em
@@ -85,7 +85,7 @@ const TextoObrigatorioHomologacao = "NF-E EMITIDA EM AMBIENTE DE HOMOLOGACAO - S
 
 // Local é o grupo de local de retirada ou de entrega.
 type Local struct {
-	CNPJ    string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ    string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF     string `xml:"CPF,omitempty" norm:"num"`
 	XNome   string `xml:"xNome,omitempty"`
 	XLgr    string `xml:"xLgr"`
@@ -106,13 +106,13 @@ type Local struct {
 // AutXML autoriza um CNPJ ou CPF a obter o XML da nota. São permitidas até dez
 // autorizações.
 type AutXML struct {
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF  string `xml:"CPF,omitempty" norm:"num"`
 }
 
 // Avulsa é o grupo D, preenchido apenas na emissão de nota avulsa pelo fisco.
 type Avulsa struct {
-	CNPJ    string      `xml:"CNPJ" norm:"num"`
+	CNPJ    string      `xml:"CNPJ" norm:"alnum"`
 	XOrgao  string      `xml:"xOrgao"`
 	Matr    string      `xml:"matr"`
 	XAgente string      `xml:"xAgente"`
@@ -129,7 +129,7 @@ type Avulsa struct {
 // InfIntermed é o grupo YB: identificação do intermediador da operação.
 type InfIntermed struct {
 	// CNPJ do intermediador, como um marketplace ou plataforma de entrega.
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 	// IdCadIntTran é a identificação do vendedor no intermediador.
 	IdCadIntTran string `xml:"idCadIntTran"`
 }
@@ -137,7 +137,7 @@ type InfIntermed struct {
 // InfRespTec é o grupo ZD: responsável técnico pelo sistema emissor.
 type InfRespTec struct {
 	// CNPJ da pessoa jurídica responsável pelo sistema.
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 	// XContato é o nome da pessoa de contato.
 	XContato string `xml:"xContato"`
 	// Email de contato.

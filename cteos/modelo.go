@@ -207,7 +207,7 @@ type Ide struct {
 
 // Toma é o tomador do serviço.
 type Toma struct {
-	CNPJ      string        `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string        `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string        `xml:"CPF,omitempty" norm:"num"`
 	IE        string        `xml:"IE,omitempty" norm:"upper"`
 	XNome     string        `xml:"xNome"`
@@ -230,7 +230,7 @@ type InfCTeNorm struct {
 	// InfCteSub identifica o conhecimento substituído.
 	InfCteSub *cte.InfCteSub `xml:"infCteSub,omitempty"`
 	// RefCTeCanc é a chave do CT-e OS cancelado que este substitui.
-	RefCTeCanc string `xml:"refCTeCanc,omitempty" norm:"num"`
+	RefCTeCanc string `xml:"refCTeCanc,omitempty" norm:"alnum"`
 	// Cobr é a fatura e as duplicatas.
 	Cobr *cte.Cobr `xml:"cobr,omitempty"`
 	// InfGTVe lista as Guias de Transporte de Valores eletrônicas
@@ -261,7 +261,7 @@ type InfDocRef struct {
 	DEmi     *tipos.Data    `xml:"dEmi,omitempty"`
 	VDoc     *tipos.Decimal `xml:"vDoc,omitempty" dec:"2"`
 	// ChBPe é a chave de um Bilhete de Passagem Eletrônico referenciado.
-	ChBPe string `xml:"chBPe,omitempty" norm:"num"`
+	ChBPe string `xml:"chBPe,omitempty" norm:"alnum"`
 }
 
 // Seguro é a averbação de um seguro da prestação.
@@ -307,7 +307,7 @@ type Veiculo struct {
 // Proprietario identifica o dono do veículo, quando não é o emitente.
 type Proprietario struct {
 	CPF            string           `xml:"CPF,omitempty" norm:"num"`
-	CNPJ           string           `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ           string           `xml:"CNPJ,omitempty" norm:"alnum"`
 	TAF            string           `xml:"TAF,omitempty"`
 	NroRegEstadual string           `xml:"NroRegEstadual,omitempty"`
 	XNome          string           `xml:"xNome"`
@@ -325,7 +325,7 @@ type InfFretamento struct {
 
 // InfGTVe é uma Guia de Transporte de Valores eletrônica relacionada.
 type InfGTVe struct {
-	ChCTe string           `xml:"chCTe" norm:"num"`
+	ChCTe string           `xml:"chCTe" norm:"alnum"`
 	Comp  []ComponenteGTVe `xml:"Comp,omitempty"`
 }
 
@@ -337,7 +337,7 @@ type ComponenteGTVe struct {
 
 // InfCteComp identifica o conhecimento que está sendo complementado.
 type InfCteComp struct {
-	Chave string `xml:"chCTe" norm:"num"`
+	Chave string `xml:"chCTe" norm:"alnum"`
 }
 
 // InfSolicNFF é a solicitação da Nota Fiscal Fácil.

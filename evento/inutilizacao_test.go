@@ -188,3 +188,22 @@ func TestMontarProcInut(t *testing.T) {
 		t.Error("o retorno não entrou no invólucro")
 	}
 }
+
+// A inutilização de um emitente com CNPJ alfanumérico guarda as letras no grupo e no Id, que segue com 43 posições.
+func TestInutilizacaoComCNPJAlfanumerico(t *testing.T) {
+	i, err := evento.NovaInutilizacao(evento.DadosInutilizacao{
+		UF: uf.RS, Ambiente: nfe.Homologacao, CNPJ: "12.abc.345/01de-35", Ano: 26,
+		Modelo: nfe.ModeloNFe, Serie: 900, NumeroInicial: 10, NumeroFinal: 12,
+		Justificativa: justInut,
+	})
+	if err != nil {
+		t.Fatalf("NovaInutilizacao: %v", err)
+	}
+	if i.InfInut.CNPJ != "12ABC34501DE35" {
+		t.Errorf("CNPJ = %s, queria 12ABC34501DE35", i.InfInut.CNPJ)
+	}
+	const esperadoId = "ID" + "43" + "26" + "12ABC34501DE35" + "55" + "900" + "000000010" + "000000012"
+	if i.InfInut.Id != esperadoId {
+		t.Errorf("Id = %s (%d posições), queria %s", i.InfInut.Id, len(i.InfInut.Id), esperadoId)
+	}
+}

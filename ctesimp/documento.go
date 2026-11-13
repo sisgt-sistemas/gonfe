@@ -40,7 +40,7 @@ func Novo() *CTeSimp {
 	}
 }
 
-// Chave devolve a chave de acesso de 44 dígitos, extraída do atributo Id.
+// Chave devolve a chave de acesso de 44 posições, extraída do atributo Id.
 func (c *CTeSimp) Chave() string { return strings.TrimPrefix(c.InfCte.Id, "CTe") }
 
 // OpcoesPreparo ajusta o comportamento de [CTeSimp.Preparar].

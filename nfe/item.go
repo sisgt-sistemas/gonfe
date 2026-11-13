@@ -34,7 +34,7 @@ type Prod struct {
 	// IndEscala informa se o produto é fabricado em escala relevante.
 	IndEscala string `xml:"indEscala,omitempty" norm:"upper"`
 	// CNPJFab é o CNPJ do fabricante, exigido quando a escala não é relevante.
-	CNPJFab string `xml:"CNPJFab,omitempty" norm:"num"`
+	CNPJFab string `xml:"CNPJFab,omitempty" norm:"alnum"`
 	// CBenef é o código de benefício fiscal na UF.
 	CBenef string `xml:"cBenef,omitempty"`
 	// EXTIPI é o código da exceção da TIPI.
@@ -105,7 +105,7 @@ type DI struct {
 	// Mercante, obrigatório quando o transporte é marítimo.
 	VAFRMM       *tipos.Decimal `xml:"vAFRMM,omitempty" dec:"2"`
 	TpIntermedio string         `xml:"tpIntermedio"`
-	CNPJ         string         `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ         string         `xml:"CNPJ,omitempty" norm:"alnum"`
 	UFTerceiro   string         `xml:"UFTerceiro,omitempty" norm:"upper"`
 	CExportador  string         `xml:"cExportador"`
 	Adi          []Adi          `xml:"adi"`
@@ -129,7 +129,7 @@ type DetExport struct {
 // ExportInd registra a nota de exportação vinculada.
 type ExportInd struct {
 	NRE     string        `xml:"nRE"`
-	ChNFe   string        `xml:"chNFe" norm:"num"`
+	ChNFe   string        `xml:"chNFe" norm:"alnum"`
 	QExport tipos.Decimal `xml:"qExport" dec:"4"`
 }
 

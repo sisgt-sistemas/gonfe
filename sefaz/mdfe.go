@@ -12,6 +12,7 @@ import (
 
 	"github.com/sisgt-sistemas/gonfe/certificado"
 	"github.com/sisgt-sistemas/gonfe/chave"
+	"github.com/sisgt-sistemas/gonfe/internal/norm"
 	"github.com/sisgt-sistemas/gonfe/mdfe"
 	"github.com/sisgt-sistemas/gonfe/tipos"
 	"github.com/sisgt-sistemas/gonfe/uf"
@@ -422,13 +423,8 @@ func (c *ClienteMDFe) NaoEncerrados(ctx context.Context, cnpj string) (*RetConsM
 	if err := validacao.ValidarCNPJ(cnpj); err != nil {
 		return nil, fmt.Errorf("sefaz: %w", err)
 	}
-	limpo := apenasDigitosDoDocumento(cnpj)
-	if len(limpo) != 14 {
-		// O CNPJ alfanumérico da IN RFB 2.229/2024 é válido, mas o campo do
-		// leiaute 3.00 deste serviço só aceita dígitos.
-		return nil, fmt.Errorf(
-			"sefaz: o serviço de MDF-e não encerrados só aceita CNPJ numérico; %q tem letras", cnpj)
-	}
+	// O CNPJ pode ser alfanumérico: o TCnpj do consMDFeNaoEnc 3.00 aceita letras nas doze primeiras posições.
+	limpo := norm.ApenasAlfanumericos(cnpj)
 	corpo := fmt.Sprintf(
 		`<consMDFeNaoEnc xmlns="%s" versao="%s"><tpAmb>%s</tpAmb><xServ>CONSULTAR NÃO ENCERRADOS</xServ><CNPJ>%s</CNPJ></consMDFeNaoEnc>`,
 		mdfe.Espaco, mdfe.Versao, c.cfg.Ambiente, limpo)
@@ -520,15 +516,4 @@ func erroDeStatusMDFe(servico ServicoMDFe, cStat int, xMotivo string, aceitos ..
 		}
 	}
 	return &ErroSefaz{Servico: Servico(servico), CStat: cStat, XMotivo: xMotivo}
-}
-
-// apenasDigitosDoDocumento descarta a pontuação de um CNPJ ou CPF.
-func apenasDigitosDoDocumento(s string) string {
-	var b []byte
-	for i := 0; i < len(s); i++ {
-		if s[i] >= '0' && s[i] <= '9' {
-			b = append(b, s[i])
-		}
-	}
-	return string(b)
 }

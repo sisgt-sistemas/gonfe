@@ -63,15 +63,15 @@ type Ide struct {
 // campos deve ser preenchido.
 type NFref struct {
 	// RefNFe é a chave de acesso de uma NF-e referenciada.
-	RefNFe string `xml:"refNFe,omitempty" norm:"num"`
+	RefNFe string `xml:"refNFe,omitempty" norm:"alnum"`
 	// RefNFeSig é a chave de acesso referenciada de forma sigilosa.
-	RefNFeSig string `xml:"refNFeSig,omitempty" norm:"num"`
+	RefNFeSig string `xml:"refNFeSig,omitempty" norm:"alnum"`
 	// RefNF referencia uma nota fiscal em papel, modelos 1 ou 1A.
 	RefNF *RefNF `xml:"refNF,omitempty"`
 	// RefNFP referencia uma nota fiscal de produtor rural.
 	RefNFP *RefNFP `xml:"refNFP,omitempty"`
 	// RefCTe é a chave de acesso de um CT-e referenciado.
-	RefCTe string `xml:"refCTe,omitempty" norm:"num"`
+	RefCTe string `xml:"refCTe,omitempty" norm:"alnum"`
 	// RefECF referencia um cupom fiscal emitido por ECF.
 	RefECF *RefECF `xml:"refECF,omitempty"`
 }
@@ -80,7 +80,7 @@ type NFref struct {
 type RefNF struct {
 	CUF   int    `xml:"cUF"`
 	AAMM  string `xml:"AAMM" norm:"num"`
-	CNPJ  string `xml:"CNPJ" norm:"num"`
+	CNPJ  string `xml:"CNPJ" norm:"alnum"`
 	Mod   string `xml:"mod"`
 	Serie int    `xml:"serie"`
 	NNF   int    `xml:"nNF"`
@@ -90,7 +90,7 @@ type RefNF struct {
 type RefNFP struct {
 	CUF   int    `xml:"cUF"`
 	AAMM  string `xml:"AAMM" norm:"num"`
-	CNPJ  string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ  string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF   string `xml:"CPF,omitempty" norm:"num"`
 	IE    string `xml:"IE" norm:"upper"`
 	Mod   string `xml:"mod"`

@@ -79,7 +79,9 @@ README.
 - só o pacote `xsd` roda programa externo;
 - todo pacote de documento tem teste contra o esquema;
 - a tag `dec:"N"` de cada campo decimal cabe nas casas do tipo `TDec_*` do
-  esquema.
+  esquema;
+- campo de CNPJ ou de chave de acesso usa `norm:"alnum"`, nunca `norm:"num"`,
+  que apagaria as letras do CNPJ alfanumérico.
 
 Um gate não se afrouxa para passar uma mudança: se a regra estiver errada,
 corrija a regra com o motivo no pull request.

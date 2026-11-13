@@ -22,7 +22,7 @@
 //   - [github.com/sisgt-sistemas/gonfe/xmldsig] — assinatura e verificação no perfil
 //     de XML Signature da SEFAZ.
 //   - [github.com/sisgt-sistemas/gonfe/certificado] — certificados A1 em PKCS#12.
-//   - [github.com/sisgt-sistemas/gonfe/chave] — chave de acesso de 44 dígitos.
+//   - [github.com/sisgt-sistemas/gonfe/chave] — chave de acesso de 44 posições.
 //   - [github.com/sisgt-sistemas/gonfe/tipos] — decimal de precisão fixa, data e
 //     data/hora nos formatos do leiaute.
 //   - [github.com/sisgt-sistemas/gonfe/validacao] — CPF, CNPJ e inscrição estadual.

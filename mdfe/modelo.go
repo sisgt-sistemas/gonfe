@@ -256,7 +256,7 @@ type InfPercurso struct {
 
 // Emit é o emitente do manifesto.
 type Emit struct {
-	CNPJ      string   `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string   `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string   `xml:"CPF,omitempty" norm:"num"`
 	IE        string   `xml:"IE" norm:"upper"`
 	XNome     string   `xml:"xNome"`
@@ -296,7 +296,7 @@ type InfMunDescarga struct {
 
 // InfCTe é um CT-e transportado, identificado pela chave de acesso.
 type InfCTe struct {
-	ChCTe         string          `xml:"chCTe" norm:"num"`
+	ChCTe         string          `xml:"chCTe" norm:"alnum"`
 	SegCodBarra   string          `xml:"SegCodBarra,omitempty"`
 	IndReentrega  string          `xml:"indReentrega,omitempty"`
 	InfUnidTransp []InfUnidTransp `xml:"infUnidTransp,omitempty"`
@@ -305,7 +305,7 @@ type InfCTe struct {
 
 // InfNFe é uma NF-e transportada, identificada pela chave de acesso.
 type InfNFe struct {
-	ChNFe         string          `xml:"chNFe" norm:"num"`
+	ChNFe         string          `xml:"chNFe" norm:"alnum"`
 	SegCodBarra   string          `xml:"SegCodBarra,omitempty"`
 	IndReentrega  string          `xml:"indReentrega,omitempty"`
 	InfUnidTransp []InfUnidTransp `xml:"infUnidTransp,omitempty"`
@@ -315,7 +315,7 @@ type InfNFe struct {
 // InfMDFeTransp é um MDF-e transportado dentro deste, no transporte
 // multimodal.
 type InfMDFeTransp struct {
-	ChMDFe        string          `xml:"chMDFe" norm:"num"`
+	ChMDFe        string          `xml:"chMDFe" norm:"alnum"`
 	IndReentrega  string          `xml:"indReentrega,omitempty"`
 	InfUnidTransp []InfUnidTransp `xml:"infUnidTransp,omitempty"`
 	Peri          []Peri          `xml:"peri,omitempty"`
@@ -364,14 +364,14 @@ type Seguro struct {
 // InfResp identifica o responsável pelo seguro.
 type InfResp struct {
 	RespSeg string `xml:"respSeg"`
-	CNPJ    string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ    string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF     string `xml:"CPF,omitempty" norm:"num"`
 }
 
 // InfSeg identifica a seguradora.
 type InfSeg struct {
 	XSeg string `xml:"xSeg"`
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 }
 
 // ProdPred descreve o produto predominante da carga.
@@ -417,7 +417,7 @@ type Lacre struct {
 
 // AutXML autoriza um CNPJ ou CPF a obter o XML do manifesto.
 type AutXML struct {
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF  string `xml:"CPF,omitempty" norm:"num"`
 }
 
@@ -429,7 +429,7 @@ type InfAdic struct {
 
 // InfRespTec identifica o responsável técnico pelo sistema emissor.
 type InfRespTec struct {
-	CNPJ     string `xml:"CNPJ" norm:"num"`
+	CNPJ     string `xml:"CNPJ" norm:"alnum"`
 	XContato string `xml:"xContato"`
 	Email    string `xml:"email"`
 	Fone     string `xml:"fone" norm:"num"`

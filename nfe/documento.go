@@ -84,7 +84,7 @@ func Nova(modelo Modelo) *NFe {
 // Modelo devolve o modelo do documento.
 func (n *NFe) Modelo() Modelo { return n.InfNFe.Ide.Mod }
 
-// Chave devolve a chave de acesso de 44 dígitos, extraída do atributo Id.
+// Chave devolve a chave de acesso de 44 posições, extraída do atributo Id.
 // Devolve string vazia enquanto [NFe.Preparar] não tiver sido chamado.
 func (n *NFe) Chave() string {
 	return strings.TrimPrefix(n.InfNFe.Id, "NFe")

@@ -19,6 +19,9 @@ var ErrDocumentoInvalido = errors.New("validacao: documento inválido")
 // Sequências de um único dígito repetido, como "111.111.111-11", satisfazem a
 // aritmética do módulo 11 mas não são CPFs válidos, e são rejeitadas.
 func ValidarCPF(s string) error {
+	if temLetra(s) {
+		return fmt.Errorf("%w: CPF com letra; o CPF só tem dígitos", ErrDocumentoInvalido)
+	}
 	d := digitos(s)
 	if len(d) != 11 {
 		return fmt.Errorf("%w: CPF com %d dígitos, esperados 11", ErrDocumentoInvalido, len(d))
@@ -44,9 +47,9 @@ func EhCPF(s string) bool { return ValidarCPF(s) == nil }
 // Também aceita o CNPJ alfanumérico, em que as doze primeiras posições podem
 // conter letras: cada caractere entra no cálculo pelo seu código ASCII menos 48,
 // como define a Instrução Normativa RFB 2.229/2024. Os dois dígitos
-// verificadores continuam sendo numéricos. Atenção: o leiaute 4.00 da NF-e
-// ainda restringe o campo CNPJ a 14 dígitos numéricos, então um CNPJ
-// alfanumérico válido aqui pode ser rejeitado pela SEFAZ.
+// verificadores continuam sendo numéricos. Os leiautes aceitam o formato desde
+// a Nota Técnica Conjunta 2025.001 (no MDF-e 3.00b, o Id do manifesto ainda é
+// numérico).
 func ValidarCNPJ(s string) error {
 	c := strings.ToUpper(strings.Map(func(r rune) rune {
 		switch {
@@ -79,14 +82,23 @@ func ValidarCNPJ(s string) error {
 // EhCNPJ é a forma booleana de [ValidarCNPJ].
 func EhCNPJ(s string) bool { return ValidarCNPJ(s) == nil }
 
-// ValidarCPFouCNPJ aceita qualquer um dos dois, decidindo pelo comprimento.
+// ValidarCPFouCNPJ aceita qualquer um dos dois, decidindo pelo comprimento sem a
+// pontuação: 11 dígitos é CPF; o resto, inclusive o CNPJ alfanumérico (que pode
+// ter só 11 dígitos entre as 14 posições), vai para o CNPJ.
 func ValidarCPFouCNPJ(s string) error {
-	switch len(digitos(s)) {
-	case 11:
+	if !temLetra(s) && len(digitos(s)) == 11 {
 		return ValidarCPF(s)
-	default:
-		return ValidarCNPJ(s)
 	}
+	return ValidarCNPJ(s)
+}
+
+func temLetra(s string) bool {
+	for _, r := range s {
+		if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+			return true
+		}
+	}
+	return false
 }
 
 // dvModulo11 calcula um dígito verificador de CPF: soma ponderada com pesos

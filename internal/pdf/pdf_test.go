@@ -3,6 +3,7 @@ package pdf
 import (
 	"bytes"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -68,11 +69,71 @@ func TestCodigoDeBarrasRejeitaEntradaInvalida(t *testing.T) {
 	if err := pg.CodigoDeBarras(0, 0, 10, 10, ""); err == nil {
 		t.Error("código vazio deveria falhar")
 	}
-	if err := pg.CodigoDeBarras(0, 0, 10, 10, "123"); err == nil {
-		t.Error("quantidade ímpar de dígitos deveria falhar no modo C")
-	}
 	if err := pg.CodigoDeBarras(0, 0, 10, 10, "12ab"); err == nil {
-		t.Error("conteúdo não numérico deveria falhar")
+		t.Error("letra minúscula deveria falhar")
+	}
+	if err := pg.CodigoDeBarras(0, 0, 10, 10, "12-34"); err == nil {
+		t.Error("pontuação deveria falhar")
+	}
+}
+
+// O exemplo da NT 2025.001 §6: "5225AB83" vira START C, 52, 25, CODE A, A, B, CODE C, 83, com a soma ponderada 1987 e
+// o dígito 30.
+func TestValoresCode128DoExemploDaNota(t *testing.T) {
+	got, err := ValoresCode128("5225AB83")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []int{105, 52, 25, 101, 33, 34, 99, 83, 30, 106}
+	if !slices.Equal(got, want) {
+		t.Errorf("valores = %v, queria %v", got, want)
+	}
+}
+
+// decodificar refaz o texto a partir dos valores, sem usar o codificador: prova que o código lê o que foi escrito.
+func decodificar(valores []int) string {
+	var b strings.Builder
+	conjuntoC := valores[0] == 105 // 103 começa no conjunto A
+	for _, v := range valores[1 : len(valores)-2] {
+		// No conjunto C, 0 a 99 são pares de dígitos e 101 troca para A; no A, 99 troca para C.
+		switch {
+		case conjuntoC && v == 101:
+			conjuntoC = false
+		case !conjuntoC && v == 99:
+			conjuntoC = true
+		case conjuntoC:
+			fmt.Fprintf(&b, "%02d", v)
+		default:
+			b.WriteByte(byte(v + 32))
+		}
+	}
+	return b.String()
+}
+
+func TestValoresCode128LeOQueEscreveu(t *testing.T) {
+	for _, texto := range []string{
+		"43260312345678000195550010000012341876543211",           // chave numérica
+		"4326071" + "2ABC34501DE35" + "570010000012341112233445", // chave com CNPJ alfanumérico
+		"123", "A", "1A", "AB12345", "9999AAAA1",
+	} {
+		valores, err := ValoresCode128(texto)
+		if err != nil {
+			t.Fatalf("%s: %v", texto, err)
+		}
+		if got := decodificar(valores); got != texto {
+			t.Errorf("%s: decodificado %s (valores %v)", texto, got, valores)
+		}
+	}
+}
+
+// Uma chave só de dígitos sai inteira no conjunto C, sem troca: o código de barras de hoje não muda.
+func TestChaveNumericaSaiSoNoConjuntoC(t *testing.T) {
+	valores, err := ValoresCode128("43260312345678000195550010000012341876543211")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(valores) != 25 || slices.Contains(valores[1:23], 101) {
+		t.Errorf("%d símbolos, %v; queria 25, todos no conjunto C", len(valores), valores)
 	}
 }
 
@@ -351,4 +412,18 @@ func ultimaPosicaoX(t *testing.T, pg *Pagina) float64 {
 		t.Fatalf("posição ilegível em %q: %v", linha, err)
 	}
 	return px
+}
+
+// Texto que começa por letra começa no conjunto A (103), sem o símbolo de troca.
+func TestValoresCode128ComecaNoConjuntoA(t *testing.T) {
+	valores, err := ValoresCode128("AB1234")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if valores[0] != 103 || valores[1] == 101 {
+		t.Errorf("valores = %v; queria começar em 103, direto na letra", valores)
+	}
+	if got := decodificar(valores); got != "AB1234" {
+		t.Errorf("decodificado %s", got)
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/sisgt-sistemas/gonfe/chave"
 	"github.com/sisgt-sistemas/gonfe/dfe"
 	"github.com/sisgt-sistemas/gonfe/evento"
 	"github.com/sisgt-sistemas/gonfe/nfe"
@@ -322,6 +323,20 @@ func TestDocumentoDesconhecidoNaoQuebra(t *testing.T) {
 	} {
 		if err := chamada(); err == nil {
 			t.Error("interpretar schema desconhecido deveria falhar")
+		}
+	}
+}
+
+func TestMontarConsultaComCNPJAlfanumerico(t *testing.T) {
+	chaveAlfa := chave.MustNova(chave.Chave{CUF: 35, Ano: 26, Mes: 7, CNPJ: "12ABC34501DE35", Modelo: 55, Serie: 1,
+		Numero: 80, TpEmis: 1, CNF: "10203043"})
+	mensagem, err := dfe.MontarConsulta(nfe.Homologacao, 43, "12.abc.345/01de-35", "", dfe.Consulta{Chave: "NFe" + chaveAlfa})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, trecho := range []string{"<CNPJ>12ABC34501DE35</CNPJ>", "<chNFe>" + chaveAlfa + "</chNFe>"} {
+		if !strings.Contains(string(mensagem), trecho) {
+			t.Errorf("faltou %s em:\n%s", trecho, mensagem)
 		}
 	}
 }

@@ -68,9 +68,9 @@ type InfEventoMDFe struct {
 	Id         string         `xml:"Id,attr"`
 	COrgao     int            `xml:"cOrgao"`
 	TpAmb      Ambiente       `xml:"tpAmb"`
-	CNPJ       string         `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ       string         `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF        string         `xml:"CPF,omitempty" norm:"num"`
-	ChMDFe     string         `xml:"chMDFe" norm:"num"`
+	ChMDFe     string         `xml:"chMDFe" norm:"alnum"`
 	DhEvento   tipos.DataHora `xml:"dhEvento"`
 	TpEvento   TipoEvento     `xml:"tpEvento"`
 	NSeqEvento int            `xml:"nSeqEvento"`

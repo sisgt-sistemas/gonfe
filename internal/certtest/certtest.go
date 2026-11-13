@@ -30,7 +30,7 @@ var (
 type Opcoes struct {
 	// RazaoSocial é o nome do titular; o CNPJ é anexado ao nome comum com ":".
 	RazaoSocial string
-	// CNPJ do titular pessoa jurídica, com 14 dígitos.
+	// CNPJ do titular pessoa jurídica, com 14 posições (pode ser alfanumérico).
 	CNPJ string
 	// CPF do titular pessoa física, com 11 dígitos. Se preenchido, o
 	// certificado é gerado como e-CPF e o CNPJ é ignorado.
@@ -43,6 +43,9 @@ type Opcoes struct {
 	// SemSubjectAltName omite a extensão com os OIDs da ICP-Brasil, para
 	// exercitar o caminho de leitura pelo nome comum.
 	SemSubjectAltName bool
+	// SemDocumentoNoNome deixa o nome comum só com a razão social, sem ":CNPJ", para exercitar a leitura pelo
+	// subjectAltName sozinha.
+	SemDocumentoNoNome bool
 }
 
 func (o *Opcoes) aplicarPadroes() {
@@ -138,7 +141,7 @@ func Gerar(o Opcoes) (*certificado.Certificado, error) {
 	modelo := x509.Certificate{
 		SerialNumber: big.NewInt(time.Now().UnixNano()),
 		Subject: pkix.Name{
-			CommonName:   o.RazaoSocial + ":" + documento,
+			CommonName:   nomeComum(o.RazaoSocial, documento, o.SemDocumentoNoNome),
 			Country:      []string{"BR"},
 			Organization: []string{"ICP-Brasil"},
 		},
@@ -227,4 +230,11 @@ func extensaoICPBrasil(cnpj, cpf string) (pkix.Extension, error) {
 		return pkix.Extension{}, fmt.Errorf("certtest: codificação do subjectAltName: %w", err)
 	}
 	return pkix.Extension{Id: oidSubjectAltName, Value: valor}, nil
+}
+
+func nomeComum(razaoSocial, documento string, semDocumento bool) string {
+	if semDocumento {
+		return razaoSocial
+	}
+	return razaoSocial + ":" + documento
 }

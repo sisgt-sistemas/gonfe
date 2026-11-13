@@ -112,12 +112,19 @@ RFB 2.229/2024, em que as doze primeiras posições podem conter letras. O cálc
 dos dígitos verificadores usa o código ASCII de cada caractere menos 48, o que
 faz o CNPJ numérico ser um caso particular do mesmo algoritmo.
 
-!!! note "O leiaute 4.00 ainda é numérico"
+O resto da biblioteca segue a Nota Técnica Conjunta 2025.001: os campos de
+CNPJ e de chave de acesso guardam as letras (a normalização põe em maiúsculas e
+tira só a pontuação), a chave aceita o padrão `[0-9]{6}[A-Z0-9]{12}[0-9]{26}` com
+o dígito verificador pelo mesmo ASCII menos 48, e o código de barras dos
+documentos auxiliares alterna do Code 128 C para o A nas letras.
 
-    Um CNPJ alfanumérico válido para `validacao.ValidarCNPJ` pode ser rejeitado
-    pela SEFAZ: o campo `CNPJ` do leiaute 4.00 ainda restringe a entrada a 14
-    dígitos numéricos. A adaptação da NF-e ao formato alfanumérico virá por Nota
-    Técnica.
+!!! note "O MDF-e ainda tem o Id numérico"
+
+    Os esquemas do CT-e (4.00 RTC) aceitam o CNPJ alfanumérico em todo campo,
+    inclusive no `Id`. No MDF-e 3.00b embutido, o CNPJ e as chaves dos
+    documentos levados aceitam letras, mas o `Id` do manifesto ainda é
+    `MDFe[0-9]{44}`: um MDF-e de emitente com CNPJ alfanumérico é recusado até a
+    SEFAZ atualizar o esquema. Na NF-e, a adequação veio pela NT 2026.004.
 
 ### Inscrição estadual
 

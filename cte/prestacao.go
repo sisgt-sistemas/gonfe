@@ -49,7 +49,7 @@ type InfDoc struct {
 
 // InfNFe é uma NF-e transportada, identificada pela chave de acesso.
 type InfNFe struct {
-	Chave string      `xml:"chave" norm:"num"`
+	Chave string      `xml:"chave" norm:"alnum"`
 	PIN   string      `xml:"PIN,omitempty"`
 	DPrev *tipos.Data `xml:"dPrev,omitempty"`
 }
@@ -92,7 +92,7 @@ type DocAnt struct {
 
 // EmiDocAnt é o emitente dos documentos anteriores.
 type EmiDocAnt struct {
-	CNPJ     string     `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ     string     `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF      string     `xml:"CPF,omitempty" norm:"num"`
 	IE       string     `xml:"IE,omitempty" norm:"upper"`
 	UF       string     `xml:"UF,omitempty" norm:"upper"`
@@ -117,7 +117,7 @@ type IdDocAntPap struct {
 
 // IdDocAntEle é um documento anterior eletrônico.
 type IdDocAntEle struct {
-	ChCTe string `xml:"chCTe" norm:"num"`
+	ChCTe string `xml:"chCTe" norm:"alnum"`
 }
 
 // InfModal envolve o grupo específico do meio de transporte.
@@ -153,7 +153,7 @@ type Occ struct {
 
 // EmiOcc é o emitente da ordem de coleta.
 type EmiOcc struct {
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 	CInt string `xml:"cInt,omitempty"`
 	IE   string `xml:"IE" norm:"upper"`
 	UF   string `xml:"UF" norm:"upper"`
@@ -236,7 +236,7 @@ type InfNFCont struct {
 
 // InfNFeCont é uma NF-e dentro de um contêiner.
 type InfNFeCont struct {
-	Chave   string         `xml:"chave" norm:"num"`
+	Chave   string         `xml:"chave" norm:"alnum"`
 	UnidRat *tipos.Decimal `xml:"unidRat,omitempty" dec:"2"`
 }
 
@@ -252,13 +252,13 @@ type TrafMut struct {
 	RespFat          string         `xml:"respFat,omitempty"`
 	FerrEmi          string         `xml:"ferrEmi,omitempty"`
 	VFrete           *tipos.Decimal `xml:"vFrete,omitempty" dec:"2"`
-	ChCTeFerroOrigem string         `xml:"chCTeFerroOrigem,omitempty" norm:"num"`
+	ChCTeFerroOrigem string         `xml:"chCTeFerroOrigem,omitempty" norm:"alnum"`
 }
 
 // FerroEnv é uma ferrovia envolvida no transporte.
 type FerroEnv struct {
 	CInt       string    `xml:"cInt,omitempty"`
-	CNPJ       string    `xml:"CNPJ" norm:"num"`
+	CNPJ       string    `xml:"CNPJ" norm:"alnum"`
 	IE         string    `xml:"IE,omitempty" norm:"upper"`
 	XNome      string    `xml:"xNome"`
 	EnderFerro *Endereco `xml:"enderFerro,omitempty"`
@@ -288,7 +288,7 @@ type SegMultimodal struct {
 // InfSeg identifica a seguradora.
 type InfSeg struct {
 	XSeg string `xml:"xSeg"`
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 }
 
 // VeicNovo descreve um veículo novo transportado.
@@ -324,22 +324,22 @@ type Dup struct {
 
 // InfCteSub identifica o conhecimento substituído.
 type InfCteSub struct {
-	ChCte         string    `xml:"chCte" norm:"num"`
-	RefCteAnu     string    `xml:"refCteAnu,omitempty" norm:"num"`
+	ChCte         string    `xml:"chCte" norm:"alnum"`
+	RefCteAnu     string    `xml:"refCteAnu,omitempty" norm:"alnum"`
 	TomaICMS      *TomaICMS `xml:"tomaICMS,omitempty"`
 	IndAlteraToma string    `xml:"indAlteraToma,omitempty"`
 }
 
 // TomaICMS identifica o documento que comprova o ICMS do tomador.
 type TomaICMS struct {
-	RefNFe string `xml:"refNFe,omitempty" norm:"num"`
+	RefNFe string `xml:"refNFe,omitempty" norm:"alnum"`
 	RefNF  *RefNF `xml:"refNF,omitempty"`
-	RefCte string `xml:"refCte,omitempty" norm:"num"`
+	RefCte string `xml:"refCte,omitempty" norm:"alnum"`
 }
 
 // RefNF referencia uma nota fiscal em papel.
 type RefNF struct {
-	CNPJ     string        `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ     string        `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF      string        `xml:"CPF,omitempty" norm:"num"`
 	Mod      string        `xml:"mod"`
 	Serie    int           `xml:"serie"`
@@ -361,7 +361,7 @@ type InfServVinc struct {
 
 // InfCTeMultimodal é a chave de um conhecimento multimodal vinculado.
 type InfCTeMultimodal struct {
-	ChCTeMultimodal string `xml:"chCTeMultimodal" norm:"num"`
+	ChCTeMultimodal string `xml:"chCTeMultimodal" norm:"alnum"`
 }
 
 // ProtCTe é o protocolo de autorização devolvido pela SEFAZ.

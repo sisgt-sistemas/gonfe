@@ -42,7 +42,7 @@ func Novo(servico TipoServico) *CTeOS {
 	}
 }
 
-// Chave devolve a chave de acesso de 44 dígitos, extraída do atributo Id.
+// Chave devolve a chave de acesso de 44 posições, extraída do atributo Id.
 func (c *CTeOS) Chave() string { return strings.TrimPrefix(c.InfCte.Id, "CTe") }
 
 // Servico devolve o tipo de serviço prestado.

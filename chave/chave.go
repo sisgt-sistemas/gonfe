@@ -1,4 +1,4 @@
-// Package chave monta, valida e decompõe a chave de acesso de 44 dígitos dos
+// Package chave monta, valida e decompõe a chave de acesso de 44 posições dos
 // documentos fiscais eletrônicos.
 //
 // A composição segue o Manual de Orientação do Contribuinte da NF-e:
@@ -7,6 +7,14 @@
 //
 // A mesma estrutura é usada por NF-e (modelo 55), NFC-e (modelo 65), CT-e
 // (57/67) e MDF-e (58), o que torna este pacote independente do documento.
+//
+// # CNPJ alfanumérico
+//
+// Pela Nota Técnica Conjunta 2025.001, as doze primeiras posições do CNPJ podem
+// ter letras maiúsculas, e a chave passa a seguir o padrão
+// [0-9]{6}[A-Z0-9]{12}[0-9]{26}. O dígito verificador continua no módulo 11,
+// com cada caractere valendo o seu código ASCII menos 48 (A vale 17): uma chave
+// só de dígitos tem o mesmo dígito de antes.
 package chave
 
 import (
@@ -34,8 +42,10 @@ type Chave struct {
 	Ano int
 	// Mes é o mês de emissão, de 1 a 12.
 	Mes int
-	// CNPJ é o CNPJ do emitente com 14 dígitos. Emitentes pessoa física usam
-	// o CPF alinhado à direita com zeros à esquerda.
+	// CNPJ é o CNPJ do emitente com 14 posições: as doze primeiras podem ter
+	// letras maiúsculas (CNPJ alfanumérico), as duas últimas são dígitos.
+	// Emitentes pessoa física usam o CPF alinhado à direita com zeros à
+	// esquerda.
 	CNPJ string
 	// Modelo é o modelo do documento: 55 (NF-e), 65 (NFC-e), 57/67 (CT-e),
 	// 58 (MDF-e).
@@ -95,8 +105,8 @@ func (c Chave) validarCampos() error {
 	if c.Mes < 1 || c.Mes > 12 {
 		return fmt.Errorf("%w: mês %d fora da faixa 1–12", ErrChaveInvalida, c.Mes)
 	}
-	if len(c.CNPJ) != 14 || !apenasDigitos(c.CNPJ) {
-		return fmt.Errorf("%w: CNPJ %q deve ter 14 dígitos", ErrChaveInvalida, c.CNPJ)
+	if !CNPJValido(c.CNPJ) {
+		return fmt.Errorf("%w: CNPJ %q fora do padrão [A-Z0-9]{12}[0-9]{2}", ErrChaveInvalida, c.CNPJ)
 	}
 	if c.Modelo < 1 || c.Modelo > 99 {
 		return fmt.Errorf("%w: modelo %d fora da faixa 01–99", ErrChaveInvalida, c.Modelo)
@@ -121,7 +131,7 @@ func (c Chave) validarCampos() error {
 	return nil
 }
 
-// Parse decompõe uma chave de acesso de 44 dígitos, conferindo o dígito
+// Parse decompõe uma chave de acesso de 44 posições, conferindo o dígito
 // verificador. Aceita pontuação e espaços, que são descartados, e o prefixo
 // "NFe" usado no atributo Id do XML.
 func Parse(s string) (Chave, error) {
@@ -146,15 +156,15 @@ func Parse(s string) (Chave, error) {
 	}, nil
 }
 
-// Validar confere o comprimento, o conteúdo numérico e o dígito verificador da
-// chave.
+// Validar confere o comprimento, o padrão (letras só nas posições do CNPJ) e o
+// dígito verificador da chave.
 func Validar(s string) error {
 	limpa := Limpar(s)
 	if len(limpa) != Tamanho {
-		return fmt.Errorf("%w: %d dígitos, esperados %d", ErrChaveInvalida, len(limpa), Tamanho)
+		return fmt.Errorf("%w: %d caracteres, esperados %d", ErrChaveInvalida, len(limpa), Tamanho)
 	}
-	if !apenasDigitos(limpa) {
-		return fmt.Errorf("%w: contém caractere não numérico", ErrChaveInvalida)
+	if !apenasDigitos(limpa[:6]) || !CNPJValido(limpa[6:20]) || !apenasDigitos(limpa[20:]) {
+		return fmt.Errorf("%w: fora do padrão [0-9]{6}[A-Z0-9]{12}[0-9]{26}", ErrChaveInvalida)
 	}
 	esperado := DigitoVerificador(limpa[:43])
 	informado := int(limpa[43] - '0')
@@ -167,28 +177,62 @@ func Validar(s string) error {
 // Valida é a forma booleana de [Validar].
 func Valida(s string) bool { return Validar(s) == nil }
 
-// Limpar remove tudo que não for dígito, permitindo receber a chave formatada
-// em grupos, com o prefixo "NFe" do atributo Id ou copiada do DANFE.
+// prefixosDeId são os prefixos do atributo Id que antecedem a chave no XML.
+var prefixosDeId = []string{"NFE", "CTE", "MDFE", "NFCE", "NF3E", "NFCOM", "BPE", "GTVE"}
+
+// Limpar devolve a chave em maiúsculas, só com letras e dígitos, permitindo
+// recebê-la formatada em grupos, copiada do DANFE, com o prefixo do atributo Id
+// ("NFe", "CTe", "MDFe") ou com um rótulo de letras antes ("Chave: …"), que são
+// descartados. As letras do CNPJ alfanumérico são preservadas.
 func Limpar(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
-	for _, r := range s {
-		if r >= '0' && r <= '9' {
+	for _, r := range strings.ToUpper(s) {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') {
 			b.WriteRune(r)
 		}
 	}
-	return b.String()
+	limpa := b.String()
+	if len(limpa) > Tamanho {
+		for _, prefixo := range prefixosDeId {
+			if len(limpa) == Tamanho+len(prefixo) && strings.HasPrefix(limpa, prefixo) {
+				return limpa[len(prefixo):]
+			}
+		}
+		// Um rótulo antes da chave ("Chave:", "chNFe="): a chave começa por dígitos, então as letras do início caem.
+		if i := strings.IndexFunc(limpa, func(r rune) bool { return r >= '0' && r <= '9' }); i > 0 && len(limpa)-i == Tamanho {
+			return limpa[i:]
+		}
+	}
+	return limpa
+}
+
+// CNPJValido confere o padrão do CNPJ na chave e nos leiautes (TCnpj):
+// [A-Z0-9]{12}[0-9]{2}. Não confere os dígitos verificadores; para isso, use o
+// pacote validacao.
+func CNPJValido(cnpj string) bool {
+	if len(cnpj) != 14 || !apenasDigitos(cnpj[12:]) {
+		return false
+	}
+	for i := 0; i < 12; i++ {
+		if (cnpj[i] < '0' || cnpj[i] > '9') && (cnpj[i] < 'A' || cnpj[i] > 'Z') {
+			return false
+		}
+	}
+	return true
 }
 
 // DigitoVerificador calcula o dígito verificador da chave pelo módulo 11 com
 // pesos de 2 a 9 aplicados da direita para a esquerda, conforme o MOC. Espera
-// os 43 primeiros dígitos da chave; caracteres não numéricos são tratados como
-// zero.
+// os 43 primeiros caracteres da chave. Letras maiúsculas valem o código ASCII
+// menos 48 (NT 2025.001); qualquer outro caractere vale zero.
 func DigitoVerificador(base string) int {
 	soma, peso := 0, 2
 	for i := len(base) - 1; i >= 0; i-- {
-		d := int(base[i] - '0')
-		if d < 0 || d > 9 {
+		// Valor do caractere pela NT 2025.001: código ASCII menos 48. Dígitos
+		// valem o que já valiam; A vale 17, Z vale 42.
+		d := int(base[i]) - '0'
+		if (base[i] < '0' || base[i] > '9') && (base[i] < 'A' || base[i] > 'Z') {
 			d = 0
 		}
 		soma += d * peso

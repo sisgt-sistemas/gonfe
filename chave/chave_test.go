@@ -255,3 +255,78 @@ func TestMustNovaEntraEmPanico(t *testing.T) {
 	}()
 	chave.MustNova(chave.Chave{})
 }
+
+// dvIndependente refaz o dígito da chave pela descrição da NT 2025.001, sem usar o pacote: valor ASCII menos 48,
+// pesos de 2 a 9 da direita para a esquerda, resto 0 ou 1 dá zero.
+func dvIndependente(base string) int {
+	soma := 0
+	for i := range len(base) {
+		peso := 2 + (len(base)-1-i)%8
+		soma += (int(base[i]) - 48) * peso
+	}
+	if r := soma % 11; r > 1 {
+		return 11 - r
+	}
+	return 0
+}
+
+func TestChaveComCNPJAlfanumerico(t *testing.T) {
+	// O CNPJ do exemplo da NT 2025.001: 12.ABC.345/01DE-35.
+	const cnpj = "12ABC34501DE35"
+	c := chave.Chave{CUF: 43, Ano: 26, Mes: 7, CNPJ: cnpj, Modelo: 57, Serie: 1, Numero: 1234, TpEmis: 1, CNF: "11223344"}
+	s, err := chave.Nova(c)
+	if err != nil {
+		t.Fatalf("Nova: %v", err)
+	}
+	if s[6:20] != cnpj {
+		t.Errorf("CNPJ na chave = %s, queria %s", s[6:20], cnpj)
+	}
+	if got, want := int(s[43]-'0'), dvIndependente(s[:43]); got != want {
+		t.Errorf("dígito = %d, a contraprova dá %d", got, want)
+	}
+	if err := chave.Validar(s); err != nil {
+		t.Errorf("Validar: %v", err)
+	}
+	volta, err := chave.Parse("CTe" + s)
+	if err != nil || volta != c {
+		t.Errorf("Parse(CTe…) = %+v, %v; queria %+v", volta, err, c)
+	}
+	if got := chave.Limpar(strings.ToLower(chave.Formatar(s))); got != s {
+		t.Errorf("Limpar(formatada, minúsculas) = %s, queria %s", got, s)
+	}
+}
+
+func TestDigitoDaChaveNumericaNaoMuda(t *testing.T) {
+	// A regra nova não muda o dígito de chave só de dígitos.
+	if got, want := chave.DigitoVerificador(chaveExemplo[:43]), dvIndependente(chaveExemplo[:43]); got != want {
+		t.Errorf("dígito = %d, a contraprova dá %d", got, want)
+	}
+}
+
+func TestChaveRecusaLetraForaDoCNPJ(t *testing.T) {
+	s := chave.MustNova(chave.Chave{CUF: 43, Ano: 26, Mes: 7, CNPJ: "12ABC34501DE35", Modelo: 57, Serie: 1,
+		Numero: 1234, TpEmis: 1, CNF: "11223344"})
+	for _, ruim := range []string{
+		"4A" + s[2:],          // letra na UF
+		s[:18] + "A" + s[19:], // letra no dígito do CNPJ
+		s[:30] + "A" + s[31:], // letra no número
+	} {
+		if chave.Valida(ruim) {
+			t.Errorf("Validar aceitou %s", ruim)
+		}
+	}
+	if _, err := chave.Nova(chave.Chave{CUF: 43, Ano: 26, Mes: 7, CNPJ: "12ABC34501DEAB", Modelo: 57, Serie: 1,
+		Numero: 1, TpEmis: 1, CNF: "11223344"}); err == nil {
+		t.Error("Nova aceitou CNPJ com letra nos dígitos verificadores")
+	}
+}
+
+func TestLimparTiraRotuloAntesDaChave(t *testing.T) {
+	s := chave.MustNova(chave.Chave{CUF: 43, Ano: 26, Mes: 7, CNPJ: "12ABC34501DE35", Modelo: 57, Serie: 1,
+		Numero: 1234, TpEmis: 1, CNF: "11223344"})
+	for _, entrada := range []string{"Chave: " + s, "chNFe=" + s, "chave de acesso " + chave.Formatar(s)} {
+		if got := chave.Limpar(entrada); got != s {
+			t.Errorf("Limpar(%q) = %s, queria %s", entrada, got, s)
+		}
+	}
+}

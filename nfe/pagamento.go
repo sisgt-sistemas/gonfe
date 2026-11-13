@@ -44,7 +44,7 @@ type DetPag struct {
 	DPag *tipos.Data `xml:"dPag,omitempty"`
 	// CNPJPag é o CNPJ do estabelecimento onde o pagamento foi processado,
 	// quando diferente do emitente.
-	CNPJPag string `xml:"CNPJPag,omitempty" norm:"num"`
+	CNPJPag string `xml:"CNPJPag,omitempty" norm:"alnum"`
 	// UFPag é a UF do estabelecimento onde o pagamento foi processado.
 	UFPag string `xml:"UFPag,omitempty" norm:"upper"`
 	// Card traz os dados da operação com cartão ou pagamento eletrônico.
@@ -56,13 +56,13 @@ type Card struct {
 	// TpIntegra informa se o pagamento foi integrado ao sistema de automação.
 	TpIntegra string `xml:"tpIntegra"`
 	// CNPJ da credenciadora do cartão.
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	// TBand é a bandeira da operadora.
 	TBand string `xml:"tBand,omitempty"`
 	// CAut é o número de autorização da transação.
 	CAut string `xml:"cAut,omitempty"`
 	// CNPJReceb é o CNPJ do beneficiário do pagamento.
-	CNPJReceb string `xml:"CNPJReceb,omitempty" norm:"num"`
+	CNPJReceb string `xml:"CNPJReceb,omitempty" norm:"alnum"`
 	// IdTermPag identifica o terminal de pagamento.
 	IdTermPag string `xml:"idTermPag,omitempty"`
 }

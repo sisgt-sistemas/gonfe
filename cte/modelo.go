@@ -128,7 +128,7 @@ type Toma3 struct {
 // destinatário.
 type Toma4 struct {
 	Toma      Tomador   `xml:"toma"`
-	CNPJ      string    `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string    `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string    `xml:"CPF,omitempty" norm:"num"`
 	IE        string    `xml:"IE,omitempty" norm:"upper"`
 	XNome     string    `xml:"xNome"`
@@ -219,7 +219,7 @@ type ObsCampo struct {
 
 // Emit é o emitente do conhecimento — a transportadora.
 type Emit struct {
-	CNPJ      string           `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string           `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string           `xml:"CPF,omitempty" norm:"num"`
 	IE        string           `xml:"IE" norm:"upper"`
 	IEST      string           `xml:"IEST,omitempty" norm:"upper"`
@@ -255,7 +255,7 @@ func (e EnderecoEmitente) Endereco() Endereco {
 
 // Rem é o remetente da carga.
 type Rem struct {
-	CNPJ      string    `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string    `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string    `xml:"CPF,omitempty" norm:"num"`
 	IE        string    `xml:"IE,omitempty" norm:"upper"`
 	XNome     string    `xml:"xNome"`
@@ -267,7 +267,7 @@ type Rem struct {
 
 // Exped é o expedidor da carga.
 type Exped struct {
-	CNPJ       string    `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ       string    `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF        string    `xml:"CPF,omitempty" norm:"num"`
 	IE         string    `xml:"IE,omitempty" norm:"upper"`
 	XNome      string    `xml:"xNome"`
@@ -278,7 +278,7 @@ type Exped struct {
 
 // Receb é o recebedor da carga.
 type Receb struct {
-	CNPJ       string    `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ       string    `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF        string    `xml:"CPF,omitempty" norm:"num"`
 	IE         string    `xml:"IE,omitempty" norm:"upper"`
 	XNome      string    `xml:"xNome"`
@@ -289,7 +289,7 @@ type Receb struct {
 
 // Dest é o destinatário da carga.
 type Dest struct {
-	CNPJ      string    `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ      string    `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF       string    `xml:"CPF,omitempty" norm:"num"`
 	IE        string    `xml:"IE,omitempty" norm:"upper"`
 	XNome     string    `xml:"xNome"`
@@ -315,13 +315,13 @@ type Endereco struct {
 
 // AutXML autoriza um CNPJ ou CPF a obter o XML do conhecimento.
 type AutXML struct {
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF  string `xml:"CPF,omitempty" norm:"num"`
 }
 
 // InfRespTec identifica o responsável técnico pelo sistema emissor.
 type InfRespTec struct {
-	CNPJ     string `xml:"CNPJ" norm:"num"`
+	CNPJ     string `xml:"CNPJ" norm:"alnum"`
 	XContato string `xml:"xContato"`
 	Email    string `xml:"email"`
 	Fone     string `xml:"fone" norm:"num"`
@@ -355,11 +355,11 @@ type Imp struct {
 
 // InfCteComp identifica o conhecimento que está sendo complementado.
 type InfCteComp struct {
-	Chave string `xml:"chCTe" norm:"num"`
+	Chave string `xml:"chCTe" norm:"alnum"`
 }
 
 // InfCteAnu identifica o conhecimento anulado.
 type InfCteAnu struct {
-	Chave string     `xml:"chCte" norm:"num"`
+	Chave string     `xml:"chCte" norm:"alnum"`
 	DEmi  tipos.Data `xml:"dEmi"`
 }

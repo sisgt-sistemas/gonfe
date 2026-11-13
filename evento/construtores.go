@@ -32,7 +32,7 @@ var ErrDadosInvalidos = errors.New("evento: dados inválidos")
 
 // comum reúne os campos que todo evento exige.
 type comum struct {
-	// Chave é a chave de acesso de 44 dígitos da nota.
+	// Chave é a chave de acesso de 44 posições da nota.
 	Chave string
 	// CNPJ de quem registra o evento. Informe CNPJ ou CPF.
 	CNPJ string

@@ -360,7 +360,7 @@ type ICMSUFDest struct {
 // IPI é o grupo O: Imposto sobre Produtos Industrializados. Preencha
 // [IPI.IPITrib] ou [IPI.IPINT], nunca os dois.
 type IPI struct {
-	CNPJProd string   `xml:"CNPJProd,omitempty" norm:"num"`
+	CNPJProd string   `xml:"CNPJProd,omitempty" norm:"alnum"`
 	CSelo    string   `xml:"cSelo,omitempty"`
 	QSelo    *int     `xml:"qSelo,omitempty"`
 	CEnq     string   `xml:"cEnq"`

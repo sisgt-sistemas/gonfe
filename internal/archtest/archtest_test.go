@@ -205,3 +205,85 @@ func TestDecimalPlacesFollowTheSchema(t *testing.T) {
 		}
 	}
 }
+
+// chaveOuCNPJ casa os nomes de elemento que levam CNPJ ou chave de acesso: CNPJ, CNPJFab, chNFe, chCTe, refNFe,
+// chave. Esses campos podem ter letras (CNPJ alfanumérico, NT 2025.001).
+var chaveOuCNPJ = regexp.MustCompile(`^(CNPJ[A-Za-z]*|chave|ch[A-Z][A-Za-z]*|ref(NFe|NFeSig|CTe|Cte|CTeCanc|CteAnu))$`)
+
+// elementosAlfanumericos lê, dos esquemas de uma família, os elementos cujo tipo aceita letras nas posições do CNPJ
+// (TCnpj, TCnpjOpc, TChDFe, TChNFe e os padrões em linha com [A-Z0-9]{12}).
+func elementosAlfanumericos(t *testing.T, folder string) map[string]bool {
+	t.Helper()
+	tipos := regexp.MustCompile(`<xs:simpleType name="([A-Za-z0-9_]+)">(?s:.*?)</xs:simpleType>`)
+	elemento := regexp.MustCompile(`<xs:element name="([A-Za-z0-9]+)"([^>]*)>`)
+	alfa := map[string]bool{}
+	out := map[string]bool{}
+	files, err := filepath.Glob(filepath.Join(root, "xsd", "esquemas", folder, "*.xsd"))
+	if err != nil || len(files) == 0 {
+		t.Fatalf("esquemas de %s: %v", folder, err)
+	}
+	var conteudos []string
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		conteudos = append(conteudos, string(content))
+		for _, m := range tipos.FindAllStringSubmatch(string(content), -1) {
+			if strings.Contains(m[0], "[A-Z0-9]{12}") {
+				alfa[m[1]] = true
+			}
+		}
+	}
+	for _, content := range conteudos {
+		for _, m := range elemento.FindAllStringSubmatchIndex(content, -1) {
+			name, attrs := content[m[2]:m[3]], content[m[4]:m[5]]
+			if tipo := regexp.MustCompile(`type="([A-Za-z0-9_]+)"`).FindStringSubmatch(attrs); tipo != nil {
+				if alfa[tipo[1]] {
+					out[name] = true
+				}
+				continue
+			}
+			// Tipo em linha: o padrão vem logo depois, antes do fim do elemento.
+			fim := strings.Index(content[m[1]:], "</xs:element>")
+			if fim > 0 && strings.Contains(content[m[1]:m[1]+fim], "[A-Z0-9]{12}") {
+				out[name] = true
+			}
+		}
+	}
+	return out
+}
+
+// TestCNPJAndKeysKeepLetters: campo de CNPJ ou de chave de acesso não usa norm:"num", que apagaria as letras do CNPJ
+// alfanumérico; usa norm:"alnum". Vale para os nomes conhecidos em todo pacote e, onde há esquema embutido, para todo
+// elemento cujo tipo aceita letras.
+func TestCNPJAndKeysKeepLetters(t *testing.T) {
+	esquema := map[string]map[string]bool{"cte": elementosAlfanumericos(t, "cte"), "mdfe": elementosAlfanumericos(t, "mdfe")}
+	familia := map[string]string{"cte": "cte", "cteos": "cte", "ctesimp": "cte", "mdfe": "mdfe"}
+	conferidos := 0
+	goFiles(t, func(relative string, test bool) {
+		if test {
+			return
+		}
+		pkg, _, _ := strings.Cut(relative, "/")
+		ast.Inspect(parse(t, relative, 0), func(node ast.Node) bool {
+			field, ok := node.(*ast.Field)
+			if !ok || field.Tag == nil {
+				return true
+			}
+			tag, _ := strconv.Unquote(field.Tag.Value)
+			name, _, _ := strings.Cut(reflect.StructTag(tag).Get("xml"), ",")
+			if !chaveOuCNPJ.MatchString(name) && !esquema[familia[pkg]][name] {
+				return true
+			}
+			conferidos++
+			if slices.Contains(strings.Split(reflect.StructTag(tag).Get("norm"), ","), "num") {
+				t.Errorf("%s: %s com norm:\"num\" apaga as letras do CNPJ alfanumérico; use norm:\"alnum\"", relative, name)
+			}
+			return true
+		})
+	})
+	if conferidos < 80 {
+		t.Errorf("só %d campos de CNPJ ou chave conferidos; o gate não está lendo os pacotes", conferidos)
+	}
+}

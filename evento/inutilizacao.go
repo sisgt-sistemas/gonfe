@@ -42,7 +42,7 @@ type InfInut struct {
 	// Ano são os dois últimos dígitos do ano da faixa inutilizada.
 	Ano int `xml:"ano"`
 	// CNPJ do emitente.
-	CNPJ string `xml:"CNPJ" norm:"num"`
+	CNPJ string `xml:"CNPJ" norm:"alnum"`
 	// Mod é o modelo do documento: 55 ou 65.
 	Mod nfe.Modelo `xml:"mod"`
 	// Serie é a série da faixa.
@@ -116,7 +116,8 @@ func NovaInutilizacao(d DadosInutilizacao) (*Inutilizacao, error) {
 		return nil, fmt.Errorf("%w: ano %d fora da faixa 00–99", ErrDadosInvalidos, ano)
 	}
 
-	cnpj := somenteDigitos(d.CNPJ)
+	// O CNPJ pode ser alfanumérico: as letras entram no Id e no grupo, em maiúsculas.
+	cnpj := norm.ApenasAlfanumericos(d.CNPJ)
 	i := &Inutilizacao{
 		Versao: VersaoInutilizacao,
 		InfInut: InfInut{

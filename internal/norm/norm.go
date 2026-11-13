@@ -6,6 +6,8 @@
 //	dec:"N"        reescala um tipos.Decimal para N casas decimais
 //	norm:"upper"   converte a string para maiúsculas
 //	norm:"num"     mantém apenas os dígitos da string
+//	norm:"alnum"   maiúsculas, só letras de A a Z e dígitos: CNPJ (que pode
+//	               ser alfanumérico) e chave de acesso
 //	norm:"-"       deixa o campo intocado
 //
 // Toda string é, por padrão, aparada nas pontas, tem sequências de espaços em
@@ -108,6 +110,8 @@ func aplicarRegraTexto(s, regra string) string {
 			s = strings.ToUpper(s)
 		case "num":
 			s = ApenasDigitos(s)
+		case "alnum":
+			s = ApenasAlfanumericos(s)
 		}
 	}
 	return s
@@ -149,6 +153,19 @@ func LimparTexto(s string) string {
 				b.WriteByte(' ')
 				espacoPendente = false
 			}
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
+// ApenasAlfanumericos põe s em maiúsculas e devolve só as letras de A a Z e os
+// dígitos, descartando a pontuação de máscaras como "12.ABC.345/01DE-35".
+func ApenasAlfanumericos(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range strings.ToUpper(s) {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') {
 			b.WriteRune(r)
 		}
 	}

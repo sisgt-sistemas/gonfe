@@ -3,6 +3,7 @@ package danfe_test
 import (
 	"bytes"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/sisgt-sistemas/gonfe/cte"
@@ -314,6 +315,26 @@ func TestDACTEDesenhaAChaveEmCodigoDeBarras(t *testing.T) {
 	}
 	if !bytes.Contains(dados, []byte(c.Chave()[:4]+" ")) {
 		t.Error("a chave formatada não aparece no documento")
+	}
+}
+
+// Com o CNPJ alfanumérico, a chave tem letras: o código de barras alterna para o conjunto A em vez de falhar
+// (NT 2025.001 §6), e a chave impressa traz as letras.
+func TestDACTEComCNPJAlfanumerico(t *testing.T) {
+	c := conhecimentoExemplo(1)
+	c.InfCte.Emit.CNPJ = "12ABC34501DE35"
+	dados, err := danfe.GerarDACTE(procCTeDe(t, c), danfe.Opcoes{})
+	if err != nil {
+		t.Fatalf("GerarDACTE com chave alfanumérica: %v", err)
+	}
+	if !strings.Contains(c.Chave(), "12ABC34501DE35") {
+		t.Fatalf("a chave %s não tem o CNPJ alfanumérico", c.Chave())
+	}
+	if barras := bytes.Count(dados, []byte(" re\nf\n")); barras < 40 {
+		t.Errorf("%d retângulos preenchidos; o código de barras não foi desenhado", barras)
+	}
+	if bytes.Contains(dados, []byte("digo de barras indispon")) {
+		t.Error("o DACTE caiu no aviso de código de barras indisponível")
 	}
 }
 

@@ -261,3 +261,16 @@ func TestDescrever(t *testing.T) {
 		}
 	}
 }
+
+// O CNPJ alfanumérico do exemplo da NT 2025.001: as letras não podem sumir na leitura do certificado, nem pelo
+// subjectAltName (OID 2.16.76.1.3.3) nem pelo sufixo do nome comum. Cada caminho é testado sozinho.
+func TestCNPJAlfanumericoDoCertificado(t *testing.T) {
+	for nome, opcoes := range map[string]certtest.Opcoes{
+		"subjectAltName": {RazaoSocial: "EMPRESA ALFA SA", CNPJ: "12ABC34501DE35", SemDocumentoNoNome: true},
+		"nome comum":     {RazaoSocial: "EMPRESA ALFA SA", CNPJ: "12ABC34501DE35", SemSubjectAltName: true},
+	} {
+		if got := certtest.MustGerar(opcoes).CNPJ(); got != "12ABC34501DE35" {
+			t.Errorf("%s: CNPJ = %q, queria 12ABC34501DE35", nome, got)
+		}
+	}
+}

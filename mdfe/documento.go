@@ -49,7 +49,7 @@ func Novo(modal Modal) *MDFe {
 	}
 }
 
-// Chave devolve a chave de acesso de 44 dígitos, extraída do atributo Id.
+// Chave devolve a chave de acesso de 44 posições, extraída do atributo Id.
 func (m *MDFe) Chave() string { return strings.TrimPrefix(m.InfMDFe.Id, "MDFe") }
 
 // Modal devolve o meio de transporte da viagem.

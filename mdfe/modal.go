@@ -47,7 +47,7 @@ type InfANTT struct {
 // InfCIOT é um Código Identificador da Operação de Transporte.
 type InfCIOT struct {
 	CIOT string `xml:"CIOT"`
-	CNPJ string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ string `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF  string `xml:"CPF,omitempty" norm:"num"`
 }
 
@@ -59,8 +59,8 @@ type ValePed struct {
 
 // DispositivoPedagio é um vale-pedágio.
 type DispositivoPedagio struct {
-	CNPJForn  string         `xml:"CNPJForn" norm:"num"`
-	CNPJPg    string         `xml:"CNPJPg,omitempty" norm:"num"`
+	CNPJForn  string         `xml:"CNPJForn" norm:"alnum"`
+	CNPJPg    string         `xml:"CNPJPg,omitempty" norm:"alnum"`
 	CPFPg     string         `xml:"CPFPg,omitempty" norm:"num"`
 	NCompra   string         `xml:"nCompra,omitempty"`
 	VValePed  *tipos.Decimal `xml:"vValePed,omitempty" dec:"2"`
@@ -70,7 +70,7 @@ type DispositivoPedagio struct {
 // InfContratante identifica quem contratou o transporte.
 type InfContratante struct {
 	XNome         string       `xml:"xNome,omitempty"`
-	CNPJ          string       `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ          string       `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF           string       `xml:"CPF,omitempty" norm:"num"`
 	IdEstrangeiro string       `xml:"idEstrangeiro,omitempty"`
 	InfContrato   *InfContrato `xml:"infContrato,omitempty"`
@@ -85,7 +85,7 @@ type InfContrato struct {
 // InfPag detalha o pagamento do frete.
 type InfPag struct {
 	XNome         string         `xml:"xNome,omitempty"`
-	CNPJ          string         `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ          string         `xml:"CNPJ,omitempty" norm:"alnum"`
 	CPF           string         `xml:"CPF,omitempty" norm:"num"`
 	IdEstrangeiro string         `xml:"idEstrangeiro,omitempty"`
 	Comp          []CompPag      `xml:"Comp"`
@@ -115,7 +115,7 @@ type InfPrazo struct {
 type InfBanc struct {
 	CodBanco   string `xml:"codBanco,omitempty"`
 	CodAgencia string `xml:"codAgencia,omitempty"`
-	CNPJIPEF   string `xml:"CNPJIPEF,omitempty" norm:"num"`
+	CNPJIPEF   string `xml:"CNPJIPEF,omitempty" norm:"alnum"`
 	PIX        string `xml:"PIX,omitempty"`
 }
 
@@ -161,7 +161,7 @@ type VeicReboque struct {
 // Proprietario identifica o dono do veículo, quando não é o emitente.
 type Proprietario struct {
 	CPF    string `xml:"CPF,omitempty" norm:"num"`
-	CNPJ   string `xml:"CNPJ,omitempty" norm:"num"`
+	CNPJ   string `xml:"CNPJ,omitempty" norm:"alnum"`
 	RNTRC  string `xml:"RNTRC" norm:"upper"`
 	XNome  string `xml:"xNome"`
 	IE     string `xml:"IE,omitempty" norm:"upper"`
@@ -192,7 +192,7 @@ type Aereo struct {
 
 // Aquav é o modal aquaviário.
 type Aquav struct {
-	CNPJAgeNav       string        `xml:"CNPJAgeNav,omitempty" norm:"num"`
+	CNPJAgeNav       string        `xml:"CNPJAgeNav,omitempty" norm:"alnum"`
 	TpEmb            string        `xml:"tpEmb"`
 	CEmbar           string        `xml:"cEmbar"`
 	XEmbar           string        `xml:"xEmbar"`

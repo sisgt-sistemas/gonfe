@@ -379,3 +379,19 @@ func TestClienteMDFeUsaEndpointSobreposto(t *testing.T) {
 		t.Errorf("autorizador = %q", c.Autorizador())
 	}
 }
+
+func TestMDFeNaoEncerradosComCNPJAlfanumerico(t *testing.T) {
+	s := novoServidor(t, func(int32, string) (int, string) {
+		return 200, enveloparMDFe(`<retConsMDFeNaoEnc versao="3.00" xmlns="http://www.portalfiscal.inf.br/mdfe">` +
+			`<tpAmb>2</tpAmb><verAplic>SVRS20260304</verAplic><cStat>112</cStat>` +
+			`<xMotivo>Consulta sem ocorrencias</xMotivo></retConsMDFeNaoEnc>`)
+	})
+	c := clienteMDFeApontando(t, s.URL)
+	if _, err := c.NaoEncerrados(context.Background(), "12.abc.345/01de-35"); err != nil {
+		t.Fatalf("NaoEncerrados recusou o CNPJ alfanumérico: %v", err)
+	}
+	enviado, _ := s.ultimoCorpo.Load().(string)
+	if !strings.Contains(enviado, "<CNPJ>12ABC34501DE35</CNPJ>") {
+		t.Errorf("o CNPJ alfanumérico não chegou ao serviço:\n%s", enviado)
+	}
+}
