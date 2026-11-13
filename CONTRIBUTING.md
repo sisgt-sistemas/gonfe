@@ -22,23 +22,24 @@ infraestrutura comum já existe e vale reaproveitar.
 
 ## Ambiente
 
-Você precisa de Go 1.23 ou mais recente. Nada além disso: a biblioteca não usa
-CGO nem ferramentas externas.
+Para **usar** a biblioteca basta Go 1.23 ou mais recente: ela não usa CGO nem
+programa externo.
+
+Para **desenvolver**, tudo roda no container de `docker/dev` (Go,
+golangci-lint, govulncheck e o `xmllint`), pelo `Makefile`. Só Docker e `make`
+no host:
 
 ```bash
 git clone https://github.com/sisgt-sistemas/gonfe
 cd gonfe
-go test ./...
+make image            # uma vez
+make ci               # o gate: formatação, vet, golangci-lint e testes
+make help             # o resto: cover, vuln, mutate, shell
 ```
 
-Para rodar tudo o que a CI roda:
-
-```bash
-gofmt -l .            # não pode listar nada
-go vet ./...
-go test -race ./...
-go test -coverprofile=cobertura.out ./... && go tool cover -func=cobertura.out
-```
+O `make ci` é o mesmo que a CI roda no Linux e o que o fluxo exige antes de
+integrar. Sem o container, `go test ./...` também funciona; os testes contra os
+esquemas oficiais são pulados quando não há `xmllint`.
 
 ## Convenções do código
 
@@ -60,6 +61,29 @@ economiza meia hora de quem for depurar.
 
 **Formatação.** `gofmt` resolve. A CI reprova o que não estiver formatado.
 
+## Leiaute
+
+**O campo nasce do XSD.** Nome, ordem, obrigatoriedade, tamanho e casas
+decimais vêm do esquema oficial da versão em vigor (em `xsd/esquemas`, com a
+origem e o sha256 no README da pasta), não de exemplo nem de outra biblioteca.
+O Manual de Orientação explica; o esquema decide.
+
+**Todo documento passa no esquema.** CT-e, CT-e OS e MDF-e têm teste que monta o
+documento, assina e confere com o pacote `xsd`. Campo novo entra no exemplo
+desse teste. Esquema novo entra em `xsd/esquemas` byte a byte, com o sha256 no
+README.
+
+**Os gates em `internal/archtest`** conferem o que o compilador não vê:
+
+- a biblioteca não usa CGO;
+- só o pacote `xsd` roda programa externo;
+- todo pacote de documento tem teste contra o esquema;
+- a tag `dec:"N"` de cada campo decimal cabe nas casas do tipo `TDec_*` do
+  esquema.
+
+Um gate não se afrouxa para passar uma mudança: se a regra estiver errada,
+corrija a regra com o motivo no pull request.
+
 ## Testes
 
 Toda mudança de comportamento precisa de teste. Alguns padrões que o projeto
@@ -79,6 +103,9 @@ segue e que vale manter:
   sintéticos.
 - **Mensagens em português**, dizendo o que se esperava e o que veio:
   `t.Errorf("vProd = %s, queria %s", got, want)`.
+- **Regra nova traz teste, e o teste é visto falhar.** Antes de abrir o pull
+  request, quebre uma vez o código que a regra protege e confira que o teste
+  reprova; diga no pull request como sabotou.
 
 ## Documentação
 
@@ -96,13 +123,20 @@ mkdocs serve
 ## Enviando a mudança
 
 1. Abra uma issue antes de mudanças grandes, para combinarmos a abordagem.
-2. Trabalhe em um branch a partir de `main`.
-3. Deixe a CI verde: formatação, `vet`, testes com `-race`, `staticcheck` e
-   `govulncheck`.
-4. Escreva a mensagem de commit em português, no imperativo, explicando o
-   porquê e não só o quê. Se o commit corrige uma rejeição da SEFAZ, cite o
-   código.
-5. Abra o pull request descrevendo o problema que ele resolve.
+2. Trabalhe em um branch `feat/…` ou `fix/…` a partir de `develop`. O `main`
+   só guarda versões lançadas.
+3. Deixe o `make ci` verde. A CI roda também `-race`, `staticcheck`,
+   `govulncheck` e a matriz de sistemas e versões de Go.
+4. Escreva o commit em [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
+   `<tipo>(<escopo>): <assunto>`, com o assunto em inglês, no imperativo, até
+   72 caracteres, e o porquê no corpo. Se o commit corrige uma rejeição da
+   SEFAZ, cite o código. A versão sai dos commits: `feat` sobe o minor, `tipo!:`
+   ou `BREAKING CHANGE:` sobe o major, o resto sobe o patch.
+5. Não mexa em `VERSION`: só o commit de release muda o arquivo.
+6. Abra o pull request para `develop`, descrevendo o problema que ele resolve.
+
+Os ganchos de `.githooks` conferem a mensagem e o gate antes do push; ative com
+`git config core.hooksPath .githooks`.
 
 ## Segurança
 

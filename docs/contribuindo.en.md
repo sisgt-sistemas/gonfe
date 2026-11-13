@@ -33,13 +33,10 @@ cd gonfe
 go test ./...
 ```
 
-Everything CI checks:
-
-```bash
-gofmt -l .            # must list nothing
-go vet ./...
-go test -race ./...
-```
+For development, everything runs in the `docker/dev` container through the
+`Makefile`: `make image` once, then `make ci`, the gate (formatting, vet,
+golangci-lint and tests, with the `xmllint` that checks documents against the
+official schemas). Without `xmllint`, those tests are skipped.
 
 The tests do not reach the internet and do not need a real certificate: the
 internal `certtest` package generates synthetic certificates, and the SEFAZ
@@ -54,6 +51,10 @@ client is exercised against an `httptest.Server`.
 - **Comments explain why**, not what.
 - **Errors carry context**: wrap with `%w` and say which field, file or endpoint
   failed.
+- **Fields come from the XSD**: name, order, length and decimal places follow
+  the official schema, and every document has a test against it.
+- **A new rule brings a test**, seen failing once before the pull request.
+- **Commits follow Conventional Commits**, on a branch from `develop`.
 
 ## Tests that prove something
 

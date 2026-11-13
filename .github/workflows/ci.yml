@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
   workflow_dispatch:
 
@@ -14,6 +14,20 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  gate:
+    name: Gate (make ci)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # O mesmo gate de quem desenvolve: formatação, vet, golangci-lint e os testes, com o xmllint, no container de
+      # docker/dev. O que passa aqui passa no `make finish`.
+      - name: Imagem de desenvolvimento
+        run: make image
+
+      - name: make ci
+        run: make ci
+
   testes:
     name: Testes (${{ matrix.os }}, Go ${{ matrix.go }})
     runs-on: ${{ matrix.os }}
