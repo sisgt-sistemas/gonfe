@@ -5,6 +5,8 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.0.0] — 2026-11-13
+
 Fork mantido pela SISGT Sistemas (`github.com/sisgt-sistemas/gonfe`).
 
 ### Adicionado
