@@ -15,6 +15,8 @@ PREPUSH_GATE=1           # 1 = o pre-push roda o gate para arvore nunca gateada
 FORMAT_ON_COMMIT=1       # 1 = o pre-commit formata os arquivos staged
 SUBJECT_MAX=72           # tamanho maximo do assunto do commit
 REFUSE_AI_COAUTHOR=0     # 1 = recusa Co-Authored-By de assistente
+CHANGELOG_MODE=generated # generated = a release escreve a secao dos commits; curated = escrito a mao, a release so promove
+UNRELEASED_HEADING='## [Não lançado]' # no modo curated, a secao que o commit comum pode editar
 DEPLOY_WORKFLOW=""       # arquivo do workflow que o push em main dispara; vazio = nao acompanha
 RELEASE_BUILD_WORKFLOW="" # workflow que constroi a release no push de release/vX.Y.Z; o ship espera ele; vazio = nao confere
 BOARD_OWNER=""           # dono do GitHub Project (org ou usuario); vazio = sem board
@@ -36,6 +38,23 @@ current_branch() {
 
 has_branch() {
   git rev-parse --verify --quiet "refs/heads/$1" >/dev/null
+}
+
+# O CHANGELOG sem a secao do que ainda nao foi lancado. No modo curated, um commit
+# comum so pode mudar essa secao: o resto (versoes ja lancadas, cabecalho) e da release.
+changelog_released_part() {
+  awk -v h="$UNRELEASED_HEADING" '$0 == h { skip = 1; next } skip && /^## / { skip = 0 } !skip'
+}
+
+# O texto da secao do que ainda nao foi lancado, sem o titulo.
+changelog_unreleased() {
+  awk -v h="$UNRELEASED_HEADING" '$0 == h { on = 1; next } on && /^## / { exit } on'
+}
+
+# Verdadeiro se, entre as duas versoes do CHANGELOG (texto em $1 e $2), so a
+# secao do que ainda nao foi lancado mudou.
+changelog_only_unreleased() {
+  [ "$(printf '%s\n' "$1" | changelog_released_part)" = "$(printf '%s\n' "$2" | changelog_released_part)" ]
 }
 
 has_origin() {

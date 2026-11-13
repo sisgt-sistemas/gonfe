@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# VERSION e CHANGELOG.md so mudam num commit de release.
+# VERSION e CHANGELOG.md so mudam num commit de release. No modo curated
+# (CHANGELOG_MODE), o commit comum pode mexer na secao do que ainda nao foi
+# lancado, e so nela.
 #
 # Um bump fora da release faz duas versoes coexistirem e o changelog mentir sobre
 # o que foi entregue.
@@ -20,6 +22,10 @@ release_files() {
 # ── commit-msg: recebe o arquivo da mensagem ────────────────────────────
 if [ $# -gt 0 ] && [ -f "$1" ]; then
   touched="$(git diff --cached --name-only | release_files)"
+  if [ "$CHANGELOG_MODE" = curated ] && grep -qx 'CHANGELOG.md' <<<"$touched" \
+    && changelog_only_unreleased "$(git show HEAD:CHANGELOG.md 2>/dev/null || true)" "$(git show :CHANGELOG.md)"; then
+    touched="$(grep -vx 'CHANGELOG.md' <<<"$touched" || true)"
+  fi
   [ -z "$touched" ] && exit 0
 
   if head -1 "$1" | grep -q '^chore(release):'; then
@@ -45,6 +51,10 @@ failed=0
 while read -r sha; do
   [ -z "$sha" ] && continue
   touched="$(git show --name-only --format= "$sha" | release_files)"
+  if [ "$CHANGELOG_MODE" = curated ] && grep -qx 'CHANGELOG.md' <<<"$touched" \
+    && changelog_only_unreleased "$(git show "$sha^:CHANGELOG.md" 2>/dev/null || true)" "$(git show "$sha:CHANGELOG.md")"; then
+    touched="$(grep -vx 'CHANGELOG.md' <<<"$touched" || true)"
+  fi
   [ -z "$touched" ] && continue
 
   subject="$(git log -1 --format=%s "$sha")"

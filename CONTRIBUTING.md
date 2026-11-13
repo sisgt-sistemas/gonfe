@@ -132,7 +132,10 @@ mkdocs serve
    72 caracteres, e o porquê no corpo. Se o commit corrige uma rejeição da
    SEFAZ, cite o código. A versão sai dos commits: `feat` sobe o minor, `tipo!:`
    ou `BREAKING CHANGE:` sobe o major, o resto sobe o patch.
-5. Não mexa em `VERSION`: só o commit de release muda o arquivo.
+5. Anote a mudança que quem usa a biblioteca vê na seção **Não lançado** do
+   `CHANGELOG.md`, em português; quebra de API leva **Incompatível**. As
+   versões já lançadas e o `VERSION` só mudam no commit de release, que
+   renomeia a seção para a versão.
 6. Abra o pull request para `develop`, descrevendo o problema que ele resolve.
 
 Os ganchos de `.githooks` conferem a mensagem e o gate antes do push; ative com

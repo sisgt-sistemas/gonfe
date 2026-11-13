@@ -233,6 +233,21 @@ emit() {
     -e 's/^([0-9a-f]+) ([^-].*)$/- \2 (\1)/' <<<"$2"
 }
 
+# A secao desta release: gerada dos commits ou, no modo curated, a escrita a mao
+# no CHANGELOG, que a release so promove.
+release_notes() {
+  if [ "$CHANGELOG_MODE" = curated ]; then
+    changelog_unreleased <CHANGELOG.md
+  else
+    section
+  fi
+}
+
+if [ "$CHANGELOG_MODE" = curated ] && ! changelog_unreleased <CHANGELOG.md 2>/dev/null | grep -q '[^[:space:]]'; then
+  echo "A secao '$UNRELEASED_HEADING' do CHANGELOG.md esta vazia ou nao existe: escreva o que esta release leva." >&2
+  exit 1
+fi
+
 echo "Versao atual:           $version"
 echo "Ultimo commit release:  $(git log -1 --format='%h %s' "$last")"
 echo "Commits nesta release:  ${#commits[@]}"
@@ -240,7 +255,7 @@ echo "Proxima versao:         $next ($level)"
 
 if [ "$dry_run" = 1 ]; then
   echo ""
-  section
+  release_notes
   echo ""
   echo "Dry run: nada mudou. Para cortar, a PESSOA roda: make release${forced:+ bump=$forced}"
   exit 0
@@ -266,20 +281,27 @@ else
   ./scripts/gate-stamp record "$DEVELOP_BRANCH"
 fi
 
-notes="$(section)"
+notes="$(release_notes)"
 
-header=$'# Changelog\n\nEscrito por `make release`. Nao edite a mao.\n'
-previous=''
-if [ -f CHANGELOG.md ]; then
-  previous="$(awk 'kept || /^## / { kept = 1; print }' CHANGELOG.md)"
-fi
-{
-  printf '%s\n' "$header"
-  printf '%s\n' "$notes"
-  if [ -n "$previous" ]; then
-    printf '\n%s\n' "$previous"
+if [ "$CHANGELOG_MODE" = curated ]; then
+  # A secao escrita a mao vira a da versao; o titulo do que nao foi lancado fica, vazio, para a proxima.
+  awk -v h="$UNRELEASED_HEADING" -v v="## [$next] — $(date +%F)" \
+    '$0 == h && !done { print; print ""; print v; done = 1; next } { print }' CHANGELOG.md >CHANGELOG.md.new
+  mv CHANGELOG.md.new CHANGELOG.md
+else
+  header=$'# Changelog\n\nEscrito por `make release`. Nao edite a mao.\n'
+  previous=''
+  if [ -f CHANGELOG.md ]; then
+    previous="$(awk 'kept || /^## / { kept = 1; print }' CHANGELOG.md)"
   fi
-} >CHANGELOG.md
+  {
+    printf '%s\n' "$header"
+    printf '%s\n' "$notes"
+    if [ -n "$previous" ]; then
+      printf '\n%s\n' "$previous"
+    fi
+  } >CHANGELOG.md
+fi
 echo "$next" >VERSION
 
 git add VERSION CHANGELOG.md
