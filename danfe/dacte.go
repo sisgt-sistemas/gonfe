@@ -324,8 +324,6 @@ func tipoDoCTe(t cte.TipoCTe) string {
 		return "0 - NORMAL"
 	case cte.CTeComplemento:
 		return "1 - COMPLEMENTO DE VALORES"
-	case cte.CTeAnulacao:
-		return "2 - ANULAÇÃO DE VALORES"
 	case cte.CTeSubstituto:
 		return "3 - SUBSTITUTO"
 	default:

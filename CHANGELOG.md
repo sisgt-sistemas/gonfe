@@ -5,6 +5,17 @@ o [versionamento semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Corrigido
+
+- O CT-e não leva mais grupos do leiaute 3.00 que o esquema 4.00 recusa:
+  `infCteAnu`, e `refCteAnu` e `tomaICMS` no `infCteSub`. Os campos
+  (`InfCte.InfCteAnu`, `InfCteSub.RefCteAnu`, `InfCteSub.TomaICMS`) ficam por
+  compatibilidade, marcados `Deprecated`: não saem no XML, e `Validar` os
+  recusa. O `tpCTe` 2 (anulação), que o leiaute 4.00 não tem, também é recusado.
+- O CT-e OS recusa, no `Validar`, o que os tipos compartilhados com o CT-e
+  admitem e o esquema do OS não tem: `Entrega`, `fluxo`, `origCalc` e `destCalc`
+  no `compl`, CPF no emitente, `ICMS60` e `indAlteraToma`.
+
 ### Alterado
 
 - O módulo pede Go 1.26 (antes, 1.23), a mesma versão do tms; a integração

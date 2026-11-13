@@ -324,9 +324,13 @@ type Dup struct {
 
 // InfCteSub identifica o conhecimento substituído.
 type InfCteSub struct {
-	ChCte         string    `xml:"chCte" norm:"alnum"`
-	RefCteAnu     string    `xml:"refCteAnu,omitempty" norm:"alnum"`
-	TomaICMS      *TomaICMS `xml:"tomaICMS,omitempty"`
+	ChCte string `xml:"chCte" norm:"alnum"`
+	// Deprecated: o refCteAnu é do leiaute 3.00 e não existe no 4.00. O campo
+	// não sai no XML, e Validar o recusa.
+	RefCteAnu string `xml:"-" norm:"alnum"`
+	// Deprecated: o tomaICMS é do leiaute 3.00 e não existe no 4.00. O campo
+	// não sai no XML, e Validar o recusa.
+	TomaICMS      *TomaICMS `xml:"-"`
 	IndAlteraToma string    `xml:"indAlteraToma,omitempty"`
 }
 

@@ -418,6 +418,30 @@ func TestValidarPegaOsErros(t *testing.T) {
 		{"veículo sem placa", func(c *cteos.CTeOS) {
 			c.InfCte.InfCTeNorm.InfModal.RodoOS.Veic.Placa = ""
 		}, "infCTeNorm.infModal.rodoOS.veic.placa"},
+		// Os tipos compartilhados com o CT-e admitem campos que o leiaute do OS não tem.
+		{"entrega prevista do CT-e", func(c *cteos.CTeOS) {
+			c.InfCte.Compl = &cte.Compl{Entrega: &cte.Entrega{}}
+		}, "compl.Entrega"},
+		{"fluxo da carga do CT-e", func(c *cteos.CTeOS) {
+			c.InfCte.Compl = &cte.Compl{Fluxo: &cte.Fluxo{XOrig: "POA"}}
+		}, "compl.fluxo"},
+		{"município de origem do cálculo", func(c *cteos.CTeOS) {
+			c.InfCte.Compl = &cte.Compl{OrigCalc: "PORTO ALEGRE"}
+		}, "compl.origCalc"},
+		{"município de destino do cálculo", func(c *cteos.CTeOS) {
+			c.InfCte.Compl = &cte.Compl{DestCalc: "CAXIAS DO SUL"}
+		}, "compl.destCalc"},
+		{"emitente com CPF", func(c *cteos.CTeOS) {
+			c.InfCte.Emit.CPF = "52998224725"
+		}, "emit.CPF"},
+		{"ICMS60 do CT-e", func(c *cteos.CTeOS) {
+			c.InfCte.Imp.ICMS = cte.ICMS{ICMS60: &cte.ICMS60{CST: "60"}}
+		}, "imp.ICMS.ICMS60"},
+		{"indAlteraToma do CT-e", func(c *cteos.CTeOS) {
+			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{
+				ChCte: "43260312345678000195570010000009871122334411", IndAlteraToma: "1",
+			}
+		}, "infCteSub.indAlteraToma"},
 	}
 
 	for _, caso := range casos {

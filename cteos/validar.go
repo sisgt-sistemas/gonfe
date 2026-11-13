@@ -56,6 +56,7 @@ func (c *CTeOS) Validar() error {
 	e = append(e, c.validarPrestacao()...)
 	e = append(e, c.validarImposto()...)
 	e = append(e, c.validarNorm()...)
+	e = append(e, c.validarForaDoLeiaute()...)
 	if len(e) == 0 {
 		return nil
 	}
@@ -466,4 +467,41 @@ func deCTe(erros cte.Erros) Erros {
 		out = append(out, Erro{Campo: e.Campo, Mensagem: e.Mensagem})
 	}
 	return out
+}
+
+// validarForaDoLeiaute recusa o que os tipos compartilhados com o CT-e admitem e o leiaute do CT-e OS não tem: a
+// estrutura é a mesma, mas o esquema do OS não prevê esses campos, e o documento seria recusado.
+func (c *CTeOS) validarForaDoLeiaute() Erros {
+	var e Erros
+	if compl := c.InfCte.Compl; compl != nil {
+		for _, campo := range []struct {
+			nome       string
+			preenchido bool
+		}{
+			{"fluxo", compl.Fluxo != nil},
+			{"Entrega", compl.Entrega != nil},
+			{"origCalc", compl.OrigCalc != ""},
+			{"destCalc", compl.DestCalc != ""},
+		} {
+			if campo.preenchido {
+				e = append(e, erro("compl."+campo.nome, "o CT-e OS não tem o %s", campo.nome))
+			}
+		}
+	}
+	if c.InfCte.Emit.CPF != "" {
+		e = append(e, erro("emit.CPF", "o emitente do CT-e OS é identificado pelo CNPJ"))
+	}
+	if c.InfCte.Imp.ICMS.ICMS60 != nil {
+		e = append(e, erro("imp.ICMS.ICMS60", "o CT-e OS não tem o ICMS60"))
+	}
+	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfCteSub != nil {
+		sub := norm.InfCteSub
+		if sub.IndAlteraToma != "" {
+			e = append(e, erro("infCteSub.indAlteraToma", "o CT-e OS não tem o indAlteraToma"))
+		}
+		if sub.RefCteAnu != "" || sub.TomaICMS != nil { //nolint:staticcheck // Recusa os campos que só existem por compatibilidade.
+			e = append(e, erro("infCteSub", "o leiaute 4.00 não tem o refCteAnu nem o tomaICMS"))
+		}
+	}
+	return e
 }

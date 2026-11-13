@@ -55,6 +55,7 @@ func (c *CTe) Validar() error {
 	e = append(e, c.validarPrestacao()...)
 	e = append(e, c.validarImposto()...)
 	e = append(e, c.validarNorm()...)
+	e = append(e, c.validarForaDoLeiaute()...)
 	if len(e) == 0 {
 		return nil
 	}
@@ -341,10 +342,7 @@ func (c *CTe) validarNorm() Erros {
 		}
 		return e
 	case CTeAnulacao:
-		if c.InfCte.InfCteAnu == nil {
-			e = append(e, erro("infCteAnu", "o CT-e de anulação precisa apontar o conhecimento anulado"))
-		}
-		return e
+		return append(e, erro("ide.tpCTe", "o leiaute 4.00 não tem o CT-e de anulação (tpCTe 2)"))
 	}
 
 	norm := c.InfCte.InfCTeNorm
@@ -430,4 +428,22 @@ func validarModal(modal Modal, m *InfModal) Erros {
 // regimeValido confere o CRT contra a lista do leiaute (TCRT).
 func regimeValido(crt string) bool {
 	return crt == "1" || crt == "2" || crt == "3" || crt == "4"
+}
+
+// validarForaDoLeiaute recusa os campos que o modelo guarda por compatibilidade e o leiaute 4.00 não tem: eles não
+// saem no XML, e quem os preenche esperaria vê-los no documento.
+func (c *CTe) validarForaDoLeiaute() Erros {
+	var e Erros
+	if c.InfCte.InfCteAnu != nil {
+		e = append(e, erro("infCteAnu", "o leiaute 4.00 não tem o grupo do CT-e de anulação"))
+	}
+	if norm := c.InfCte.InfCTeNorm; norm != nil && norm.InfCteSub != nil {
+		if norm.InfCteSub.RefCteAnu != "" {
+			e = append(e, erro("infCteSub.refCteAnu", "o leiaute 4.00 não tem o refCteAnu"))
+		}
+		if norm.InfCteSub.TomaICMS != nil {
+			e = append(e, erro("infCteSub.tomaICMS", "o leiaute 4.00 não tem o tomaICMS"))
+		}
+	}
+	return e
 }

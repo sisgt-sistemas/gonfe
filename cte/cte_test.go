@@ -294,6 +294,17 @@ func TestValidarApontaCampo(t *testing.T) {
 		{"CNPJ do emitente inválido", func(c *cte.CTe) { c.InfCte.Emit.CNPJ = "12345678000100" }, "emit.CNPJ"},
 		{"emitente sem IE", func(c *cte.CTe) { c.InfCte.Emit.IE = "" }, "emit.IE"},
 		{"sem tomador", func(c *cte.CTe) { c.InfCte.Ide.Toma3 = nil }, "ide.toma"},
+		// O leiaute 4.00 não tem o CT-e de anulação nem os campos de substituição do 3.00.
+		{"CT-e de anulação", func(c *cte.CTe) { c.InfCte.Ide.TpCTe = cte.TipoCTe("2") }, "ide.tpCTe"},
+		{"grupo do CT-e de anulação", func(c *cte.CTe) {
+			c.InfCte.InfCteAnu = &cte.InfCteAnu{Chave: "43260312345678000195570010000009871122334411"} //nolint:staticcheck // O teste prova a recusa.
+		}, "infCteAnu"},
+		{"refCteAnu do 3.00", func(c *cte.CTe) {
+			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{ChCte: "43260312345678000195570010000009871122334411", RefCteAnu: "43260312345678000195570010000009871122334411"} //nolint:staticcheck // O teste prova a recusa.
+		}, "infCteSub.refCteAnu"},
+		{"tomaICMS do 3.00", func(c *cte.CTe) {
+			c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{ChCte: "43260312345678000195570010000009871122334411", TomaICMS: &cte.TomaICMS{RefCte: "43260312345678000195570010000009871122334411"}} //nolint:staticcheck // O teste prova a recusa.
+		}, "infCteSub.tomaICMS"},
 		{"produto predominante ausente", func(c *cte.CTe) {
 			c.InfCte.InfCTeNorm.InfCarga.ProPred = ""
 		}, "infCTeNorm.infCarga.proPred"},
@@ -650,5 +661,25 @@ func TestValidarNomeDoComponente(t *testing.T) {
 	c.InfCte.VPrest.Comp[0].XNome = strings.Repeat("A", 16)
 	if _, ok := camposComErro(t, c.Validar())["vPrest.Comp[0].xNome"]; !ok {
 		t.Fatal("um nome de componente de 16 caracteres passou")
+	}
+}
+
+// Os campos do leiaute 3.00, guardados por compatibilidade, não saem no XML: o esquema 4.00 recusaria o documento.
+func TestCamposDo300NaoSaemNoXML(t *testing.T) {
+	c := conhecimentoExemplo()
+	c.InfCte.InfCTeNorm.InfCteSub = &cte.InfCteSub{
+		ChCte:     "43260312345678000195570010000009871122334411",
+		RefCteAnu: "43260312345678000195570010000009871122334411",                        //nolint:staticcheck // O teste prova que não sai.
+		TomaICMS:  &cte.TomaICMS{RefCte: "43260312345678000195570010000009871122334411"}, //nolint:staticcheck // O teste prova que não sai.
+	}
+	c.InfCte.InfCteAnu = &cte.InfCteAnu{Chave: "43260312345678000195570010000009871122334411"} //nolint:staticcheck // O teste prova que não sai.
+	documento, err := c.XML()
+	if err != nil {
+		t.Fatalf("XML: %v", err)
+	}
+	for _, tag := range []string{"refCteAnu", "tomaICMS", "infCteAnu"} {
+		if strings.Contains(string(documento), "<"+tag) {
+			t.Errorf("o XML traz <%s>, que o leiaute 4.00 não tem", tag)
+		}
 	}
 }

@@ -37,8 +37,9 @@ type InfCte struct {
 	InfCTeNorm *InfCTeNorm `xml:"infCTeNorm,omitempty"`
 	// InfCteComp identifica o conhecimento complementado.
 	InfCteComp *InfCteComp `xml:"infCteComp,omitempty"`
-	// InfCteAnu identifica o conhecimento anulado.
-	InfCteAnu *InfCteAnu `xml:"infCteAnu,omitempty"`
+	// Deprecated: o leiaute 4.00 não tem o CT-e de anulação nem o grupo
+	// infCteAnu. O campo não sai no XML, e Validar o recusa.
+	InfCteAnu *InfCteAnu `xml:"-"`
 
 	AutXML     []AutXML    `xml:"autXML,omitempty"`
 	InfRespTec *InfRespTec `xml:"infRespTec,omitempty"`
